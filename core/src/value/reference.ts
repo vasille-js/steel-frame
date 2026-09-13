@@ -2,38 +2,31 @@ import { Reactive } from "../core/core.js";
 import { IValue } from "../core/ivalue.js";
 import { reportError } from "../functional/safety.js";
 
-function run<T>(fn: (value: T) => void, value: T) {
-    try {
-        fn(value);
-    } catch (e) {
-        reportError(e);
-    }
-}
-
 /**
  * Declares a notifiable value
  * @class Reference
  * @extends IValue
  */
-export class Reference<T> extends IValue<T> {
+export class Reference<T, Extra extends unknown> extends IValue<T, Extra> {
     /**
      * The encapsulated value
      * @type {*}
      */
     protected state: T;
 
-    protected handler1?: (value: T) => void;
-    protected handler2?: (value: T) => void;
+    protected handler1?: (value: T, extra?: Extra) => void;
+    protected handler2?: (value: T, extra?: Extra) => void;
 
     /**
      * Array of handlers
      * @type {Set}
      * @readonly
      */
-    protected onChange?: Set<(value: T) => void>;
+    protected onChange?: Set<(value: T, extra?: Extra) => void>;
 
     /**
      * @param value {any} the initial value
+     * @param ctx {Reactive} the reactive context
      */
     public constructor(value: T, ctx?: Reactive) {
         super(ctx?.sDeep ?? 0);
@@ -45,6 +38,10 @@ export class Reference<T> extends IValue<T> {
     }
 
     public set V(value: T) {
+        this.up(value);
+    }
+
+    public up(value: T, extra?: Extra): T {
         if (this.state !== value) {
             const { onChange, handler1, handler2 } = this;
 
@@ -52,19 +49,21 @@ export class Reference<T> extends IValue<T> {
 
             if (onChange) {
                 onChange.forEach(handler => {
-                    run(handler, value);
+                    this.run(handler, value, extra);
                 });
             } else if (handler1) {
-                run(handler1, value);
+                this.run(handler1, value, extra);
 
                 if (handler2) {
-                    run(handler2, value);
+                    this.run(handler2, value, extra);
                 }
             }
         }
+
+        return value;
     }
 
-    public on(handler: (value: T) => void): void {
+    public on(handler: (value: T, extra?: Extra) => void): void {
         if (this.onChange) {
             this.onChange.add(handler);
         } else {
@@ -80,7 +79,7 @@ export class Reference<T> extends IValue<T> {
         }
     }
 
-    public off(handler: (value: T) => void): void {
+    public off(handler: (value: T, arg?: Extra) => void): void {
         if (this.onChange) {
             this.onChange.delete(handler);
         } else {
@@ -90,6 +89,14 @@ export class Reference<T> extends IValue<T> {
             } else if (this.handler2 === handler) {
                 this.handler2 = undefined;
             }
+        }
+    }
+
+    protected run(fn: (value: T, extra?: Extra) => void, value: T, extra?: Extra) {
+        try {
+            fn(value, extra);
+        } catch (e) {
+            reportError(e);
         }
     }
 }

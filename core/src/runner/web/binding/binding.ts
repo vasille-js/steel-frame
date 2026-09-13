@@ -7,14 +7,14 @@ import type { IValue } from "../../../core/ivalue.js";
  */
 export class Binding<T> implements Destroyable {
     public readonly rDeep: number;
-    private binding: IValue<T>;
+    private binding: IValue<T, unknown>;
     private func!: (value: T) => void;
 
     /**
      * Constructs a common binding logic
      * @param value {IValue} the value to bind
      */
-    public constructor(value: IValue<T>) {
+    public constructor(value: IValue<T, unknown>) {
         this.binding = value;
         this.rDeep = value.rDeep;
     }

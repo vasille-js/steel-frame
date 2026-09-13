@@ -79,18 +79,22 @@ export class MapView<
         K,
         {
             frag: Fragment<Node, Element, TagOptions, Runner>;
-            value: IValue<T>;
+            value: IValue<T, unknown>;
         }
     >();
     private acceptUpdate: ((...args: Arguments<K, T>) => void) | undefined;
-    private readonly slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: IValue<T>, key: K) => void;
+    private readonly slot: (
+        ctx: Fragment<Node, Element, TagOptions, Runner>,
+        value: IValue<T, unknown>,
+        key: K,
+    ) => void;
 
     public constructor(
         runner: Runner,
         deep: number,
         private readonly model: MapModel<K, T>,
-        slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: IValue<T>, key: K) => void,
-        private readonly ref: <T>(v: T) => IValue<T>,
+        slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: IValue<T, unknown>, key: K) => void,
+        private readonly ref: <T>(v: T) => IValue<T, unknown>,
         private readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(runner, deep);

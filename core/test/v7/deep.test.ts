@@ -17,19 +17,19 @@ class MyApp extends App<Node, Element, TagOptions> {
      *   - frag_2_1
      *     - ref_2_2
      * */
-    ref_0!: Reference<number>;
-    ref_1!: Reference<number>;
-    ref_1_1!: Reference<number>;
-    ref_1_1_1!: Reference<number>;
-    ref_2!: Reference<number>;
-    ref_2_1!: Reference<number>;
-    ref_2_1_1!: Reference<number>;
-    expr_1!: Expression<number, [number]>;
-    expr_1_1!: Expression<number, [number, number]>;
-    expr_1_1_1!: Expression<number, [number, number]>;
-    expr_2!: Expression<number, [number, number]>;
-    expr_2_1!: Expression<number, [number, number]>;
-    expr_2_1_1!: Expression<number, [number, number]>;
+    ref_0!: Reference<number, unknown>;
+    ref_1!: Reference<number, unknown>;
+    ref_1_1!: Reference<number, unknown>;
+    ref_1_1_1!: Reference<number, unknown>;
+    ref_2!: Reference<number, unknown>;
+    ref_2_1!: Reference<number, unknown>;
+    ref_2_1_1!: Reference<number, unknown>;
+    expr_1!: Expression<number, [number], unknown>;
+    expr_1_1!: Expression<number, [number, number], unknown>;
+    expr_1_1_1!: Expression<number, [number, number], unknown>;
+    expr_2!: Expression<number, [number, number], unknown>;
+    expr_2_1!: Expression<number, [number, number], unknown>;
+    expr_2_1_1!: Expression<number, [number, number], unknown>;
     frag_1!: Fragment<Node, Element, TagOptions>;
     frag_1_1!: Fragment<Node, Element, TagOptions>;
     frag_1_1_1!: Fragment<Node, Element, TagOptions>;
@@ -95,7 +95,7 @@ class MyApp extends App<Node, Element, TagOptions> {
     }
 }
 
-function handlersCount(ref: Reference<unknown> | Expression<unknown, unknown[]>) {
+function handlersCount(ref: Reference<unknown, unknown> | Expression<unknown, unknown[], unknown>) {
     if (ref instanceof Expression) {
         // @ts-expect-error
         return handlersCount(ref.sync);
@@ -215,7 +215,7 @@ it("destroys array view", () => {
 
     root.tag("div", {}, function (tag) {
         tag.create(
-            new ArrayView<number, Node, Element, TagOptions, typeof runner>(
+            new ArrayView<number, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
                 array,

@@ -2,12 +2,12 @@ import { Reactive } from "../core/core.js";
 import { IValue } from "../core/ivalue.js";
 import { SyncedIValue } from "./synced.js";
 
-export class EdgeReference<T> extends SyncedIValue<T> {
+export class EdgeReference<T, Extra extends unknown> extends SyncedIValue<T, Extra> {
     public readonly getter: () => T;
     public readonly setter: (v: T) => void;
 
     public constructor(
-        createRef: (v: T, ctx?: Reactive) => IValue<T>,
+        createRef: (v: T, ctx?: Reactive) => IValue<T, Extra>,
         getter: () => T,
         setter: (v: T) => void,
         ctx?: Reactive,
@@ -31,5 +31,9 @@ export class EdgeReference<T> extends SyncedIValue<T> {
     public set V(value: T) {
         this.setter(value);
         this.sync.V = this.getter();
+    }
+
+    public up(value: T): T {
+        return (this.V = value);
     }
 }

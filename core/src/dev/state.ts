@@ -2,79 +2,51 @@ import { Reactive } from "../core/core.js";
 import { Destroyable } from "../core/destroyable.js";
 import { IValue } from "../core/ivalue.js";
 import { reportError } from "../functional/safety.js";
+import { DebounceReference } from "../value/debounce.js";
+import { EdgeReference } from "../value/edge.js";
+import { Expression, KindOfIValue } from "../value/expression.js";
+import { DeepFieldReference, SingleFieldReference } from "../value/field.js";
+import { Reference } from "../value/reference.js";
 import { DevReactive } from "./core.js";
 import {
     Dependency,
     errorToString,
     ExecutionPosition,
-    InspectableReference,
     inspector,
     provideId,
     StaticPosition,
     toDevValue,
 } from "./inspectable.js";
 
-export type KindOfDevIValue<T extends unknown[]> = {
-    [K in keyof T]: IValue<T[K]> | DevIValue<T[K]> | undefined;
-};
-
-export abstract class DevIValue<T> extends IValue<T> {
-    public abstract update(value: T, position: ExecutionPosition): void;
-}
-
-export class BaseDevReference<T> extends DevIValue<T> {
-    protected state: T;
-    protected readonly onChange: Set<(value: T, position?: ExecutionPosition) => void>;
+export abstract class BaseDevReference<T> extends Reference<T, ExecutionPosition> {
+    protected override readonly onChange: Set<(value: T, position?: ExecutionPosition) => void>;
 
     public constructor(value: T, ctx?: Reactive) {
-        super(ctx?.sDeep ?? 0);
-        this.state = value;
+        super(value, ctx);
         this.onChange = new Set();
     }
 
-    public get V(): T {
-        return this.state;
-    }
-
-    public set V(value: T) {
-        this.update(value);
-    }
-
-    public update(value: T, position?: ExecutionPosition) {
+    public override up(value: T, position?: ExecutionPosition): T {
         if (this.state !== value) {
-            this.state = value;
-
             this.shareUpdate(position);
-            this.onChange.forEach(handler => {
-                try {
-                    handler(value, position);
-                } catch (e) {
-                    this.shareError(e, position);
-                    reportError(e);
-                }
-            });
+        }
+        return super.up(value, position);
+    }
+
+    protected override run(fn: (value: T, extra?: ExecutionPosition) => void, value: T, position?: ExecutionPosition) {
+        try {
+            fn(value, position);
+        } catch (e) {
+            this.shareError(e, position);
+            reportError(e);
         }
     }
 
-    public on(handler: (value: T, position: ExecutionPosition) => void): void {
-        this.onChange.add(handler);
-    }
-
-    public off(handler: (value: T, position: ExecutionPosition) => void): void {
-        this.onChange.delete(handler);
-    }
-
-    protected shareUpdate(position?: ExecutionPosition) {
-        void position;
-    }
-
-    protected shareError(error: unknown, position?: ExecutionPosition) {
-        void error;
-        void position;
-    }
+    protected abstract shareUpdate(position?: ExecutionPosition): void;
+    protected abstract shareError(error: unknown, position?: ExecutionPosition): void;
 }
 
-export class DevReference<T> extends BaseDevReference<T> implements InspectableReference<T>, Destroyable {
+export class DevReference<T> extends BaseDevReference<T> implements Destroyable {
     public readonly id: number;
 
     public constructor(value: T, ctx: Reactive | undefined, declaration: StaticPosition, name?: string) {
@@ -82,7 +54,6 @@ export class DevReference<T> extends BaseDevReference<T> implements InspectableR
 
         this.id = provideId();
         this.rDeep = ctx?.sDeep ?? 0;
-
         inspector.newReference({
             id: this.id,
             declaration: declaration,
@@ -96,13 +67,16 @@ export class DevReference<T> extends BaseDevReference<T> implements InspectableR
                 stateId: this.id,
             });
         }
+        if (ctx) {
+            ctx.bind(this);
+        }
     }
 
     public destroy(): void {
-        this.shareDestroy();
+        inspector.destroy({ id: this.id, time: Date.now() });
     }
 
-    protected override shareUpdate(position?: ExecutionPosition) {
+    protected shareUpdate(position?: ExecutionPosition) {
         inspector.updateReference({
             id: this.id,
             time: Date.now(),
@@ -111,7 +85,7 @@ export class DevReference<T> extends BaseDevReference<T> implements InspectableR
         });
     }
 
-    protected override shareError(error: unknown, position?: ExecutionPosition) {
+    protected shareError(error: unknown, position?: ExecutionPosition) {
         inspector.reportReferenceError({
             targetId: this.id,
             time: Date.now(),
@@ -119,13 +93,9 @@ export class DevReference<T> extends BaseDevReference<T> implements InspectableR
             position: position,
         });
     }
-
-    protected shareDestroy() {
-        inspector.destroy({ id: this.id, time: Date.now() });
-    }
 }
 
-export class ExpressionDevReference<T> extends BaseDevReference<T> implements InspectableReference<T> {
+export class ExpressionDevReference<T> extends BaseDevReference<T> {
     public readonly id: number;
 
     public constructor(id: number, value: T) {
@@ -142,98 +112,61 @@ export class ExpressionDevReference<T> extends BaseDevReference<T> implements In
             position: position,
         });
     }
+
+    protected override shareUpdate() {
+        // do nothing
+    }
 }
 
-export class DevExpression<T, Args extends unknown[]>
-    extends IValue<T>
-    implements Destroyable, InspectableReference<T>
-{
+export class DevExpression<T, Args extends unknown[]> extends Expression<T, Args, ExecutionPosition> {
     public readonly id: number;
-    public readonly declaration: StaticPosition;
-
-    private values: KindOfDevIValue<Args>;
-    private readonly valuesCache: Args;
-    private linkedFunc: Array<() => void> = [];
-    private sync: ExpressionDevReference<T>;
+    public readonly isWatch: boolean;
 
     public constructor(
         func: (...args: Args) => T,
-        values: KindOfDevIValue<Args>,
-        ctx: Reactive | undefined,
+        values: KindOfIValue<Args, ExecutionPosition>,
+        ctx: Reactive,
         name: string | undefined,
         depsCode: string[],
         declaration: StaticPosition,
         isWatch: boolean,
         safe: boolean,
     ) {
-        super(ctx?.sDeep ?? 0);
-
         const id = provideId();
-        const handler = (i: number, value: unknown, position: ExecutionPosition) => {
-            try {
-                this.valuesCache[i] = value;
 
-                const newValue = func.apply(this, this.valuesCache);
+        super(
+            func,
+            (args: Args) => {
+                let initialValue: T | undefined;
 
-                if (this.sync.V !== newValue || isWatch) {
-                    this.sync.update(newValue, position);
-                    inspector.updateExpression({
-                        id: id,
+                try {
+                    initialValue = func.apply(null, args);
+                } catch (e) {
+                    inspector.reportExpressionCalculationError({
+                        targetId: id,
                         time: Date.now(),
-                        position: position,
-                        value: newValue,
-                        deps: this.valuesCache.map(toDevValue),
+                        error: errorToString(e),
+                        deps: args.map(toDevValue),
                     });
+                    if (!safe) {
+                        throw e;
+                    }
                 }
-            } catch (e) {
-                inspector.reportExpressionCalculationError({
-                    targetId: id,
-                    time: Date.now(),
-                    error: errorToString(e),
-                    position: position,
-                    deps: this.valuesCache.map(toDevValue),
-                });
-                reportError(e);
-            }
-        };
 
-        this.valuesCache = values.map(item => item?.V) as Args;
+                return new ExpressionDevReference<T>(id, initialValue as T);
+            },
+            values,
+            ctx,
+        );
 
-        let initialValue: T | undefined;
-
-        try {
-            initialValue = func.apply(this, this.valuesCache);
-        } catch (e) {
-            inspector.reportExpressionCalculationError({
-                targetId: id,
-                time: Date.now(),
-                error: errorToString(e),
-                deps: this.valuesCache.map(toDevValue),
-            });
-            if (!safe) {
-                throw e;
-            }
+        if (ctx.sDeep <= ctx.rDeep) {
+            ctx.bind(this);
         }
-
-        this.sync = new ExpressionDevReference(id, initialValue as T);
-        this.id = id;
-        this.declaration = declaration;
-
-        let i = 0;
-        values.forEach(value => {
-            const updater = handler.bind(this, Number(i++));
-
-            this.linkedFunc.push(updater);
-            value?.on(updater);
-        });
-
-        this.values = values;
-        this.rDeep = Math.min(...values.filter(Boolean).map(item => item!.sDeep));
-        ctx?.bind(this);
+        this.isWatch = isWatch;
 
         inspector.newExpression({
             id: this.id,
-            declaration: this.declaration,
+            declaration: declaration,
             isWatch: isWatch,
             value: toDevValue(this.sync.V),
             deps: values.map((dep, index) => {
@@ -258,33 +191,97 @@ export class DevExpression<T, Args extends unknown[]>
         }
     }
 
-    public update(value: T, position?: ExecutionPosition): void {
-        this.sync.update(value, position);
-    }
-
-    public get V(): T {
-        return this.sync.V;
-    }
-
-    public set V(v: T) {
-        this.sync.V = v;
-    }
-
-    public on(handler: (value: T, position: ExecutionPosition) => void): void {
-        this.sync.on(handler);
-    }
-
-    public off(handler: (value: T, position: ExecutionPosition) => void): void {
-        this.sync.off(handler);
-    }
-
-    public destroy(): void {
+    public override destroy(): void {
         inspector.destroy({ id: this.id, time: Date.now() });
-        for (let i = 0; i < this.values.length; i++) {
-            this.values[i]?.off(this.linkedFunc[i]!);
-        }
-        this.values.splice(0);
-        this.valuesCache.splice(0);
-        this.linkedFunc.splice(0);
+        super.destroy();
+    }
+
+    protected override getHandler(
+        func: (...args: Args) => T,
+    ): (i: number | undefined, _value: unknown, extra?: ExecutionPosition) => void {
+        return (i: number, value: unknown, position: ExecutionPosition) => {
+            try {
+                this.valuesCache[i] = value;
+
+                const newValue = func.apply(this, this.valuesCache);
+
+                if (this.sync.V !== newValue || this.isWatch) {
+                    this.sync.up(newValue, position);
+                    inspector.updateExpression({
+                        id: this.id,
+                        time: Date.now(),
+                        position: position,
+                        value: newValue,
+                        deps: this.valuesCache.map(toDevValue),
+                    });
+                }
+            } catch (e) {
+                inspector.reportExpressionCalculationError({
+                    targetId: this.id,
+                    time: Date.now(),
+                    error: errorToString(e),
+                    position: position,
+                    deps: this.valuesCache.map(toDevValue),
+                });
+                reportError(e);
+            }
+        };
+    }
+}
+
+export class DevDebounceReference<T> extends DebounceReference<T, ExecutionPosition> {
+    declare protected readonly sync: DevReference<T>;
+
+    public constructor(
+        createRef: (v: T, ctx?: Reactive) => DevReference<T>,
+        target: IValue<T, ExecutionPosition>,
+        delay: number,
+        ctx: Reactive,
+    ) {
+        super(createRef, target, delay, ctx);
+        ctx.bind(this.sync);
+    }
+}
+
+export class DevEdgeReference<T> extends EdgeReference<T, ExecutionPosition> {
+    declare protected readonly sync: DevReference<T>;
+
+    public constructor(
+        createRef: (v: T, ctx?: Reactive) => DevReference<T>,
+        getter: () => T,
+        setter: (v: T) => void,
+        ctx?: Reactive,
+        subscriber?: (setter: (v: T) => void) => void | (() => void),
+    ) {
+        super(createRef, getter, setter, ctx, subscriber);
+        ctx?.bind(this.sync);
+    }
+}
+
+export class DevSingleFieldReference extends SingleFieldReference<ExecutionPosition> {
+    declare protected readonly sync: DevReference<unknown>;
+
+    public constructor(
+        createRef: (v: unknown, ctx?: Reactive) => DevReference<unknown>,
+        object: IValue<object | undefined | null, ExecutionPosition>,
+        field: string | symbol,
+        ctx: Reactive,
+    ) {
+        super(createRef, object, field, ctx);
+        ctx.bind(this.sync);
+    }
+}
+
+export class DevDeepFieldReference extends DeepFieldReference<ExecutionPosition> {
+    declare protected readonly sync: DevReference<unknown>;
+
+    public constructor(
+        createRef: (v: unknown, ctx?: Reactive) => DevReference<unknown>,
+        object: IValue<object | undefined | null, ExecutionPosition>,
+        fields: (string | symbol)[],
+        ctx: Reactive,
+    ) {
+        super(createRef, object, fields, ctx);
+        ctx.bind(this.sync);
     }
 }

@@ -14,7 +14,7 @@ export class PropertyBinding<T> extends Binding<T> {
      * @param name the name of property
      * @param value the value of property
      */
-    public constructor(node: Tag<Node, Element, object>, name: string, value: IValue<T>) {
+    public constructor(node: Tag<Node, Element, object>, name: string, value: IValue<T, unknown>) {
         super(value);
 
         this.init(value => {

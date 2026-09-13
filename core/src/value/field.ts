@@ -3,27 +3,31 @@ import { Destroyable } from "../core/destroyable.js";
 import { IValue } from "../core/ivalue.js";
 import { SyncedIValue } from "./synced.js";
 
-export class FieldReference extends SyncedIValue<unknown> implements Destroyable {
-    protected readonly object: IValue<object | undefined | null>;
+export class FieldReference<Extra extends unknown> extends SyncedIValue<unknown, Extra> implements Destroyable {
+    protected readonly object: IValue<object | undefined | null, Extra>;
     protected readonly updated: (v: unknown) => object;
     protected readonly handler: (v: object | undefined | null) => void;
 
     public constructor(
-        createRef: (v: unknown, ctx?: Reactive) => IValue<unknown>,
-        object: IValue<object | undefined | null>,
+        createRef: (v: unknown, ctx?: Reactive) => IValue<unknown, Extra>,
+        object: IValue<object | undefined | null, Extra>,
         getValue: (v: object | undefined | null) => unknown,
         update: (v: unknown) => object,
-        ctx?: Reactive,
+        ctx: Reactive,
     ) {
         super(createRef(getValue(object.V), ctx), ctx);
 
-        object.on((this.handler = (v: object | undefined | null) => (this.sync.V = getValue(v))));
+        object.on(
+            (this.handler = (v: object | undefined | null, extra?: Extra) => {
+                this.sync.up(getValue(v), extra);
+            }),
+        );
 
         this.object = object;
         this.updated = update;
 
         this.rDeep = object.sDeep;
-        if (ctx && ctx.sDeep > object.sDeep) {
+        if (ctx.sDeep > object.sDeep) {
             ctx.bind(this);
         }
     }
@@ -35,17 +39,21 @@ export class FieldReference extends SyncedIValue<unknown> implements Destroyable
         this.object.V = this.updated(value);
     }
 
+    public up(value: unknown, extra?: Extra): unknown {
+        return this.object.up(this.updated(value), extra);
+    }
+
     public destroy(): void {
         this.object.off(this.handler);
     }
 }
 
-export class SingleFieldReference extends FieldReference {
+export class SingleFieldReference<Extra extends unknown> extends FieldReference<Extra> {
     public constructor(
-        createRef: (v: unknown, ctx?: Reactive) => IValue<unknown>,
-        object: IValue<object | undefined | null>,
+        createRef: (v: unknown, ctx?: Reactive) => IValue<unknown, Extra>,
+        object: IValue<object | undefined | null, Extra>,
         field: string | symbol,
-        ctx?: Reactive,
+        ctx: Reactive,
     ) {
         super(
             createRef,
@@ -57,12 +65,12 @@ export class SingleFieldReference extends FieldReference {
     }
 }
 
-export class DeepFieldReference extends FieldReference {
+export class DeepFieldReference<Extra extends unknown> extends FieldReference<Extra> {
     public constructor(
-        createRef: (v: unknown, ctx?: Reactive) => IValue<unknown>,
-        object: IValue<object | undefined | null>,
+        createRef: (v: unknown, ctx?: Reactive) => IValue<unknown, Extra>,
+        object: IValue<object | undefined | null, Extra>,
         fields: (string | symbol)[],
-        ctx?: Reactive,
+        ctx: Reactive,
     ) {
         super(
             createRef,

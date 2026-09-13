@@ -2,14 +2,14 @@ import { Expression, IValue, Reactive, Reference } from "../../src/index.js";
 import { TestExpression } from "../page.js";
 
 class CoreTest extends Reactive {
-    ref0: IValue<number>;
+    ref0: IValue<number, unknown>;
 
     watch_test = 0;
     handler_test = 0;
-    handler_ref: IValue<number>;
-    bind0: IValue<number>;
+    handler_ref: IValue<number, unknown>;
+    bind0: IValue<number, unknown>;
 
-    freeze_test: IValue<boolean>;
+    freeze_test: IValue<boolean, unknown>;
 
     constructor() {
         super(1);
@@ -21,6 +21,7 @@ class CoreTest extends Reactive {
                 this.watch_test = v;
             },
             [this.ref0],
+            this,
         );
 
         this.bind0 = new TestExpression(
@@ -28,6 +29,7 @@ class CoreTest extends Reactive {
                 return x + 1;
             },
             [this.ref0],
+            this,
         );
 
         this.freeze_test = new Reference(false);

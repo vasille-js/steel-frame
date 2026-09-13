@@ -1,3 +1,4 @@
+import { IValue } from "../core/ivalue.js";
 import { DevExpression, DevReference } from "./state.js";
 
 export type StaticPosition = [string, number, number, number, number];
@@ -29,11 +30,6 @@ export interface Inspectable {
 
 export interface InspectableReactive {
     id: number;
-}
-
-export interface InspectableReference<T> extends Inspectable {
-    declaration?: StaticPosition;
-    update(value: T, position?: ExecutionPosition): void;
 }
 
 export interface Dependency extends Inspectable {
@@ -489,7 +485,10 @@ export interface DevValue {
 
 const primitiveTypes: string[] = ["number", "string", "boolean"] as const;
 
-export function registerReference<T>(value: DevReference<T>, declaration: StaticPosition): DevReference<T> {
+export function registerReference<T extends Inspectable & IValue<unknown, unknown>>(
+    value: T,
+    declaration: StaticPosition,
+): T {
     inspector.newReference({
         id: value.id,
         value: toDevValue(value.V),
@@ -662,7 +661,7 @@ export function wrapObject<T extends object>(v: T, declaration: StaticPosition):
     return v;
 }
 
-export function toDevValue(value: unknown) {
+export function toDevValue(value: unknown): DevValue {
     const type = typeof value;
 
     return {
@@ -675,7 +674,7 @@ export function toDevValue(value: unknown) {
                   : type === "function"
                     ? JSON.stringify(getPosition(value as Function))
                     : undefined,
-    } satisfies DevValue;
+    };
 }
 
 export function toDevId(value: unknown): number | undefined {

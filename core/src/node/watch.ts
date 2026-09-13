@@ -9,7 +9,7 @@ export interface WatchOptions<
     Runner extends IRunner<Node, Element, TagOptions>,
     T,
 > {
-    model: IValue<T>;
+    model: IValue<T, unknown>;
     slot?: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T) => void;
 }
 /**
@@ -24,7 +24,7 @@ export class Watch<
     T,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Fragment<Node, Element, TagOptions, Runner> {
-    private readonly model: IValue<T>;
+    private readonly model: IValue<T, unknown>;
     private readonly slot?: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T) => void;
     private handler?: (value: T) => void;
 

@@ -121,9 +121,15 @@ export class ArrayModel<T> extends Array<T> {
     }
 }
 
-interface CacheItem<Node, Element, TagOptions extends object, Runner extends IRunner<Node, Element, TagOptions>> {
+interface CacheItem<
+    Node,
+    Element,
+    TagOptions extends object,
+    Runner extends IRunner<Node, Element, TagOptions>,
+    Extra extends unknown,
+> {
     frag: Fragment<Node, Element, TagOptions, Runner>;
-    index: IValue<number>;
+    index: IValue<number, Extra>;
 }
 
 class BaseArrayView<
@@ -131,7 +137,8 @@ class BaseArrayView<
     Element,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
-    CacheItemType extends CacheItem<Node, Element, TagOptions, Runner>,
+    Extra extends unknown,
+    CacheItemType extends CacheItem<Node, Element, TagOptions, Runner, Extra>,
 > extends Fragment<Node, Element, TagOptions, Runner> {
     protected cache: CacheItemType[] = [];
 
@@ -163,16 +170,21 @@ export class ArrayView<
     Element,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
-> extends BaseArrayView<Node, Element, TagOptions, Runner, CacheItem<Node, Element, TagOptions, Runner>> {
+    Extra extends unknown,
+> extends BaseArrayView<Node, Element, TagOptions, Runner, Extra, CacheItem<Node, Element, TagOptions, Runner, Extra>> {
     private apply: ((...args: Arguments<T>) => void) | undefined;
-    private readonly slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T, index: IValue<number>) => void;
+    private readonly slot: (
+        ctx: Fragment<Node, Element, TagOptions, Runner>,
+        value: T,
+        index: IValue<number, Extra>,
+    ) => void;
 
     public constructor(
         runner: Runner,
         deep: number,
         private readonly model: ArrayModel<T>,
-        slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T, index: IValue<number>) => void,
-        private readonly ref: <T>(v: T) => IValue<T>,
+        slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T, index: IValue<number, Extra>) => void,
+        private readonly ref: <T>(v: T) => IValue<T, Extra>,
         private readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(runner, deep);
@@ -183,8 +195,8 @@ export class ArrayView<
         const view = this;
 
         function apply(this: void, index: number, remove: number, values?: T[]) {
-            const children: CacheItem<Node, Element, TagOptions, Runner>[] = view.cache;
-            const toInsert: CacheItem<Node, Element, TagOptions, Runner>[] = [];
+            const children: CacheItem<Node, Element, TagOptions, Runner, Extra>[] = view.cache;
+            const toInsert: CacheItem<Node, Element, TagOptions, Runner, Extra>[] = [];
             const prev = children[index - 1]?.frag;
             const next = children[index + remove]?.frag;
             const length = values?.length || 0;
@@ -239,10 +251,16 @@ export class ArrayView<
     }
 }
 
-interface KeyedCacheItem<T, Node, Element, TagOptions extends object, Runner extends IRunner<Node, Element, TagOptions>>
-    extends CacheItem<Node, Element, TagOptions, Runner> {
+interface KeyedCacheItem<
+    T,
+    Node,
+    Element,
+    TagOptions extends object,
+    Runner extends IRunner<Node, Element, TagOptions>,
+    Extra extends unknown,
+> extends CacheItem<Node, Element, TagOptions, Runner, Extra> {
     key: string | number;
-    value: IValue<T>;
+    value: IValue<T, Extra>;
     moved: boolean;
     unmounted: boolean;
 }
@@ -253,18 +271,34 @@ export class DiffingArrayView<
     Element,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
-> extends BaseArrayView<Node, Element, TagOptions, Runner, KeyedCacheItem<T, Node, Element, TagOptions, Runner>> {
+    Extra extends unknown,
+> extends BaseArrayView<
+    Node,
+    Element,
+    TagOptions,
+    Runner,
+    Extra,
+    KeyedCacheItem<T, Node, Element, TagOptions, Runner, Extra>
+> {
     protected match: ((model: T[]) => void) | undefined;
-    protected slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: IValue<T>, index: IValue<number>) => void;
+    protected slot: (
+        ctx: Fragment<Node, Element, TagOptions, Runner>,
+        value: IValue<T, Extra>,
+        index: IValue<number, Extra>,
+    ) => void;
 
     public constructor(
         runner: Runner,
         deep: number,
-        protected readonly model: IValue<T[]>,
+        protected readonly model: IValue<T[], Extra>,
         protected readonly key: (item: T) => number | string,
-        slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: IValue<T>, index: IValue<number>) => void,
-        protected readonly vRef: <T>(v: T) => IValue<T>,
-        protected readonly iRef: <T>(v: T) => IValue<T>,
+        slot: (
+            ctx: Fragment<Node, Element, TagOptions, Runner>,
+            value: IValue<T, Extra>,
+            index: IValue<number, Extra>,
+        ) => void,
+        protected readonly vRef: <T>(v: T) => IValue<T, Extra>,
+        protected readonly iRef: <T>(v: T) => IValue<T, Extra>,
         protected readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(runner, deep);
@@ -272,7 +306,7 @@ export class DiffingArrayView<
     }
 
     protected addChild(
-        newCache: KeyedCacheItem<T, Node, Element, TagOptions, Runner>[],
+        newCache: KeyedCacheItem<T, Node, Element, TagOptions, Runner, Extra>[],
         key: number | string,
         modelItem: T,
         prev?: Fragment<Node, Element, TagOptions, Runner>,
@@ -281,7 +315,7 @@ export class DiffingArrayView<
         const frag = this.frag(this.runner, this.sDeep + 1);
         const index = this.iRef(newCache.length);
         const value = this.vRef(modelItem);
-        const cache: KeyedCacheItem<T, Node, Element, TagOptions, Runner> = {
+        const cache: KeyedCacheItem<T, Node, Element, TagOptions, Runner, Extra> = {
             frag: frag,
             key: key,
             value: value,
@@ -312,8 +346,12 @@ export class SinglePassArrayView<
     Element,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
-> extends DiffingArrayView<T, Node, Element, TagOptions, Runner> {
-    protected readonly existing = new Map<number | string, KeyedCacheItem<T, Node, Element, TagOptions, Runner>>();
+    Extra extends unknown,
+> extends DiffingArrayView<T, Node, Element, TagOptions, Runner, Extra> {
+    protected readonly existing = new Map<
+        number | string,
+        KeyedCacheItem<T, Node, Element, TagOptions, Runner, Extra>
+    >();
 
     public override compose() {
         const view = this;
@@ -321,8 +359,8 @@ export class SinglePassArrayView<
 
         function match(model: T[]) {
             const children = view.cache;
-            const newCache: KeyedCacheItem<T, Node, Element, TagOptions, Runner>[] = [];
-            const unmounted = new Set<KeyedCacheItem<T, Node, Element, TagOptions, Runner>>();
+            const newCache: KeyedCacheItem<T, Node, Element, TagOptions, Runner, Extra>[] = [];
+            const unmounted = new Set<KeyedCacheItem<T, Node, Element, TagOptions, Runner, Extra>>();
             const modelLength = model.length;
             const cacheLength = children.length;
             let modelIndex = 0;
@@ -337,7 +375,7 @@ export class SinglePassArrayView<
                 const cacheItem = children[cacheIndex];
                 const key = modelItem ? view.key(modelItem) : null;
                 const prev = newCache[modelIndex - 1];
-                let present: KeyedCacheItem<T, Node, Element, TagOptions, Runner> | undefined;
+                let present: KeyedCacheItem<T, Node, Element, TagOptions, Runner, Extra> | undefined;
 
                 // ideal case, a match
                 if (key === cacheItem?.key) {

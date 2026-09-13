@@ -1,5 +1,5 @@
 import { DOMWindow } from "jsdom";
-import { App, Expression, Fragment, IValue, Reference, SwitchedNode, Tag } from "../../src/index.js";
+import { App, Fragment, IValue, Reference, SwitchedNode, Tag } from "../../src/index.js";
 import { Runner, TagOptions } from "../../src/runner/web/runner.js";
 import { page, TestExpression } from "../page.js";
 
@@ -40,7 +40,7 @@ it("Tag", function () {
         expect(div.node!.childNodes[1] instanceof window.Text).toBe(true);
         expect(div.node!.childNodes[1]!.textContent).toBe("test");
 
-        const textRef = new Reference<string | null>(null);
+        const textRef = new Reference<string | null, unknown>(null);
         div.text(textRef);
         expect(div.node!.childNodes[2] instanceof window.Text).toBe(true);
         expect(div.node!.childNodes[2]!.textContent).toBe("");
@@ -135,9 +135,9 @@ it("switch", function () {
             root.runner,
             root.sDeep + 1,
             [
-                { $case: new TestExpression(v => v == 1, [v]), slot: () => (check = 1) },
-                { $case: new TestExpression(v => v == 2, [v]), slot: () => (check = 2) },
-                { $case: new TestExpression(v => v == 3, [v]), slot: () => (check = 3) },
+                { $case: new TestExpression(v => v == 1, [v], root), slot: () => (check = 1) },
+                { $case: new TestExpression(v => v == 2, [v], root), slot: () => (check = 2) },
+                { $case: new TestExpression(v => v == 3, [v], root), slot: () => (check = 3) },
                 { $case: v2, slot: () => (check = -2) },
             ],
             () => (check = 4),
@@ -169,7 +169,7 @@ it("INode", function () {
         // attr
         (function () {
             const attrName = "data-attr";
-            const attrValue = new Reference("test");
+            const attrValue = new Reference<string, unknown>("test");
             let el!: Element;
 
             test.tag("div", {
@@ -183,6 +183,7 @@ it("INode", function () {
                             return str.length > 1 ? str : "alternative";
                         },
                         [attrValue],
+                        test,
                     ),
                 },
                 k: node => (el = node),
@@ -227,7 +228,7 @@ it("INode", function () {
         //style
         (function () {
             const dyn = new Reference("0px");
-            const num = new TestExpression<number, [string]>(x => parseFloat(x) + 10, [dyn]);
+            const num = new TestExpression<number, [string]>(x => parseFloat(x) + 10, [dyn], root);
             let el!: HTMLElement;
 
             test.tag("div", {
@@ -388,7 +389,7 @@ it("Class add/removing test", function () {
     );
 });
 
-function checkSpanAfterDiv(node: Tag<Node, Element, object>, bool: IValue<boolean>, window: DOMWindow) {
+function checkSpanAfterDiv(node: Tag<Node, Element, object>, bool: IValue<boolean, unknown>, window: DOMWindow) {
     expect(node.node!.childNodes.length).toBe(2);
     expect(node.node!.childNodes[0]).toBeInstanceOf(window.HTMLDivElement);
     expect(node.node!.childNodes[1]).toBeInstanceOf(window.HTMLSpanElement);

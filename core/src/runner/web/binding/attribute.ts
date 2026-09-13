@@ -17,7 +17,7 @@ export class AttributeBinding extends Binding<string | number | boolean | null |
     public constructor(
         node: Tag<Node, Element, object>,
         name: string,
-        value: IValue<string | number | boolean | null | undefined>,
+        value: IValue<string | number | boolean | null | undefined, unknown>,
     ) {
         super(value);
 

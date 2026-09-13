@@ -103,7 +103,7 @@ export function set(o: object, key: string | symbol | number, value: unknown, cr
 
 /**
  * It safely initializes a child component.
- * 1. `<Child x={y.z}/>` to `safeInit(() => Child({x: y.z))`
+ * 1. `<Child x={y.z}/>` to `safeInit(() => Child({x: y.z}))`
  */
 export function safeInit(fn: () => void) {
     safe(fn)();

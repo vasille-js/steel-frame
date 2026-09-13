@@ -8,8 +8,9 @@ import {
 } from "../../src/index.js";
 
 it("test field reference", function () {
-    const obj = new Reference<object>({});
-    const field = new SingleFieldReference(v => new Reference(v), obj, "test");
+    const ctx = new Reactive(0);
+    const obj = new Reference<object, unknown>({});
+    const field = new SingleFieldReference(v => new Reference(v), obj, "test", ctx);
 
     expect(field.V).toBeUndefined();
     obj.V = { test: 22 };
@@ -20,7 +21,7 @@ it("test field reference", function () {
     expect(obj.V).toEqual({ test: 25, test2: 22 });
     obj.V = {};
     expect(field.V).toBeUndefined();
-    field.V = 24;
+    field.up(24);
     expect(obj.V).toEqual({ test: 24 });
     field.V = 25;
     expect(obj.V).toEqual({ test: 25 });
@@ -28,8 +29,9 @@ it("test field reference", function () {
 });
 
 it("test field reference of undefined", function () {
-    const obj = new Reference<object | undefined>(undefined);
-    const field = new SingleFieldReference(v => new Reference(v), obj, "test");
+    const ctx = new Reactive(0);
+    const obj = new Reference<object | undefined, unknown>(undefined);
+    const field = new SingleFieldReference(v => new Reference(v), obj, "test", ctx);
 
     expect(field.V).toBeUndefined();
     field.V = 24;
@@ -38,8 +40,9 @@ it("test field reference of undefined", function () {
 });
 
 it("test deep field reference", function () {
-    const obj = new Reference<object>({ test: { test2: 22 } });
-    const field = new DeepFieldReference(v => new Reference(v), obj, ["test", "test2"]);
+    const ctx = new Reactive(0);
+    const obj = new Reference<object, unknown>({ test: { test2: 22 } });
+    const field = new DeepFieldReference(v => new Reference(v), obj, ["test", "test2"], ctx);
 
     expect(field.V).toBe(22);
     obj.V = { test: { test2: 33, test3: 22 }, test4: 44 };
@@ -52,18 +55,20 @@ it("test deep field reference", function () {
 });
 
 it("test deep field reference of undefined", function () {
-    const obj = new Reference<object | undefined>(undefined);
-    const field = new DeepFieldReference(v => new Reference(v), obj, ["test", "test2"]);
+    const ctx = new Reactive(0);
+    const obj = new Reference<object | undefined, unknown>(undefined);
+    const field = new DeepFieldReference(v => new Reference(v), obj, ["test", "test2"], ctx);
 
     expect(field.V).toBeUndefined();
-    field.V = 24;
+    field.up(24);
     expect(obj.V).toEqual({ test: { test2: 24 } });
     field.destroy();
 });
 
 it("test deep field reference destroy", function () {
-    const obj = new Reference<object | undefined>(undefined);
-    const field = new DeepFieldReference(v => new Reference(v), obj, ["test", "test2"]);
+    const ctx = new Reactive(0);
+    const obj = new Reference<object | undefined, unknown>(undefined);
+    const field = new DeepFieldReference(v => new Reference(v), obj, ["test", "test2"], ctx);
 
     expect(field.V).toBeUndefined();
     field.destroy();
@@ -74,7 +79,7 @@ it("test deep field reference destroy", function () {
 it("test deep field reference context destroy", function () {
     const ctx0 = new Reactive(0);
     const ctx1 = new Reactive(1);
-    const obj = new Reference<object | undefined>(undefined, ctx0);
+    const obj = new Reference<object | undefined, unknown>(undefined, ctx0);
     const field = new DeepFieldReference(v => new Reference(v), obj, ["test", "test2"], ctx1);
 
     expect(field.V).toBeUndefined();
@@ -120,15 +125,16 @@ it("test reactivity edge ref with subscriber", function () {
     (update as ((v: boolean) => void) | null)?.(true);
     expect(test).toBe(true);
     expect(edge.V).toBe(true);
-    edge.V = false;
+    edge.up(false);
     expect(test).toBe(false);
     ctx.destroy(0);
     expect(update).toBeNull();
 });
 
 it("test reference debounce update", function (done) {
+    const ctx = new Reactive(0);
     const ref = new Reference(0);
-    const debounce = new DebounceReference(v => new Reference(v), ref, 1);
+    const debounce = new DebounceReference(v => new Reference(v), ref, 1, ctx);
 
     expect(debounce.V).toBe(0);
     ref.V = 1;
@@ -140,8 +146,9 @@ it("test reference debounce update", function (done) {
 });
 
 it("test reference debounce update via debounce ref", function (done) {
+    const ctx = new Reactive(0);
     const ref = new Reference(0);
-    const debounce = new DebounceReference(v => new Reference(v), ref, 1);
+    const debounce = new DebounceReference(v => new Reference(v), ref, 1, ctx);
 
     expect(debounce.V).toBe(0);
     debounce.V = 1;
@@ -152,9 +159,24 @@ it("test reference debounce update via debounce ref", function (done) {
     }, 1);
 });
 
-it("test reference debounce destroy", function (done) {
+it("test reference debounce update via debounce ref (up)", function (done) {
+    const ctx = new Reactive(0);
     const ref = new Reference(0);
-    const debounce = new DebounceReference(v => new Reference(v), ref, 1);
+    const debounce = new DebounceReference(v => new Reference(v), ref, 1, ctx);
+
+    expect(debounce.V).toBe(0);
+    debounce.up(1);
+    expect(debounce.V).toBe(0);
+    setTimeout(() => {
+        expect(debounce.V).toBe(1);
+        done();
+    }, 1);
+});
+
+it("test reference debounce destroy", function (done) {
+    const ctx = new Reactive(0);
+    const ref = new Reference(0);
+    const debounce = new DebounceReference(v => new Reference(v), ref, 1, ctx);
 
     expect(debounce.V).toBe(0);
     ref.V = 1;

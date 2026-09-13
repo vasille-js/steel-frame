@@ -3,31 +3,31 @@ import { Destroyable } from "../core/destroyable.js";
 import { IValue } from "../core/ivalue.js";
 import { SyncedIValue } from "./synced.js";
 
-export class DebounceReference<T> extends SyncedIValue<T> implements Destroyable {
-    protected readonly target: IValue<T>;
+export class DebounceReference<T, Extra extends unknown> extends SyncedIValue<T, Extra> implements Destroyable {
+    protected readonly target: IValue<T, Extra>;
     protected readonly handler: (v: T) => void;
     protected timer: ReturnType<typeof setTimeout> | undefined;
 
     public constructor(
-        createRef: (v: T, ctx?: Reactive) => IValue<T>,
-        target: IValue<T>,
+        createRef: (v: T, ctx?: Reactive) => IValue<T, Extra>,
+        target: IValue<T, Extra>,
         delay: number,
-        ctx?: Reactive,
+        ctx: Reactive,
     ) {
         super(createRef(target.V, ctx), ctx);
 
         target.on(
-            (this.handler = (v: T) => {
+            (this.handler = (v: T, extra?: Extra) => {
                 clearTimeout(this.timer);
                 this.timer = setTimeout(() => {
-                    this.sync.V = v;
+                    this.sync.up(v, extra);
                 }, delay);
             }),
         );
         this.target = target;
 
         this.rDeep = target.sDeep;
-        if (ctx && ctx.sDeep > target.sDeep) {
+        if (ctx.sDeep > target.sDeep) {
             ctx.bind(this);
         }
     }
@@ -37,6 +37,10 @@ export class DebounceReference<T> extends SyncedIValue<T> implements Destroyable
     }
     public set V(value: T) {
         this.target.V = value;
+    }
+
+    public up(value: T, extra?: Extra): T {
+        return this.target.up(value, extra);
     }
 
     public destroy(): void {

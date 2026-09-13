@@ -5,7 +5,7 @@ import { SetView } from "../models/set-model.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
 import { Reference } from "../value/reference.js";
-import { inspector, provideId, StaticPosition, toDevObject } from "./inspectable.js";
+import { ExecutionPosition, inspector, provideId, StaticPosition, toDevObject } from "./inspectable.js";
 import { DevArrayModel, DevMapModel, DevSetModel } from "./models.js";
 import { DevFragment } from "./node.js";
 import { DevReference } from "./state.js";
@@ -21,14 +21,15 @@ export class DevArrayView<Node, Element, TagOptions extends object, T> extends A
     Node,
     Element,
     TagOptions,
-    IRunner<Node, Element, TagOptions>
+    IRunner<Node, Element, TagOptions>,
+    ExecutionPosition
 > {
     public readonly id: number;
 
     public constructor(
         runner: IRunner<Node, Element, TagOptions>,
         model: DevArrayModel<T>,
-        slot: (ctx: Fragment<Node, Element, TagOptions>, value: T, index: IValue<number>) => void,
+        slot: (ctx: Fragment<Node, Element, TagOptions>, value: T, index: IValue<number, ExecutionPosition>) => void,
         usage: StaticPosition,
         indexDeclaration?: StaticPosition,
     ) {
@@ -57,15 +58,20 @@ export class DevSinglePassArrayView<Node, Element, TagOptions extends object, T>
     Node,
     Element,
     TagOptions,
-    IRunner<Node, Element, TagOptions>
+    IRunner<Node, Element, TagOptions>,
+    ExecutionPosition
 > {
     public readonly id: number;
 
     public constructor(
         runner: IRunner<Node, Element, TagOptions>,
-        model: IValue<T[]>,
+        model: IValue<T[], ExecutionPosition>,
         key: (item: T) => number | string,
-        slot: (ctx: Fragment<Node, Element, TagOptions>, value: IValue<T>, index: IValue<number>) => void,
+        slot: (
+            ctx: Fragment<Node, Element, TagOptions>,
+            value: IValue<T, ExecutionPosition>,
+            index: IValue<number, ExecutionPosition>,
+        ) => void,
         usage: StaticPosition,
         valueDeclaration: StaticPosition | undefined,
         indexDeclaration: StaticPosition | undefined,
@@ -134,7 +140,7 @@ export class DevMapView<Node, Element, TagOptions extends object, K, T> extends 
     public constructor(
         runner: IRunner<Node, Element, TagOptions>,
         model: DevMapModel<K, T>,
-        slot: (ctx: Fragment<Node, Element, TagOptions>, value: IValue<T>, key: K) => void,
+        slot: (ctx: Fragment<Node, Element, TagOptions>, value: IValue<T, ExecutionPosition>, key: K) => void,
         usage: StaticPosition,
         valueDeclaration: StaticPosition | undefined,
     ) {

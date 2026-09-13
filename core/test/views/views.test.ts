@@ -20,11 +20,11 @@ it("array view", function () {
     const root = new App<Node, Element, TagOptions>(window.document.body, runner);
     const array = new ArrayModel<number>([1]);
     let element!: Element;
-    let view!: ArrayView<any, any, any, any, any>;
+    let view!: ArrayView<any, any, any, any, any, unknown>;
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
         tag.create(
-            (view = new ArrayView<number, Node, Element, TagOptions, typeof runner>(
+            (view = new ArrayView<number, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
                 array,
@@ -98,19 +98,26 @@ it("single pass array view", function () {
     const window = page();
     const runner = new Runner(window.document);
     const root = new App<Node, Element, TagOptions>(window.document.body, runner);
-    const array = new Reference<{ id: number; value: number }[]>([{ id: 0, value: 1 }]);
+    const array = new Reference<{ id: number; value: number }[], unknown>([{ id: 0, value: 1 }]);
     let element!: Element;
     let view!: Fragment<any, any, any>;
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
         tag.create(
-            (view = new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner>(
+            (view = new SinglePassArrayView<
+                { id: number; value: number },
+                Node,
+                Element,
+                TagOptions,
+                typeof runner,
+                unknown
+            >(
                 runner,
                 tag.sDeep + 1,
                 array,
                 item => item.id,
                 function (f, item, index) {
-                    f.text(new TestExpression((item, index) => `(${index}:${item.value})`, [item, index]));
+                    f.text(new TestExpression((item, index) => `(${index}:${item.value})`, [item, index], tag));
                 },
                 v => new Reference(v),
                 v => new Reference(v),
@@ -190,7 +197,7 @@ it("multiple text remount", function () {
     const window = page();
     const runner = new Runner(window.document);
     const root = new App<Node, Element, TagOptions>(window.document.body, runner);
-    const array = new Reference<{ id: number; value: number }[]>([
+    const array = new Reference<{ id: number; value: number }[], unknown>([
         { id: 0, value: 1 },
         { id: 10, value: 11 },
     ]);
@@ -198,7 +205,7 @@ it("multiple text remount", function () {
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
         tag.create(
-            new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner>(
+            new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
                 array,
@@ -206,9 +213,9 @@ it("multiple text remount", function () {
                 function (f, item, index) {
                     f.text(index);
                     f.text(":");
-                    f.text(new TestExpression(item => item.id, [item]));
+                    f.text(new TestExpression(item => item.id, [item], tag));
                     f.text("=");
-                    f.text(new TestExpression(item => item.value, [item]));
+                    f.text(new TestExpression(item => item.value, [item], tag));
                     f.text("|");
                 },
                 v => new Reference(v),
@@ -230,7 +237,7 @@ it("multiple tag remount", function () {
     const window = page();
     const runner = new Runner(window.document);
     const root = new App<Node, Element, TagOptions>(window.document.body, runner);
-    const array = new Reference<{ id: number; value: number }[]>([
+    const array = new Reference<{ id: number; value: number }[], unknown>([
         { id: 0, value: 1 },
         { id: 10, value: 11 },
     ]);
@@ -238,17 +245,17 @@ it("multiple tag remount", function () {
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
         tag.create(
-            new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner>(
+            new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
                 array,
                 item => item.id,
                 function (f, item, index) {
                     f.tag("div", {}, ctx => {
-                        ctx.text(new TestExpression(item => item.id, [item]));
+                        ctx.text(new TestExpression(item => item.id, [item], ctx));
                     });
                     f.tag("div", {}, ctx => {
-                        ctx.text(new TestExpression(item => item.value, [item]));
+                        ctx.text(new TestExpression(item => item.value, [item], ctx));
                     });
                 },
                 v => new Reference(v),
@@ -270,7 +277,7 @@ it("array view remount", function () {
     const window = page();
     const runner = new Runner(window.document);
     const root = new App<Node, Element, TagOptions>(window.document.body, runner);
-    const array = new Reference<{ id: number; value: number }[]>([
+    const array = new Reference<{ id: number; value: number }[], unknown>([
         { id: 0, value: 1 },
         { id: 10, value: 11 },
     ]);
@@ -278,7 +285,7 @@ it("array view remount", function () {
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
         tag.create(
-            new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner>(
+            new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
                 array,
@@ -290,7 +297,8 @@ it("array view remount", function () {
                             Node,
                             Element,
                             TagOptions,
-                            typeof runner
+                            typeof runner,
+                            unknown
                         >(
                             runner,
                             f.sDeep + 1,
@@ -298,10 +306,10 @@ it("array view remount", function () {
                             i => i.id,
                             function (f, item, index) {
                                 f.tag("div", {}, ctx => {
-                                    ctx.text(new TestExpression(item => item.id, [item]));
+                                    ctx.text(new TestExpression(item => item.id, [item], ctx));
                                 });
                                 f.tag("div", {}, ctx => {
-                                    ctx.text(new TestExpression(item => item.value, [item]));
+                                    ctx.text(new TestExpression(item => item.value, [item], ctx));
                                 });
                             },
                             v => new Reference(v),
@@ -378,7 +386,7 @@ it("map view remount", function () {
     const window = page();
     const runner = new Runner(window.document);
     const root = new App<Node, Element, TagOptions>(window.document.body, runner);
-    const array = new Reference<{ id: number; value: number }[]>([
+    const array = new Reference<{ id: number; value: number }[], unknown>([
         { id: 0, value: 1 },
         { id: 10, value: 11 },
     ]);
@@ -386,7 +394,7 @@ it("map view remount", function () {
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
         tag.create(
-            new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner>(
+            new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
                 array,
@@ -510,7 +518,7 @@ it("set view remount", function () {
     const window = page();
     const runner = new Runner(window.document);
     const root = new App<Node, Element, TagOptions>(window.document.body, runner);
-    const array = new Reference<{ id: number; value: number }[]>([
+    const array = new Reference<{ id: number; value: number }[], unknown>([
         { id: 0, value: 1 },
         { id: 10, value: 11 },
     ]);
@@ -518,7 +526,7 @@ it("set view remount", function () {
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
         tag.create(
-            new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner>(
+            new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
                 array,

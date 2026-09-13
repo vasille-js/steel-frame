@@ -13,7 +13,7 @@ export function removeClass(node: Tag<Node, Element, object>, cl: string) {
 export class StaticClassBinding extends Binding<boolean> {
     private current = false;
 
-    constructor(node: Tag<Node, Element, object>, name: string, value: IValue<boolean>) {
+    constructor(node: Tag<Node, Element, object>, name: string, value: IValue<boolean, unknown>) {
         super(value);
         this.init((value: boolean) => {
             if (value !== this.current) {
@@ -31,7 +31,7 @@ export class StaticClassBinding extends Binding<boolean> {
 export class DynamicalClassBinding extends Binding<string> {
     private current = "";
 
-    constructor(node: Tag<Node, Element, object>, value: IValue<string>) {
+    constructor(node: Tag<Node, Element, object>, value: IValue<string, unknown>) {
         super(value);
         this.init((value: string) => {
             /* istanbul ignore else */

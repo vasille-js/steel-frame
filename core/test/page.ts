@@ -16,8 +16,8 @@ export function page() {
     return page.window;
 }
 
-export class TestExpression<T, Args extends unknown[]> extends Expression<T, Args> {
-    public constructor(func: (...args: Args) => T, values: KindOfIValue<Args>, ctx?: Reactive) {
+export class TestExpression<T, Args extends unknown[]> extends Expression<T, Args, unknown> {
+    public constructor(func: (...args: Args) => T, values: KindOfIValue<Args, unknown>, ctx: Reactive) {
         super(func, args => new Reference(func.apply(null, args)), values, ctx);
     }
 }

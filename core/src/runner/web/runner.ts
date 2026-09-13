@@ -6,14 +6,20 @@ import { addClass, DynamicalClassBinding, removeClass, StaticClassBinding } from
 import { PropertyBinding } from "./binding/property.js";
 import { stringifyStyleValue, StyleBinding } from "./binding/style.js";
 
-export type AttrType<T> = IValue<T | string | null> | T | string | null | undefined;
-export type StyleType<T> = T | number | number[] | IValue<string | number | number[] | undefined> | undefined;
+export type AttrType<T> = IValue<T | string | null, unknown> | T | string | null | undefined;
+export type StyleType<T> = T | number | number[] | IValue<string | number | number[] | undefined, unknown> | undefined;
 
 export interface TagOptions {
     /** attributes */
     a?: Record<string, AttrType<number | boolean>>;
     /** classes */
-    c?: (string | CssStyleInjector | IValue<string> | Record<string, boolean | IValue<boolean>> | undefined)[];
+    c?: (
+        | string
+        | CssStyleInjector
+        | IValue<string, unknown>
+        | Record<string, boolean | IValue<boolean, unknown>>
+        | undefined
+    )[];
     /** style */
     s?: Record<string, StyleType<string>>;
     /** events */

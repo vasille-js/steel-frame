@@ -28,7 +28,7 @@ export class StyleBinding extends Binding<string | number | number[] | undefined
     public constructor(
         node: Tag<Node, Element, object>,
         name: string,
-        value: IValue<string | number | number[] | undefined>,
+        value: IValue<string | number | number[] | undefined, unknown>,
     ) {
         super(value);
         this.init(value => {

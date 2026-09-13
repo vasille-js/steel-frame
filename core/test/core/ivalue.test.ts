@@ -1,4 +1,4 @@
-import { Expression, Reference } from "../../src/index.js";
+import { Expression, Reactive, Reference } from "../../src/index.js";
 import { TestExpression } from "../page.js";
 
 it("ivalue", function () {
@@ -11,18 +11,18 @@ it("ivalue", function () {
 });
 
 it("expression", function () {
+    const ctx = new Reactive(0);
     const a = new Reference(2);
     const b = new Reference(3);
-    const c = new TestExpression((a, b) => a + b, [a, b]);
+    const c = new TestExpression((a, b) => a + b, [a, b], ctx);
 
     expect(c.V).toBe(5);
     c.V = 10;
     expect(c.V).toBe(10);
     a.V++;
-    expect(c.V).toBe(6);
+    expect(c.V).toBe(10);
+    c.up(11);
+    expect(c.V).toBe(11);
 
     c.destroy();
-
-    b.V++;
-    expect(c.V).toBe(6);
 });

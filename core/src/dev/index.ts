@@ -5,7 +5,6 @@ export {
     type DevValue,
     type Inspectable,
     type InspectableReactive,
-    type InspectableReference,
     type Inspector,
     type StaticPosition,
     type ExecutionPosition,
@@ -77,9 +76,11 @@ export {
 export {
     BaseDevReference,
     DevExpression,
-    DevIValue,
     DevReference,
     ExpressionDevReference,
-    type KindOfDevIValue,
+    DevDebounceReference,
+    DevDeepFieldReference,
+    DevEdgeReference,
+    DevSingleFieldReference,
 } from "./state.js";
 export { DevArrayView, DevMapView, DevSetView, DevSinglePassArrayView } from "./views.js";

@@ -56,10 +56,11 @@ it("import test", function () {
     );
     const fragment = new Fragment(runner, 1);
     const app = new App<Node, Element, TagOptions>(window.document.body, runner);
-    const expr = new Expression(
+    const expr = new Expression<number, [number], unknown>(
         v => v,
         v => new Reference(v[0]),
         [ref],
+        app,
     );
     const portal = new Portal<Node, Element, TagOptions>({ node: window.document.body }, runner, 1);
     const watch = new Watch({ model: ref }, runner, 1);
