@@ -4,15 +4,7 @@ import { ArrayModel } from "../models/array-model.js";
 import { MapModel } from "../models/map-model.js";
 import { SetModel } from "../models/set-model.js";
 import { DevReactive } from "./core.js";
-import {
-    DevValue,
-    inspector,
-    Inspector,
-    provideId,
-    StaticPosition,
-    toDevIdOrValue,
-    toDevValue,
-} from "./inspectable.js";
+import { inspector, provideId, StaticPosition, toDevValue } from "./inspectable.js";
 
 export class DevArrayModel<T> extends ArrayModel<T> implements Destroyable {
     public readonly id: number;

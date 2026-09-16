@@ -29,7 +29,9 @@ export interface TagOptions {
     /** slot */
     l?: (ctx: Tag<typeof this, Runner<typeof this>>) => void;
     /** callback */
-    k?: (node: Element) => void;
+    k?: (node: Element) => void | Element | (() => void);
+    /** run on destroy */
+    d?: () => void;
 }
 
 export class TextNode<Options extends TagOptions, RunnerT extends Runner<Options>> extends AbstractTextNode<
@@ -85,17 +87,28 @@ export class Tag<Options extends TagOptions, RunnerT extends Runner<Options>> ex
     RunnerT
 > {
     public compose(): void {
-        if (!this.name) {
+        const name = this.name;
+
+        if (!name) {
             throw internalError("wrong Tag constructor call");
         }
 
-        const node = this.runner.document.createElement(this.name);
+        const node = this.runner.document.createElement(name);
+        const options = this.options;
 
         this.node = node;
-        this.applyOptions(this.options);
+        this.applyOptions(options);
         this.parent.appendNode(node);
-        this.options.l?.(this);
-        this.options.k?.(this.node);
+        options.l?.(this);
+
+        const destructor = options.k?.(node);
+
+        if (typeof destructor === "function") {
+            this.runOnDestroy(destructor);
+        }
+        if (options.d) {
+            this.runOnDestroy(options.d);
+        }
     }
 
     public override destroy(deep: number, keepNodes?: boolean) {
