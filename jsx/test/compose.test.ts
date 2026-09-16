@@ -34,12 +34,18 @@ it("MVVM test", function () {
     const body = window.document.body;
     let div!: Element;
 
-    mount(body, mvvm, node.runner, { callback: node => (div = node?.div as Element) });
+    mount(body, mvvm, node.runner, {
+        callback: node => {
+            div = node?.div as Element;
+        },
+    });
     expect(div).toBeInstanceOf(window.Element);
     expect(div.children.length).toBe(0);
 
     mount(body, mvvm, node.runner, {
-        callback: node => (div = node?.div as Element),
+        callback: node => {
+            div = node?.div as Element;
+        },
         slot(f: Fragment<Node, Element, object>) {
             f.tag("div", { c: ["1"] });
         },

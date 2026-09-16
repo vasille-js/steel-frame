@@ -5,7 +5,10 @@ export interface CompositionProps {
 }
 
 export type Composed<Node, Element, TagOptions extends object, In extends CompositionProps, Out> = (
-    $: In & { callback?(data: Out | undefined): void },
+    $: In & {
+        callback?(data: Out): void | (() => void);
+        runOnDestroy?(): void;
+    },
     node?: Fragment<Node, Element, TagOptions>,
     slot?: In["slot"],
 ) => void;
@@ -14,7 +17,7 @@ export function view<Node, Element, TagOptions extends object, In extends Compos
     renderer: (node: Fragment<Node, Element, TagOptions>, input: In) => Out,
 ): Composed<Node, Element, TagOptions, In, Out> {
     return function (props, node, slot) {
-        const { callback } = props;
+        const { callback, runOnDestroy } = props;
 
         if (!node) {
             throw new Error("Vasille: Component context is missing");
@@ -30,10 +33,18 @@ export function view<Node, Element, TagOptions extends object, In extends Compos
             const result = renderer(frag, props);
 
             if (result !== undefined && result !== null && callback) {
-                callback(result);
+                const onDestroy = callback(result);
+
+                if (onDestroy) {
+                    frag.runOnDestroy(onDestroy);
+                }
             }
         } catch (e) {
             reportError(e);
+        }
+
+        if (runOnDestroy) {
+            frag.runOnDestroy(runOnDestroy);
         }
     };
 }
