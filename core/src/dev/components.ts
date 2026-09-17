@@ -1,12 +1,15 @@
-import { App, Portal, PortalOptions } from "../node/app.js";
+import { IValue } from "../core/ivalue.js";
+import { App, Portal } from "../node/app.js";
 import { Fragment, SwitchedNode, SwitchedNodeCase } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
 import { Watch, WatchOptions } from "../node/watch.js";
+import { Zombie } from "../node/zombie.js";
 import {
     DevValue,
     inspector,
     provideId,
     StaticPosition,
+    toDevId,
     toDevIdOrValue,
     toDevObject,
     toDevValue,
@@ -14,6 +17,8 @@ import {
 import { DevFragment } from "./node.js";
 
 export class DevWatch<Node, Element, TagOptions extends object, T> extends Watch<Node, Element, TagOptions, T> {
+    public readonly id: number;
+
     public constructor(
         input: WatchOptions<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, T>,
         runner: IRunner<Node, Element, TagOptions>,
@@ -22,7 +27,7 @@ export class DevWatch<Node, Element, TagOptions extends object, T> extends Watch
         super(input, runner, 1);
         this.rDeep = 0;
 
-        const id = provideId();
+        const id = (this.id = provideId());
 
         inspector.createComponent({
             id: id,
@@ -31,18 +36,21 @@ export class DevWatch<Node, Element, TagOptions extends object, T> extends Watch
             props: toDevObject(input),
             time: Date.now(),
         });
+    }
 
-        this.runOnDestroy(() => {
-            inspector.destroy({ id, time: Date.now() });
-        });
+    public override destroy(deep: number, keepNodes?: boolean): void {
+        inspector.destroy({ id: this.id, time: Date.now() });
+        super.destroy(deep, keepNodes);
     }
 }
 
 export class DevApp<Node, Element, TagOptions extends object> extends App<Node, Element, TagOptions> {
+    public readonly id: number;
+
     public constructor(node: Element, runner: IRunner<Node, Element, TagOptions>) {
         super(node, runner);
 
-        const id = provideId();
+        const id = (this.id = provideId());
 
         inspector.createComponent({
             id: id,
@@ -50,10 +58,11 @@ export class DevApp<Node, Element, TagOptions extends object> extends App<Node, 
             props: {},
             time: Date.now(),
         });
+    }
 
-        this.runOnDestroy(() => {
-            inspector.destroy({ id, time: Date.now() });
-        });
+    public override destroy(deep: number, keepNodes?: boolean): void {
+        inspector.destroy({ id: this.id, time: Date.now() });
+        super.destroy(deep, keepNodes);
     }
 }
 
@@ -66,13 +75,13 @@ export class DevPortal<
     public readonly id: number;
 
     constructor(
-        input: PortalOptions<Node, Element, TagOptions, Runner>,
+        node: Element,
         runner: Runner,
         declaration: StaticPosition | undefined,
         usage: StaticPosition | undefined,
         name: string | undefined,
     ) {
-        super(input, runner, 1);
+        super(node, runner, 1);
         this.rDeep = 0;
 
         const id = (this.id = provideId());
@@ -85,10 +94,11 @@ export class DevPortal<
             usage: usage,
             time: Date.now(),
         });
+    }
 
-        this.runOnDestroy(() => {
-            inspector.destroy({ id, time: Date.now() });
-        });
+    public override destroy(deep: number) {
+        inspector.destroy({ id: this.id, time: Date.now() });
+        super.destroy(deep);
     }
 }
 
@@ -109,14 +119,13 @@ export class DevSwitchedNode<Node, Element, TagOptions extends object> extends S
         super(runner, 1, cases, _default);
         this.rDeep = 0;
 
-        const id = provideId();
+        const id = (this.id = provideId());
         const conditions: { [k: number]: number | DevValue } = {};
 
         cases.forEach((_case, index) => {
             conditions[index] = _case.slot === _default ? toDevValue(true) : toDevIdOrValue(_case.$case);
         });
 
-        this.id = id;
         inspector.createComponent({
             id: id,
             name: "Switch",
@@ -135,5 +144,41 @@ export class DevSwitchedNode<Node, Element, TagOptions extends object> extends S
         index: number,
     ): Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>> {
         return new DevFragment(this.runner, null, null, "Case", { index });
+    }
+}
+
+export class DevZombie<Node, Element, TagOptions extends object> extends Zombie<
+    Node,
+    Element,
+    TagOptions,
+    IRunner<Node, Element, TagOptions>
+> {
+    public readonly id: number;
+
+    public constructor(
+        usage: StaticPosition,
+        runner: IRunner<Node, Element, TagOptions>,
+        time: IValue<number, unknown>,
+        trigger: () => void,
+    ) {
+        super(runner, time, trigger);
+
+        const id = (this.id = provideId());
+
+        inspector.createComponent({
+            id: id,
+            name: "Switch",
+            props: {
+                time: toDevIdOrValue(time),
+                trigger: toDevValue(trigger),
+            },
+            usage: usage,
+            time: Date.now(),
+        });
+    }
+
+    public override destroy(deep: number, keepNodes?: boolean): void {
+        inspector.destroy({ id: this.id, time: Date.now() });
+        super.destroy(deep, keepNodes);
     }
 }

@@ -8,12 +8,9 @@ class MyApp extends App<Node, Element, TagOptions> {
     public compose() {
         this.tag("div", { k: node => (this.div = node as HTMLDivElement) });
 
-        this.create(
-            new Portal<Node, Element, TagOptions>({ node: this.div }, this.runner, this.sDeep + 1),
-            function (f) {
-                f.tag("span", {});
-            },
-        );
+        this.child(new Portal<Node, Element, TagOptions>(this.div, this.runner, this.sDeep + 1), function (f) {
+            f.tag("span", {});
+        });
     }
 }
 

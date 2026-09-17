@@ -30,16 +30,6 @@ export class App<
     }
 }
 
-export interface PortalOptions<
-    Node,
-    Element,
-    TagOptions extends object,
-    Runner extends IRunner<Node, Element, TagOptions>,
-> {
-    node: Element;
-    slot?: (ctx: Fragment<Node, Element, TagOptions, Runner>) => void;
-}
-
 export class Portal<
     Node,
     Element,
@@ -48,13 +38,21 @@ export class Portal<
 > extends Fragment<Node, Element, TagOptions, Runner> {
     private readonly node: Element;
 
-    constructor(input: PortalOptions<Node, Element, TagOptions, Runner>, runner: Runner, deep: number) {
+    constructor(node: Element, runner: Runner, deep: number) {
         super(runner, deep);
 
-        this.node = input.node;
+        this.node = node;
+    }
+
+    public override compose() {
+        this.refreshDeep(0);
     }
 
     public override appendNode(node: Node) {
         this.runner.appendChild(this.node, node);
+    }
+
+    public override destroy(deep: number) {
+        super.destroy(deep);
     }
 }

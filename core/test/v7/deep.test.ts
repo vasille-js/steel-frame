@@ -45,18 +45,18 @@ class MyApp extends App<Node, Element, TagOptions> {
     public compose(triple?: boolean, runOnDestroy?: () => void) {
         this.tag("div", { k: node => (this.div = node as HTMLDivElement) });
 
-        this.create(new Fragment<Node, Element, TagOptions>(this.runner, this.sDeep + 1), ctx => {
+        this.child(new Fragment<Node, Element, TagOptions>(this.runner, this.sDeep + 1), ctx => {
             this.frag_1 = ctx;
             this.ref_1 = new Reference(1, ctx);
             this.expr_1 = new TestExpression(n => n, [this.ref_1], ctx);
 
-            ctx.create(new Fragment<Node, Element, TagOptions>(this.runner, ctx.sDeep + 1), ctx => {
+            ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.sDeep + 1), ctx => {
                 this.frag_1_1 = ctx;
                 this.ref_1_1 = new Reference(11, ctx);
                 this.expr_1_1 = new TestExpression((n, m) => n + m, [this.ref_1_1, this.ref_1], ctx);
 
                 if (triple) {
-                    ctx.create(new Fragment<Node, Element, TagOptions>(this.runner, ctx.sDeep + 1), ctx => {
+                    ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.sDeep + 1), ctx => {
                         this.frag_1_1_1 = ctx;
                         this.ref_1_1_1 = new Reference(111, ctx);
                         this.expr_1_1_1 = new TestExpression((n, m) => n, [this.ref_1_1_1, this.expr_1_1], ctx);
@@ -67,7 +67,7 @@ class MyApp extends App<Node, Element, TagOptions> {
                 }
             });
         });
-        this.create(new Fragment<Node, Element, TagOptions>(this.runner, this.sDeep + 1), ctx => {
+        this.child(new Fragment<Node, Element, TagOptions>(this.runner, this.sDeep + 1), ctx => {
             this.frag_2 = ctx;
             this.ref_2 = new Reference(2, ctx);
 
@@ -75,7 +75,7 @@ class MyApp extends App<Node, Element, TagOptions> {
                 this.expr_2 = new TestExpression((n, m) => n + m, [this.ref_0, this.ref_2], ctx);
             }
 
-            ctx.create(new Fragment<Node, Element, TagOptions>(this.runner, ctx.sDeep + 1), ctx => {
+            ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.sDeep + 1), ctx => {
                 this.frag_2_1 = ctx;
                 this.ref_2_1 = new Reference(21, ctx);
 
@@ -84,7 +84,7 @@ class MyApp extends App<Node, Element, TagOptions> {
                 }
 
                 if (triple) {
-                    ctx.create(new Fragment<Node, Element, TagOptions>(this.runner, ctx.sDeep + 1), ctx => {
+                    ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.sDeep + 1), ctx => {
                         this.frag_2_1_1 = ctx;
                         this.ref_2_1_1 = new Reference(211, ctx);
                         this.expr_2_1_1 = new TestExpression((n, m) => n + m, [this.ref_0, this.ref_2_1_1], ctx);
@@ -214,7 +214,7 @@ it("destroys array view", () => {
     const ref = new Reference(0);
 
     root.tag("div", {}, function (tag) {
-        tag.create(
+        tag.child(
             new ArrayView<number, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
@@ -240,7 +240,7 @@ it("destroys switched node", () => {
     const ref = new Reference(0);
 
     root.tag("div", {}, function (tag) {
-        tag.create(
+        tag.child(
             new SwitchedNode<Node, Element, TagOptions, typeof runner>(runner, tag.sDeep + 1, [
                 {
                     $case: new TestExpression(n => n === 1, [ref], tag),
@@ -264,7 +264,7 @@ it("destroys watch node", () => {
     const ref = new Reference(0);
 
     root.tag("div", {}, function (tag) {
-        tag.create(
+        tag.child(
             new Watch<Node, Element, TagOptions, number, typeof runner>(
                 {
                     model: ref,

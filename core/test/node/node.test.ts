@@ -17,7 +17,7 @@ it("Fragment", function () {
     const runner = new Runner(window.document);
     const root = new App<Node, Element, TagOptions>(window.document.body, runner);
 
-    root.create(new FragmentTest(runner, 1));
+    root.child(new FragmentTest(runner, 1));
     expect(root.children.length).toBe(1);
     expect(compose).toBe(true);
 
@@ -59,7 +59,7 @@ it("if", function () {
     let check1 = false;
     let check2 = true;
 
-    root.create(
+    root.child(
         new SwitchedNode<Node, Element, TagOptions>(root.runner, root.sDeep + 1, [
             {
                 $case: new Reference(true),
@@ -70,7 +70,7 @@ it("if", function () {
             },
         ]),
     );
-    root.create(
+    root.child(
         new SwitchedNode<Node, Element, TagOptions>(root.runner, root.sDeep + 1, [
             {
                 $case: new Reference(false),
@@ -93,7 +93,7 @@ it("if else", function () {
     let check1 = 1,
         check2 = 1;
 
-    root.create(
+    root.child(
         new SwitchedNode<Node, Element, TagOptions>(
             root.runner,
             root.sDeep + 1,
@@ -102,7 +102,7 @@ it("if else", function () {
         ),
     );
 
-    root.create(
+    root.child(
         new SwitchedNode<Node, Element, TagOptions>(
             root.runner,
             root.sDeep + 1,
@@ -130,7 +130,7 @@ it("switch", function () {
     const v2 = new Reference(false);
     let check = 0;
 
-    root.create(
+    root.child(
         new SwitchedNode<Node, Element, TagOptions>(
             root.runner,
             root.sDeep + 1,
@@ -165,7 +165,7 @@ it("INode", function () {
     const runner = new Runner(window.document);
     const root = new App<Node, Element, TagOptions>(window.document.body, runner);
 
-    root.create(new Fragment<Node, Element, TagOptions>(runner, 1), function (test) {
+    root.child(new Fragment<Node, Element, TagOptions>(runner, 1), function (test) {
         // attr
         (function () {
             const attrName = "data-attr";
@@ -411,7 +411,7 @@ it("Insert adjacent", function () {
     const bool = new Reference(true);
 
     root.tag("div", {}, function (node) {
-        node.create(
+        node.child(
             new SwitchedNode<Node, Element, TagOptions>(node.runner, node.sDeep + 1, [
                 {
                     $case: bool,
@@ -434,7 +434,7 @@ it("Find first child of tag", function () {
     const bool = new Reference(true);
 
     root.tag("div", {}, function (node) {
-        node.create(
+        node.child(
             new SwitchedNode<Node, Element, TagOptions>(node.runner, node.sDeep + 1, [
                 {
                     $case: bool,
@@ -444,7 +444,7 @@ it("Find first child of tag", function () {
                 },
             ]),
         );
-        node.create(new Fragment<Node, Element, TagOptions>(runner, node.sDeep + 1), node => {
+        node.child(new Fragment<Node, Element, TagOptions>(runner, node.sDeep + 1), node => {
             node.tag("span", {});
         });
 

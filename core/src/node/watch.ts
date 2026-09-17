@@ -51,10 +51,10 @@ export class Watch<
         }
     }
 
-    public override destroy(deep: number) {
+    public override destroy(deep: number, keepNodes?: boolean) {
         if (this.handler && this.model.rDeep < deep) {
             this.model.off(this.handler);
         }
-        super.destroy(deep);
+        super.destroy(deep, keepNodes);
     }
 }

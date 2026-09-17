@@ -23,7 +23,7 @@ it("array view", function () {
     let view!: ArrayView<any, any, any, any, any, unknown>;
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
-        tag.create(
+        tag.child(
             (view = new ArrayView<number, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
@@ -103,7 +103,7 @@ it("single pass array view", function () {
     let view!: Fragment<any, any, any>;
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
-        tag.create(
+        tag.child(
             (view = new SinglePassArrayView<
                 { id: number; value: number },
                 Node,
@@ -204,7 +204,7 @@ it("multiple text remount", function () {
     let element!: Element;
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
-        tag.create(
+        tag.child(
             new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
@@ -244,7 +244,7 @@ it("multiple tag remount", function () {
     let element!: Element;
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
-        tag.create(
+        tag.child(
             new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
@@ -284,14 +284,14 @@ it("array view remount", function () {
     let element!: Element;
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
-        tag.create(
+        tag.child(
             new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
                 array,
                 item => item.id,
                 function (f, item, index) {
-                    f.create(
+                    f.child(
                         new SinglePassArrayView<
                             { id: number; value: number },
                             Node,
@@ -346,7 +346,7 @@ it("map view", function () {
     let view!: Fragment<any, any, any>;
 
     root.tag("div", { k: node => (element = node as HTMLElement) }, function (tag) {
-        tag.create(
+        tag.child(
             (view = new MapView<number, number, Node, Element, TagOptions, typeof runner>(
                 runner,
                 tag.sDeep + 1,
@@ -393,14 +393,14 @@ it("map view remount", function () {
     let element!: Element;
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
-        tag.create(
+        tag.child(
             new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
                 array,
                 item => item.id,
                 function (f, item) {
-                    f.create(
+                    f.child(
                         new MapView<number, number, Node, Element, TagOptions, typeof runner>(
                             runner,
                             f.sDeep + 1,
@@ -442,7 +442,7 @@ it("set view", function () {
     let view!: Fragment<any, any, any>;
 
     root.tag("div", { k: node => (element = node as HTMLElement) }, function (f) {
-        f.create(
+        f.child(
             (view = new SetView<number, Node, Element, TagOptions, typeof runner>(
                 runner,
                 f.sDeep + 1,
@@ -483,7 +483,7 @@ it("view timeout test", function (done) {
     let element!: HTMLElement;
 
     root.tag("div", { k: node => (element = node as HTMLElement) }, function (f) {
-        f.create(
+        f.child(
             new SetView<number, Node, Element, TagOptions, typeof runner>(
                 runner,
                 f.sDeep + 1,
@@ -525,14 +525,14 @@ it("set view remount", function () {
     let element!: Element;
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
-        tag.create(
+        tag.child(
             new SinglePassArrayView<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
                 array,
                 item => item.id,
                 function (f, item) {
-                    f.create(
+                    f.child(
                         new SetView<number, Node, Element, TagOptions, typeof runner>(
                             runner,
                             f.sDeep + 1,

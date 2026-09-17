@@ -9,12 +9,12 @@ it("Watch Test", function () {
     const body = window.document.body;
     const root = new App<Node, Element, TagOptions>(body, runner);
 
-    root.create(
+    root.child(
         new Watch<Node, Element, TagOptions, boolean>(
             {
                 model,
                 slot: function (node, input) {
-                    node.create(new Fragment<Node, Element, TagOptions>(runner, root.sDeep + 1), ctx => {
+                    node.child(new Fragment<Node, Element, TagOptions>(runner, root.sDeep + 1), ctx => {
                         ctx.tag("div", {}, ctx => {
                             ctx.text(input);
                         });
@@ -26,7 +26,7 @@ it("Watch Test", function () {
         ),
     );
 
-    root.create(new Watch<Node, Element, TagOptions, boolean>({ model }, runner, root.sDeep + 1));
+    root.child(new Watch<Node, Element, TagOptions, boolean>({ model }, runner, root.sDeep + 1));
 
     expect(body.children.length).toBe(1);
     expect(body.children[0]!.innerHTML).toBe("false");

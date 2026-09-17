@@ -8,6 +8,7 @@ export { MapModel, MapView } from "./models/map-model.js";
 export { SetModel, SetView } from "./models/set-model.js";
 export { App, Portal } from "./node/app.js";
 export { Fragment, Tag, TextNode, SwitchedNode } from "./node/node.js";
+export { Zombie } from "./node/zombie.js";
 export { Expression, type KindOfIValue } from "./value/expression.js";
 export { Reference } from "./value/reference.js";
 export { DebounceReference } from "./value/debounce.js";

@@ -100,7 +100,7 @@ export abstract class Root<
      * @param node {Fragment} vasille element to insert
      * @param callback {function($ : *)}
      */
-    public create<T extends Fragment<Node, Element, TagOptions>>(node: T, callback?: (ctx: T) => void): void {
+    public child<T extends Fragment<Node, Element, TagOptions>>(node: T, callback?: (ctx: T) => void): void {
         this.push(node);
         node.compose();
         callback?.(node);
@@ -278,7 +278,7 @@ export abstract class TextNode<
 /**
  * Represents an Vasille.js HTML element node
  * @class Tag
- * @extends INode
+ * @extends Fragment
  */
 export abstract class Tag<
     Node,
