@@ -14,8 +14,8 @@
     "prettier": "prettier src test/**/*.tsx test/**/*.ts test/run-test.ts --write",
     "prebuild": "rm -rf lib types",
     "build": "tsc --build tsconfig.json",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
-    "test-coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test-coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "type": "module",
   "repository": {
@@ -52,7 +52,6 @@
     "@types/node": "^24.3.0",
     "babel-jest": "^30.1.2",
     "babel-plugin-vasille": "file:../babel-plugin",
-    "cross-env": "^10.0.0",
     "jest": "^30.3.0",
     "prettier": "^3.6.2",
     "steel-frame": "file:../steel-frame",

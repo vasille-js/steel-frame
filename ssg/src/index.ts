@@ -1,6 +1,6 @@
 import { Fragment, Portal } from "vasille";
 import { Runner, Node, Element, type TagOptions } from "./runner.js";
-import { view } from "steel-frame";
+import { view } from "vasille-jsx";
 
 export { safe } from "vasille";
 export {
