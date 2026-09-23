@@ -1,5 +1,6 @@
 import { Fragment, Portal } from "vasille";
 import { Runner, Node, Element, type TagOptions } from "./runner.js";
+import { view } from "steel-frame";
 
 export { safe } from "vasille";
 export {
@@ -22,10 +23,21 @@ export {
     Switch,
     setErrorHandler,
     match,
+    view,
+    debounceRef,
+    edgeRef,
+    toDeepFieldRef,
+    toFieldRef,
+    safeRef,
+    safeExpr,
+    safeInit,
+    abortSignal,
+    // no zombies in SSG
+    Slot as Zombie,
 } from "vasille-jsx";
 
 export { styleSheet } from "./css.js";
-export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth } from "./css.js";
+export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth } from "vasille-css";
 
 export { context, impute, receive, share } from "vasille-context";
 
@@ -46,45 +58,28 @@ interface CompositionProps {
     slot?: (...args: any[]) => void;
 }
 
-export function view<In extends CompositionProps>(
-    renderer: (node: Fragment<Node, Element, TagOptions>, input: In) => void,
-) {
-    return (props: In, node?: Fragment<Node, Element, TagOptions>, slot?: In["slot"]) => {
-        if (!node) {
-            throw new Error("Vasille: Component context is missing");
-        }
-        const frag = new Fragment<Node, Element, TagOptions>(node.runner);
-
-        if (slot) {
-            props.slot = slot;
-        }
-
-        node.create(frag);
-        renderer(frag, props);
-    };
-}
-
 export const component = view;
 export const compose = view;
 
 export function modal<T extends CompositionProps>(
-    modal: (node: Fragment<Node, Element, TagOptions>, input: T) => void,
-): (input: T, node: Fragment<Node, Element, TagOptions>) => void {
+    modal: (node: Fragment<Node, Element, TagOptions, Runner>, input: T) => void,
+): (input: T, node: Fragment<Node, Element, TagOptions, Runner>) => void {
     return function (props, node) {
         if (!node) {
             throw new Error("Vasille: Modal context is missing");
         }
-        const runner: Runner = node.runner as Runner;
-        const portal = new Portal<Node, Element, TagOptions>({ node: runner.body }, runner);
+        const runner: Runner = node.runner;
+        const portal = new Portal<Node, Element, TagOptions, Runner>(runner.body, runner, node.sDeep + 1);
 
-        node.create(portal);
+        node.child(portal);
         modal(portal, props);
     };
 }
 
 // no prompts support in SSG
-export function prompt(): () => void {
+export function prompt(compose: () => void): () => void {
     return function () {
+        compose();
         throw new Error("User input is not supported in SSG");
     };
 }

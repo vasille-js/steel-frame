@@ -11,10 +11,20 @@ import {
     StaticPosition,
     toDevId,
     toDevIdOrValue,
-    toDevObject,
+    processDevObject,
     toDevValue,
 } from "./inspectable.js";
 import { DevFragment } from "./node.js";
+
+export function processComponentProps(id: number, props: object): void {
+    processDevObject(props, (field, value) => {
+        inspector.componentProperty({
+            id: id,
+            name: field,
+            value: toDevIdOrValue(value),
+        });
+    });
+}
 
 export class DevWatch<Node, Element, TagOptions extends object, T> extends Watch<Node, Element, TagOptions, T> {
     public readonly id: number;
@@ -33,9 +43,9 @@ export class DevWatch<Node, Element, TagOptions extends object, T> extends Watch
             id: id,
             usage: usage,
             name: "Watch",
-            props: toDevObject(input),
             time: Date.now(),
         });
+        processComponentProps(id, input);
     }
 
     public override destroy(deep: number, keepNodes?: boolean): void {
@@ -55,7 +65,6 @@ export class DevApp<Node, Element, TagOptions extends object> extends App<Node, 
         inspector.createComponent({
             id: id,
             name: "App",
-            props: {},
             time: Date.now(),
         });
     }
@@ -89,7 +98,6 @@ export class DevPortal<
         inspector.createComponent({
             id: id,
             name: name ?? "Portal",
-            props: {},
             declaration: declaration,
             usage: usage,
             time: Date.now(),
@@ -129,10 +137,10 @@ export class DevSwitchedNode<Node, Element, TagOptions extends object> extends S
         inspector.createComponent({
             id: id,
             name: "Switch",
-            props: conditions,
             usage: usage,
             time: Date.now(),
         });
+        processComponentProps(id, conditions);
     }
 
     public override destroy(deep: number, keepNodes?: boolean): void {
@@ -168,13 +176,10 @@ export class DevZombie<Node, Element, TagOptions extends object> extends Zombie<
         inspector.createComponent({
             id: id,
             name: "Switch",
-            props: {
-                time: toDevIdOrValue(time),
-                trigger: toDevValue(trigger),
-            },
             usage: usage,
             time: Date.now(),
         });
+        processComponentProps(id, { time, trigger });
     }
 
     public override destroy(deep: number, keepNodes?: boolean): void {

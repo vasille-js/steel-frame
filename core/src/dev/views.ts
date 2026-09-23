@@ -5,7 +5,8 @@ import { SetView } from "../models/set-model.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
 import { Reference } from "../value/reference.js";
-import { ExecutionPosition, inspector, provideId, StaticPosition, toDevObject } from "./inspectable.js";
+import { processComponentProps } from "./components.js";
+import { ExecutionPosition, inspector, provideId, StaticPosition, processDevObject } from "./inspectable.js";
 import { DevArrayModel, DevMapModel, DevSetModel } from "./models.js";
 import { DevFragment } from "./node.js";
 import { DevReference } from "./state.js";
@@ -46,10 +47,10 @@ export class DevArrayView<Node, Element, TagOptions extends object, T> extends A
         inspector.createComponent({
             id: this.id,
             name: "ArrayModelView",
-            props: toDevObject({ model }),
             usage: usage,
             time: Date.now(),
         });
+        processComponentProps(this.id, { model });
     }
 }
 
@@ -92,10 +93,10 @@ export class DevSinglePassArrayView<Node, Element, TagOptions extends object, T>
         inspector.createComponent({
             id: this.id,
             name: "ArrayView",
-            props: toDevObject({ model, slot }),
             usage: usage,
             time: Date.now(),
         });
+        processComponentProps(this.id, { model, key, slot });
     }
 }
 
@@ -120,10 +121,10 @@ export class DevSetView<Node, Element, TagOptions extends object, T> extends Set
         inspector.createComponent({
             id: this.id,
             name: "SetView",
-            props: toDevObject({ model, slot }),
             usage: usage,
             time: Date.now(),
         });
+        processComponentProps(this.id, { model, slot });
     }
 }
 
@@ -157,9 +158,9 @@ export class DevMapView<Node, Element, TagOptions extends object, K, T> extends 
         inspector.createComponent({
             id: this.id,
             name: "MapView",
-            props: toDevObject({ model, slot }),
             usage: usage,
             time: Date.now(),
         });
+        processComponentProps(this.id, { model, slot });
     }
 }

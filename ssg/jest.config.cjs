@@ -17,7 +17,8 @@ module.exports = {
     },
     extensionsToTreatAsEsm: [".ts", ".tsx"],
     moduleNameMapper: {
-        "vasille-ssg": "<rootDir>/src/index.ts",
+        "vasille-ssg": "<rootDir>/lib/index.js",
         "^(\\.{1,2}/.*)\\.js$": "$1",
     },
+    coveragePathIgnorePatterns: ["/test/"]
 };

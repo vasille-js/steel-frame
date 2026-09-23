@@ -1,6 +1,13 @@
 import { insertRule } from "./lib.js";
 
-export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth } from "./lib.js";
+export {
+    setMobileMaxWidth,
+    setTabletMaxWidth,
+    setLaptopMaxWidth,
+    mobileMaxWidth,
+    tabletMaxWidth,
+    laptopMaxWidth,
+} from "./lib.js";
 
 let index = 1;
 
@@ -20,13 +27,7 @@ export class CssStyleInjector {
         const className = this.generateClassName();
 
         for (const item of this.styles) {
-            if (item instanceof Array) {
-                const [target, rule] = item;
-
-                insertRule(target, rule.replace("{}", className));
-            } else {
-                insertRule(0, item.replace("{}", className));
-            }
+            this.insertRule(item, className);
         }
 
         this.styles.splice(0);
@@ -36,6 +37,25 @@ export class CssStyleInjector {
 
     protected generateClassName(): string {
         return `vasille-${++index}`;
+    }
+
+    protected insertRule(rule: string | [number, string], className: string) {
+        if (rule instanceof Array) {
+            insertRule(rule[0], rule[1].replace("{}", className));
+        } else {
+            insertRule(0, rule.replace("{}", className));
+        }
+    }
+}
+
+export class SafeCssStyleInjector extends CssStyleInjector {
+    protected insertRule(rule: string | [number, string], className: string) {
+        try {
+            super.insertRule(rule, className);
+        } catch (e) {
+            // ignore any style related errors
+            void e;
+        }
     }
 }
 
@@ -49,7 +69,7 @@ export function styleSheet<T extends { [k: string]: (string | [number, string])[
     const result: { [k: string]: CssStyleInjector } = {};
 
     for (const key in styles) {
-        result[key] = new CssStyleInjector(styles[key]);
+        result[key] = new SafeCssStyleInjector(styles[key]);
     }
 
     return result as { [K in keyof T]: CssStyleInjector };

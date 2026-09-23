@@ -27,7 +27,7 @@ export function view<Node, Element, TagOptions extends object, In extends Compos
         if (slot) {
             props.slot = slot;
         }
-        node.create(frag);
+        node.child(frag);
 
         try {
             const result = renderer(frag, props);
@@ -72,7 +72,7 @@ export function mount<Node, Element, TagOptions extends object, T>(
     const root = new App<Node, Element, TagOptions>(tag, runner);
     const frag = new Fragment<Node, Element, TagOptions>(runner, 1);
 
-    root.create(frag, function () {
+    root.child(frag, function () {
         view($, frag);
     });
 

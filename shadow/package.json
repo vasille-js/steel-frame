@@ -1,6 +1,6 @@
 {
   "name": "vasille-shadow",
-  "version": "7.0.0-rc.1",
+  "version": "7.0.0-rc.2",
   "description": "Pack fault tolerant steel-frame components to custom web components.",
   "main": "index.js",
   "types": "./index.d.ts",
@@ -17,8 +17,8 @@
     "prettier": "prettier src --write",
     "prebuild": "rm -rf lib types",
     "build": "tsc --build tsconfig.json",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
-    "test-coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test-coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "type": "module",
   "repository": {
@@ -39,15 +39,16 @@
   },
   "homepage": "https://github.com/vasille-js/steel-frame#readme",
   "dependencies": {
-    "vasille": "^7.0.0-rc.2",
-    "vasille-jsx": "^7.0.0-rc.1",
-    "vasille-web": "^7.0.0-rc.1"
+    "vasille": "^7.0.0-rc.9",
+    "vasille-css": "^7.0.0-rc.4",
+    "vasille-jsx": "^7.0.0-rc.7",
+    "vasille-web": "^7.0.0-rc.3"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
+    "@types/jsdom": "^30.0.0",
     "@types/node": "^24.3.0",
     "@types/web": "^0.0.256",
-    "cross-env": "^10.1.0",
     "jest": "^30.3.0",
     "jsdom": "^26.1.0",
     "prettier": "^3.6.2",

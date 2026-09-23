@@ -3,7 +3,7 @@ import { orangeDark, orangeLight } from "../../style/text.js";
 
 interface Props {
   isDark: boolean;
-  slot(): void;
+  slot?(): void;
 }
 
 export const Keyword = component<Props>(({ isDark, slot }) => {

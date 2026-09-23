@@ -34,6 +34,9 @@ export abstract class IValue<T, Extra extends unknown> {
      */
     public abstract up(value: T, arg?: Extra): T;
 
+    /** use it for debugging */
+    declare public id: number | undefined;
+
     /** self dependency deep */
     public readonly sDeep: number;
     /** reactive dependency deep */

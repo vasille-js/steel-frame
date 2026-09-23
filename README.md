@@ -130,9 +130,12 @@ We respect semantic versioning:
 - A minor version is increased when we add functionality.
 - Patch version is increased when we fix bugs.
 
-### 7.0
+### 7.0 RC (WIP)
 
-- WIP
+- Add `debounceRef`, `edgeRef` and `fieldRef` functions, which extend the reativity system.
+- Add `Zombie` component, it keeps HTML elements alive some time after destruction.
+- Add `abortSignal` to cancel fetch requests and timers when component is destroyed.
+- Add `safeRef`, `safeExpr`, `safeInit` functions, they make the JSX much safer.
 
 ### 6.0 RC (never released)
 
@@ -161,12 +164,12 @@ We respect semantic versioning:
 
 - Switch to a babel plugin to compile components code. **[API change]**
 - 100% of the code has been covered with unit tests.
-- New developement direction: `keep it simple`.
+- New development direction: `keep it simple`.
 
 ### 2.0 - 2.3
 
 - Introduces components compilation via a typescript plugin. **[API change]**
-- New developement direction: `write less, do more`.
+- New development direction: `write less, do more`.
 
 ### 1.0 - 1.2
 

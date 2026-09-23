@@ -1,4 +1,4 @@
-import { IValue, Reference } from "vasille";
+import { IValue, Reactive, Reference } from "vasille";
 import {
     arrayModel,
     ensure,
@@ -55,10 +55,10 @@ it("set test", function () {
     const arr = arrayModel(undefined);
     const c = o.c;
 
-    set(o, "a", 10);
-    set(o, "$b", 20);
-    set(o, "c", 30);
-    set(arr, 0, 1);
+    set(undefined, o, "a", 10);
+    set(undefined, o, "$b", 20);
+    set(undefined, o, "c", 30);
+    set(undefined, arr, 0, 1);
 
     expect(o.a).toBe(10);
     expect(o.$b).toBeInstanceOf(IValue);
@@ -69,10 +69,10 @@ it("set test", function () {
 });
 
 it("match test", function () {
-    const a = match("a", 2);
-    const $a = match("$a", 3);
-    const b = match("b", $a);
-    const $b = match("$b", $a);
+    const a = match(undefined, "a", 2);
+    const $a = match(undefined, "$a", 3);
+    const b = match(undefined, "b", $a);
+    const $b = match(undefined, "$b", $a);
 
     expect(a).toBe(2);
     expect($a).toBeInstanceOf(IValue);
@@ -85,9 +85,9 @@ it("match test", function () {
 it("ensure", function () {
     const o: { x: number; y?: number } = { x: 1 };
 
-    const t1 = ensure(null, "x" as unknown as never);
-    const t2 = ensure(o, "x");
-    const t3 = ensure(o, "y");
+    const t1 = ensure(undefined, null, "x" as unknown as never);
+    const t2 = ensure(undefined, o, "x");
+    const t3 = ensure(undefined, o, "y");
 
     expect(t1).toBeInstanceOf(Reference);
     expect(t1.V).toBeUndefined();
@@ -101,11 +101,12 @@ it("ensure", function () {
 it("safety", function () {
     const a = { b: 1 };
     const b = null as unknown as { c: 1 };
+    const ctx = new Reactive(0);
 
     const r1 = safeRef(() => a.b);
     const r2 = safeRef(() => b.c);
-    const r3 = safeExpr(undefined, () => a.b, []);
-    const r4 = safeExpr(undefined, () => b.c, []);
+    const r3 = safeExpr(ctx, () => a.b, []);
+    const r4 = safeExpr(ctx, () => b.c, []);
 
     expect(r1.V).toBe(1);
     expect(r2.V).toBeUndefined();

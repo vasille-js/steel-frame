@@ -37,10 +37,19 @@ export {
     setLaptopMaxWidth,
     setMobileMaxWidth,
     setTabletMaxWidth,
-    styleSheet,
+    Zombie,
+    toFieldRef,
+    toDeepFieldRef,
+    safeRef,
+    safeInit,
+    safeExpr,
+    abortSignal,
+    edgeRef,
+    debounceRef,
 } from "vasille-web";
 
 export { shadow as compose, shadow as component } from "./lib.js";
+export { shadowStyleSheet as styleSheet } from "./css.js";
 
 type Kebab<T extends string, A extends string = ""> = T extends `${infer F}${infer R}`
     ? Kebab<R, `${A}${F extends Lowercase<F> ? "" : "-"}${Lowercase<F>}`>
@@ -93,7 +102,7 @@ export type WebComponent<
     prefixedObject<EventHandlers<TagEvents<HTMLElement & Return & WebComponentProps<Props>>>, "on"> &
     WebComponentAttributes<Props> &
     Partial<TagAttrs> &
-    prefixedObject<WebComponentProps<Props> & TagProps<HTMLElement>, "bind:">;
+    prefixedObject<WebComponentProps<Props> & TagProps<HTMLElement>, "property:">;
 
 type EventHandlersAdapter<T, Element> = {
     [K in keyof T]: T[K] extends (arg: infer Arg, ...args: unknown[]) => unknown
@@ -112,6 +121,6 @@ export type WebComponentAdapter<
     callback?: (element: HTMLElement & Properties & Methods) => void;
 } & Partial<Attributes> &
     Partial<TagAttrs> &
-    prefixedObject<Properties, "bind:"> &
+    prefixedObject<Properties, "property:"> &
     prefixedObject<EventHandlersAdapter<Events, HTMLElement & Properties & Methods>, "on-"> &
     prefixedObject<EventHandlers<TagEvents<HTMLElement & Properties & Methods>>, "on">;

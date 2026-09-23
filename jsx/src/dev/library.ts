@@ -9,7 +9,7 @@ export function devAwaited<T>(
     target: () => Promise<T>,
     declaration: [DebugData, DebugData],
     ctx: Reactive,
-): [IValue<unknown>, IValue<unknown>, () => void, (reason?: unknown) => void] {
+): [IValue<unknown, unknown>, IValue<unknown, unknown>, () => void, (reason?: unknown) => void] {
     let i = 0;
     return awaited(target, ctx, v => devRef(v, ctx, ...declaration[i++]));
 }

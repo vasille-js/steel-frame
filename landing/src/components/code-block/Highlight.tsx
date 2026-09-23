@@ -3,11 +3,11 @@ import { blueDark, blueLight } from "../../style/text.js";
 
 interface Props {
   isDark: boolean;
-  slot(): void;
+  slot?(): void;
 }
 
 export const Highlight = component<Props>(({ isDark, slot }) => {
-  <span style={{ "font-weight": "bol" }} class={isDark ? blueDark : blueLight}>
+  <span style={{ "font-weight": "bold" }} class={isDark ? blueDark : blueLight}>
     <Slot model={slot} />
   </span>;
 });

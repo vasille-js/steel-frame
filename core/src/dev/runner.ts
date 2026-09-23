@@ -10,7 +10,7 @@ import {
     StaticPosition,
     toDevId,
     toDevIdOrValue,
-    toDevObject,
+    processDevObject,
     toDevValue,
 } from "./inspectable.js";
 import { DevExpression, DevReference } from "./state.js";
@@ -84,56 +84,66 @@ export class DevTag extends Tag<DevTagOptions, DevRunner> {
     ) {
         super(options, runner, tagName, deep);
 
-        this.id = provideId();
+        const id = (this.id = provideId());
 
         inspector.createTag({
             id: this.id,
             time: Date.now(),
             tagName: tagName,
             usage: usage,
-            callback: options.k && toDevIdOrValue(options.k),
-            attr: options.a && toDevObject(options.a),
-            class:
-                options.c &&
-                options.c.map(item => {
-                    if (typeof item === "string") {
-                        return item;
-                    }
-                    if (item instanceof DevReference || item instanceof DevExpression) {
-                        return item.id;
-                    }
-                    if (item instanceof IValue) {
-                        return JSON.stringify(item.V);
-                    }
-                    if (item instanceof CssStyleInjector) {
-                        return item.inject();
-                    }
+        });
 
-                    return remapObject(item, toDevIdOrValue);
-                }),
-            style:
-                options.s &&
-                remapObject(options.s, value => {
-                    return typeof value === "number"
-                        ? `${value}px`
-                        : value instanceof Array
-                          ? value.map(v => `${v}px`).join(" ")
-                          : typeof value === "string"
-                            ? value
-                            : (toDevId(value) ?? "");
-                }),
-            events: options.e && remapObject(options.e, toDevValue),
-            bind: options.b && remapObject(options.b, toDevIdOrValue),
+        if (options.k) {
+            inspector.tagCallback({
+                id: id,
+                value: toDevIdOrValue(options.k),
+            });
+        }
+        if (options.d) {
+            inspector.tagOnDestroy({
+                id: id,
+                value: toDevIdOrValue(options.d),
+            });
+        }
+        processDevObject(options.a, (key, value) => {
+            inspector.tagAttr({
+                id: id,
+                name: key,
+                value: value,
+            });
+        });
+        if (options.c) {
+            for (const item of options.c) {
+                const value = item instanceof CssStyleInjector ? item.inject() : item instanceof IValue ? item.V : item;
+
+                if (typeof value === "string") {
+                    inspector.tagClass({ id: id, value: toDevId(item) ?? value, name: value });
+                } else {
+                    processDevObject(value, (name, condition) => {
+                        inspector.tagClass({ id, name, value: toDevId(condition) ?? (condition ? "true" : "false") });
+                    });
+                }
+            }
+        }
+        processDevObject(options.s, (name, value) => {
+            inspector.tagStyle({ id, name, value });
+        });
+        processDevObject(options.e, (name, value) => {
+            inspector.tagEvent({ id, name, value });
+        });
+        processDevObject(options.b, (name, value) => {
+            inspector.tagBind({ id, name, value });
         });
     }
 
     public override applyOptions(options: DevTagOptions): void {
         if (options.e) {
             for (const [key, handler] of Object.entries(options.e)) {
-                if (handler instanceof Array) {
-                    const userHandler = handler[0];
+                const userHandler = handler instanceof Array ? handler[0] : handler;
+                const evOptions = handler instanceof Array ? handler[1] : {};
 
-                    handler[0] = ev => {
+                options.e[key] = [
+                    ev => {
                         inspector.eventTrigger({
                             target: this.id,
                             eventName: key,
@@ -141,18 +151,9 @@ export class DevTag extends Tag<DevTagOptions, DevRunner> {
                             position: getPosition(handler[0]),
                         });
                         userHandler(ev);
-                    };
-                } else {
-                    options.e[key] = ev => {
-                        inspector.eventTrigger({
-                            target: this.id,
-                            eventName: key,
-                            time: Date.now(),
-                            position: getPosition(handler),
-                        });
-                        handler(ev);
-                    };
-                }
+                    },
+                    evOptions,
+                ];
             }
         }
         super.applyOptions(options);

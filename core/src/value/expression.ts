@@ -1,6 +1,6 @@
 import { Reactive } from "../core/core.js";
 import { Destroyable } from "../core/destroyable.js";
-import { safe } from "../functional/safety.js";
+import { reportError, safe } from "../functional/safety.js";
 import { IValue } from "../core/ivalue.js";
 import { SyncedIValue } from "./synced.js";
 
@@ -78,6 +78,7 @@ export class Expression<T, Args extends unknown[], Extra extends unknown>
     }
 
     public up(value: T, arg?: Extra): T {
+        reportError(new Error("Expression was updated manually. Reactivity is disabled."));
         this.destroy();
         return this.sync.up(value, arg);
     }

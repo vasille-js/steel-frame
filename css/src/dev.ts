@@ -1,4 +1,39 @@
-import { CssStyleInjector } from "./index.js";
+import { CssStyleInjector, setLaptopMaxWidth, setMobileMaxWidth, setTabletMaxWidth } from "./index.js";
+import { desktop, laptopMaxWidth, mobile, mobileMaxWidth, tablet, tabletMaxWidth } from "./lib.js";
+
+function warn(device: string) {
+    console.warn(`[vasille-css] Setting of ${device} max width in production mode is not supported.`);
+}
+
+export function devSetMobileMaxWidth(value: number) {
+    setMobileMaxWidth(value);
+    if (mobile) {
+        mobile.media = `(max-width:${mobileMaxWidth}px)`;
+    }
+    if (tablet) {
+        tablet.media = `(min-width:${mobileMaxWidth}px) and (max-width:${tabletMaxWidth}px)`;
+    }
+    warn("mobile");
+}
+
+export function devSetTabletMaxWidth(value: number) {
+    setTabletMaxWidth(value);
+    if (tablet) {
+        tablet.media = `(min-width:${mobileMaxWidth}px) and (max-width:${tabletMaxWidth}px)`;
+    }
+    if (desktop) {
+        desktop.media = `(min-width:${tabletMaxWidth}px) and (max-width:${laptopMaxWidth}px)`;
+    }
+    warn("tablet");
+}
+
+export function devSetLaptopMaxWidth(value: number) {
+    setLaptopMaxWidth(value);
+    if (desktop) {
+        desktop.media = `(min-width:${tabletMaxWidth}px) and (max-width:${laptopMaxWidth}px)`;
+    }
+    warn("laptop");
+}
 
 export class DevCssStyleInjector extends CssStyleInjector {
     protected key: string;
@@ -11,16 +46,4 @@ export class DevCssStyleInjector extends CssStyleInjector {
     protected generateClassName(): string {
         return `${super.generateClassName()}-${this.key}`;
     }
-}
-
-export function devStyleSheet<T extends { [k: string]: (string | [number, string])[] }>(
-    styles: T,
-): { [K in keyof T]: DevCssStyleInjector } {
-    const result: { [k: string]: DevCssStyleInjector } = {};
-
-    for (const key in styles) {
-        result[key] = new DevCssStyleInjector(key, styles[key]);
-    }
-
-    return result as { [K in keyof T]: DevCssStyleInjector };
 }

@@ -10,6 +10,7 @@
     "esModuleInterop": false,
     "skipLibCheck": true,
     "strictNullChecks": true,
+    "isolatedModules": true,
     "types": [
       "node",
       "jest"

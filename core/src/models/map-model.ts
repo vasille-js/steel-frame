@@ -3,6 +3,7 @@ import { IValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
+import { ReadOnlyReference } from "../value/reference.js";
 import { Listener, removeFragmentFromTree } from "./listener.js";
 
 const enum Ops {
@@ -21,6 +22,7 @@ type Arguments<K, T> = [Ops.Clear] | [Ops.Remove, K] | [Ops.Add, K, T];
 export class MapModel<K, T> extends Map<K, T> {
     public readonly listener: Listener<Arguments<K, T>>;
     public readonly rDeep: number;
+    public readonly $size: ReadOnlyReference<number, unknown>;
 
     /**
      * Constructs a map model
@@ -35,6 +37,7 @@ export class MapModel<K, T> extends Map<K, T> {
             super.set(key, value);
         });
         this.rDeep = ctx?.sDeep || 0;
+        this.$size = new ReadOnlyReference(this.size, ctx);
     }
 
     /**
@@ -42,7 +45,7 @@ export class MapModel<K, T> extends Map<K, T> {
      */
     public override clear() {
         this.listener.emit(Ops.Clear);
-        super.clear();
+        this.run(() => super.clear());
     }
 
     /**
@@ -52,7 +55,7 @@ export class MapModel<K, T> extends Map<K, T> {
      */
     public override delete(key: K): boolean {
         this.listener.emit(Ops.Remove, key);
-        return super.delete(key);
+        return this.run(() => super.delete(key));
     }
 
     /**
@@ -63,7 +66,13 @@ export class MapModel<K, T> extends Map<K, T> {
      */
     public override set(key: K, value: T): this {
         this.listener.emit(Ops.Add, key, value);
-        return super.set(key, value);
+        return this.run(() => super.set(key, value));
+    }
+
+    protected run<T>(fn: () => T): T {
+        const result = fn();
+        this.$size.set(this.size);
+        return result;
     }
 }
 

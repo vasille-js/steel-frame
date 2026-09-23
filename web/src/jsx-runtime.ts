@@ -1,5 +1,6 @@
 import type { RawStyleProps } from "./spec/css.ts";
 import type { HtmlTagMap } from "./spec/html.ts";
+import type { CssStyleInjector } from "vasille-css";
 
 export type { TagEvents, TagAttrs, TagProps } from "./spec/html.ts";
 
@@ -10,7 +11,7 @@ export type EventHandlers<T> = {
     [K in keyof T]: T[K] | [T[K], boolean | AddEventListenerOptions];
 };
 
-export type ClassItem = string | Record<string, boolean> | false;
+export type ClassItem = string | CssStyleInjector | Record<string, boolean> | false;
 
 const internal = Symbol("internal");
 
@@ -22,13 +23,13 @@ export type VasilleChild = VasilleElement | string | number | boolean | null | u
 export type VasilleSlot = VasilleChild | VasilleChild[];
 
 type HtmlInput<K extends keyof HTMLElementTagNameMap & keyof HtmlTagMap> = {
-    callback?: (node: HTMLElementTagNameMap[K]) => unknown;
+    callback?: (node: HTMLElementTagNameMap[K]) => void | HTMLElementTagNameMap[K] | (() => void);
     class?: ClassItem[] | string;
     style?: RawStyleProps | string;
     "vasille:slot"?: VasilleSlot;
 } & Partial<HtmlTagMap[K]["attrs"]> &
     prefixedObject<EventHandlers<HtmlTagMap[K]["events"]>, "on"> &
-    Partial<prefixedObject<HtmlTagMap[K]["props"], "bind:">>;
+    Partial<prefixedObject<HtmlTagMap[K]["props"], "property:">>;
 
 export declare namespace JSX {
     // Valid JSX tags: all the valid lowercase tags and function components

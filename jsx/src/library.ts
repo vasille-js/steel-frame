@@ -5,7 +5,7 @@ export function awaited<T>(
     target: (signal: AbortSignal) => Promise<T>,
     ctx: Reactive,
     createRef = ref,
-): [IValue<unknown>, IValue<unknown>, () => void, (reason?: unknown) => void] {
+): [IValue<unknown, unknown>, IValue<unknown, unknown>, () => void, (reason?: unknown) => void] {
     const err = createRef<unknown>(undefined);
     const value = createRef<unknown>(undefined);
     const controller = new AbortController();
@@ -50,4 +50,14 @@ export function awaited<T>(
     run();
 
     return [err, value, run, abort];
+}
+
+export function abortSignal(ctx: Reactive): AbortSignal {
+    const manager = new AbortController();
+
+    ctx.runOnDestroy(() => {
+        manager.abort();
+    });
+
+    return manager.signal;
 }

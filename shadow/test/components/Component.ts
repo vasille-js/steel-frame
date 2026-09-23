@@ -4,10 +4,10 @@ import { IValue } from "vasille";
 import { watch } from "vasille-web";
 
 interface Props {
-    $idNumber: IValue<number>;
-    $name: IValue<string>;
-    $visible: IValue<boolean>;
-    $prop: IValue<number>;
+    $idNumber: IValue<number, unknown>;
+    $name: IValue<string, unknown>;
+    $visible: IValue<boolean, unknown>;
+    $prop: IValue<number, unknown>;
     onItemHide: (isHide: boolean) => void;
     onvisible: () => void;
 }

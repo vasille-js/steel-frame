@@ -4,9 +4,10 @@ import type { StyleSheetProps as StyleProps } from "vasille-web";
 import type { ScreenProps } from "vasille-router";
 import type { Router } from "vasille-router/web-router";
 import type { VasilleSlot } from "vasille-web/jsx-runtime";
+import type { CssStyleInjector } from "vasille-css";
 
 export type { StyleProps } from "vasille-web";
-export type ClassItem = string | Record<string, boolean> | false;
+export type ClassItem = string | CssStyleInjector | Record<string, boolean> | false;
 export type { FallbackScreenProps, ErrorScreenProps } from "vasille-router";
 export { safe } from "vasille";
 export type { AppSide, IdeSide } from "../types/communication.d.ts";
@@ -27,7 +28,10 @@ declare type ComposedNoCallback<In extends object, Out> = (
     $: Required<In> extends Params ? In & { "vasille:slot"?: VasilleSlot } : In,
 ) => void;
 
-/** Composes a component (v3), which can receive external reactive values via props */
+/**
+ * Composes a component (v3), which can receive external reactive values via props
+ * @deprecated use `component` instead
+ * */
 export declare function compose<In extends object, Out extends NonNullable<unknown>>(
     renderer: (input: In) => Out,
 ): Composed<In, Out>;
@@ -54,31 +58,74 @@ type Screen<Route extends string> = (input: ScreenProps<Route>) => Promise<void>
 
 /** Composes a screen, the router navigates between screens */
 export declare function screen<Route extends string>(renderer: Screen<Route>): Screen<Route>;
+
 /** Composes a page, the file-based router navigates between pages (used for tests only) */
 export declare function page<Route extends string>(renderer: Screen<Route>): Screen<Route>;
 
-/** Returns the raw value of the expression */
+/**
+ * Returns the raw value of the expression
+ * @deprecated use `unwrap` instead
+ * */
 export declare function raw<T>(v: T): T;
+
 /** Unwrap the expression */
 export declare function unwrap<T>(v: T): T;
+
 /** Pack value into a reactive reference */
 export declare function ref<T>(v: T): T;
-/** Returns a reactive-computed form of expression */
+
+/** Pack value into a reactive reference, returns undefined when initialization fails */
+export declare function safeRef<T>(v: T): T | undefined;
+
+/** Edge reference converts an external reactive value to an internal one */
+export declare function edgeRef<T>(
+    getter: () => T,
+    setter: (v: T) => void,
+    subscriber: ((setter: (v: T) => void) => void | (() => void)) | undefined,
+): T;
+
+/** Debounce updates signals of a reactive reference/expression */
+export declare function debounceRef<T>(v: T, delay: number): T;
+
+/** Returns a reactive reference to the object field */
+export declare function toFieldRef<T>(v: T): T;
+
+/** Returns a reactive-computed form of expression value */
 export declare function bind<T>(v: T): T;
-/** Returns a reactive-computed form of returned value */
+
+/** Returns a reactive-computed form of expression value, returns undefined when initialization fails */
+export declare function safeBind<T>(v: T): T | undefined;
+
+/**
+ * Returns a reactive-computed form of returned value
+ * @deprecated use `computed` instead
+ * */
 export declare function calculate<T>(fn: () => T): T;
+
+/** Returns a reactive-computed form of returned value */
+export declare function computed<T>(fn: () => T): T;
+
+/** Returns a reactive-computed form of returned value, returns undefined when initialization fails */
+export declare function safeComputed<T>(fn: () => T): T | undefined;
+
 /** Runs the function each time when a dependency is changed */
 export declare function watch(f: () => void): void;
+
 /** Returns an array model of the array */
 export declare function arrayModel<T>(v?: T[]): ArrayModel<T>;
+
 /** Returns a set model of array values */
 export declare function setModel<T>(v?: T[]): SetModel<T>;
+
 /** Returns a map model of map data */
 export declare function mapModel<K, T>(v?: [K, T][]): MapModel<K, T>;
 
 /** Awaits async data in a sync component */
 export declare function awaited<T>(target: Promise<T>): [unknown, T | undefined, () => void];
 export declare function awaited<T>(target: () => Promise<T>): [unknown, T | undefined, () => void];
+
+/** Returns an abort signal to cancel requests/timers when context is destroyed */
+export declare function abortSignal(): AbortSignal;
 
 /** Mounts a slot parameter of the component */
 export declare function Slot(options: { model?: () => void; slot?: () => void }): void;
@@ -205,6 +252,8 @@ export { type Router, NavigationMode } from "vasille-router/web-router";
 export declare function theme<T>(name: string, value: T): T;
 /** Applies the value to the dark theme */
 export declare function dark<T>($: T): T;
+/** Applies the value to the light theme */
+export declare function light<T>($: T): T;
 /** Applies the value to mobile devices */
 export declare function mobile<T>($: T): T;
 /** Applies the value to tablet devices */
@@ -215,6 +264,10 @@ export declare function laptop<T>($: T): T;
 export declare function prefersDark<T>($: T): T;
 /** Applies the value when the user prefers the light theme */
 export declare function prefersLight<T>($: T): T;
+/** `dark` + `prefersDark` */
+export declare function allDark<T>($: T): T;
+/** `light` + `prefersLight` */
+export declare function allLight<T>($: T): T;
 
 export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth } from "vasille-css";
 
@@ -230,7 +283,7 @@ export declare const styleSheet: <
     },
 >(
     input: T,
-) => { [K in keyof T]: string };
+) => { [K in keyof T]: CssStyleInjector };
 
 /** Mounts a Vasille.JS component to a page */
 export declare function mount<T>(element: Element, component: ($: T) => void, $: T): App<Node, Element, TagOptions>;
@@ -269,8 +322,13 @@ export declare function beforeDestroy(fn: () => void): void;
 /** Returns the current used router */
 export declare function router(): Router<string> | undefined;
 
+declare class ComponentContext {}
+
+/** Returns the current component context */
+export declare function ctx(): ComponentContext;
+
 /** Composes a modal window (v4+) */
-export declare function modal<T extends object>(modal: (input: T) => void): (input: T) => void;
+export declare function modal<T extends object>(modal: (input: T) => void): (ctx: ComponentContext, input: T) => void;
 
 /** Describes properties of a prompt window */
 export interface PromptProps<T> {
@@ -281,7 +339,7 @@ export interface PromptProps<T> {
 /** Composes a function which will show a prompt on call */
 export declare function prompt<T, Input extends PromptProps<T> = PromptProps<T>>(
     modal: (input: Input) => void,
-): (input: Omit<Input, keyof PromptProps<unknown>>, timeout?: number) => Promise<T>;
+): (ctx: ComponentContext, input: Omit<Input, keyof PromptProps<unknown>>, timeout?: number) => Promise<T>;
 
 /** Describes an injectable context value */
 export declare class SteelContext<Args extends unknown[], Value> {

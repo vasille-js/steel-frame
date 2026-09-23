@@ -13,10 +13,10 @@ class AppHandler implements AppSide {
     private $height = ref(window.innerHeight);
 
     public constructor() {
-        window.onresize = () => {
+        window.addEventListener("resize", () => {
             this.$width.V = window.innerWidth;
             this.$height.V = window.innerHeight;
-        };
+        });
     }
 
     public setup(app: App<Node, Element, TagOptions>, bridge: Inspector): void {

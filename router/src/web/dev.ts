@@ -3,6 +3,7 @@ import { DevFragment, DevRunner, DevTagOptions, inspector, Inspector, StaticPosi
 import { Fragment, Runner as IRunner } from "vasille";
 import { ScreenProps } from "../types.js";
 import { devMount } from "vasille-jsx/dev";
+import { createScreen } from "../screen.js";
 
 export function devScreen<Node, Element, TagOptions extends object, Route extends string>(
     renderer: (node: DevFragment<Node, Element, TagOptions>, input: ScreenProps<Route>) => Promise<void>,
@@ -12,18 +13,13 @@ export function devScreen<Node, Element, TagOptions extends object, Route extend
     props: ScreenProps<Route>,
     ctx?: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
 ) => Promise<void> {
-    return async function (props, node) {
-        if (!node) {
-            throw new Error("Vasille: Screen context is missing");
-        }
-
-        const frag = new DevFragment<Node, Element, TagOptions>(node.runner, declaration, null, name, props);
-
-        node.create(frag);
-
-        await renderer(frag, props);
-    };
+    return createScreen(
+        renderer,
+        (node, props) => new DevFragment<Node, Element, TagOptions>(node.runner, declaration, null, name, props),
+    );
 }
+
+let targetLookUpResultId = 0;
 
 export class DevRouter<Routes extends string> extends Router<Routes> {
     public constructor(
@@ -34,7 +30,11 @@ export class DevRouter<Routes extends string> extends Router<Routes> {
     ) {
         super(window, location, node, init);
 
-        inspector.registeredRoutes({ paths: [...Object.keys(init.routes)], time: Date.now() });
+        const data = Date.now();
+
+        Object.keys(init.routes).forEach(path => {
+            inspector.registeredRoute({ path });
+        });
 
         this.$currentUrl.on(value => {
             inspector.routerStateChange({ name: "currentUrl", value, time: Date.now() });
@@ -66,15 +66,21 @@ export class DevRouter<Routes extends string> extends Router<Routes> {
 
     protected targetByUrl(url: string) {
         const result = super.targetByUrl(url);
+        const id = ++targetLookUpResultId;
 
         inspector.routerTargetResult({
+            id: id,
             url: result.url,
             path: result.path,
-            query: result.query,
             hash: result.hash,
             params: result.params,
             targetFound: !!result.target,
             time: Date.now(),
+        });
+        Object.entries(result.query).forEach(([name, values]) => {
+            values.forEach(value => {
+                inspector.routerTargetResultQueryArg({ id, name, value });
+            });
         });
 
         return result;

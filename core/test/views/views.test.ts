@@ -523,6 +523,7 @@ it("set view remount", function () {
         { id: 10, value: 11 },
     ]);
     let element!: Element;
+    let count = 0;
 
     root.tag("div", { k: node => (element = node) }, function (tag) {
         tag.child(
@@ -541,6 +542,7 @@ it("set view remount", function () {
                                 f.tag("div", {}, ctx => {
                                     ctx.text(item);
                                 });
+                                ++count;
                             },
                             r => new Fragment(r, f.sDeep + 1),
                         ),
@@ -557,6 +559,7 @@ it("set view remount", function () {
 
     array.V = [array.V[1]!, array.V[0]!];
     expect(element.innerHTML).toBe("<div>10</div><div>11</div><div>0</div><div>1</div>");
+    expect(count).toBe(4);
 
     root.destroy(0);
 });

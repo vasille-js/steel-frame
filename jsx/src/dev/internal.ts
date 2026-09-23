@@ -1,24 +1,26 @@
-import { Reactive } from "vasille";
+import { IValue, KindOfIValue, Reactive } from "vasille";
 import {
     DevArrayModel,
+    DevDebounceReference,
+    DevDeepFieldReference,
+    DevEdgeReference,
     DevExpression,
-    DevIValue,
     DevMapModel,
     DevReference,
     DevSetModel,
+    DevSingleFieldReference,
     errorToString,
     executionPosition,
     ExecutionPosition,
     inspector,
-    KindOfDevIValue,
     StaticPosition,
 } from "vasille/dev";
 import { match, set } from "../internal.js";
 
 export function devExpr<T, Args extends unknown[]>(
-    ctx: Reactive | undefined,
+    ctx: Reactive,
     func: (...args: Args) => T,
-    values: KindOfDevIValue<Args>,
+    values: KindOfIValue<Args, ExecutionPosition>,
     depsCode: string[],
     declaration: StaticPosition,
     name?: string,
@@ -27,9 +29,9 @@ export function devExpr<T, Args extends unknown[]>(
 }
 
 export function devSafeExpr<T, Args extends unknown[]>(
-    ctx: Reactive | undefined,
+    ctx: Reactive,
     func: (...args: Args) => T,
-    values: KindOfDevIValue<Args>,
+    values: KindOfIValue<Args, ExecutionPosition>,
     depsCode: string[],
     declaration: StaticPosition,
     name?: string,
@@ -37,7 +39,12 @@ export function devSafeExpr<T, Args extends unknown[]>(
     return new DevExpression<T, Args>(func, values, ctx, name, depsCode, declaration, false, true);
 }
 
-export function devRef<T>(v: T, ctx: Reactive | undefined, declaration: StaticPosition, name?: string): DevIValue<T> {
+export function devRef<T>(
+    v: T,
+    ctx: Reactive | undefined,
+    declaration: StaticPosition,
+    name?: string,
+): IValue<T, ExecutionPosition> {
     return new DevReference(v, ctx, declaration, name);
 }
 
@@ -46,7 +53,7 @@ export function devSafeRef<T>(
     ctx: Reactive | undefined,
     declaration: StaticPosition,
     name?: string,
-): DevIValue<T | undefined> {
+): IValue<T | undefined, ExecutionPosition> {
     const ref = new DevReference<T | undefined>(undefined, ctx, declaration, name);
 
     try {
@@ -56,7 +63,7 @@ export function devSafeRef<T>(
             time: Date.now(),
             position: executionPosition(declaration, new Error()),
             error: errorToString(e),
-            targetId: ref.id,
+            id: ref.id,
         });
     }
 
@@ -99,7 +106,7 @@ export function devEnsure<T extends object>(
 }
 
 export function devMatch(name: string | number | symbol, data: unknown, declaration: StaticPosition, ctx?: Reactive) {
-    return match(name, data, v => devRef(v, ctx, declaration));
+    return match(ctx, name, data, v => devRef(v, ctx, declaration));
 }
 
 export function devSet(
@@ -110,10 +117,55 @@ export function devSet(
     declaration: StaticPosition,
     executionPosition: ExecutionPosition,
 ) {
-    if (o[key] instanceof DevIValue) {
-        o[key].update(value, executionPosition);
+    if (o[key] instanceof IValue) {
+        o[key].up(value, executionPosition);
         return value;
     }
 
-    return set(o, key, value, v => devRef(v, ctx, declaration));
+    return set(ctx, o, key, value, v => devRef(v, ctx, declaration));
+}
+
+function createRef<T>(declaration: StaticPosition, name?: string): (value: T, ctx?: Reactive) => DevReference<T> {
+    return (value, ctx) => new DevReference(value, ctx, declaration, name);
+}
+
+export function devEdgeRef<T>(
+    ctx: Reactive | undefined,
+    getter: () => T,
+    setter: (v: T) => void,
+    subscriber: ((setter: (v: T) => void) => void | (() => void)) | undefined,
+    declaration: StaticPosition,
+    name?: string,
+) {
+    return new DevEdgeReference(createRef<T>(declaration, name), getter, setter, ctx, subscriber);
+}
+
+export function devDebounceRef<T>(
+    ctx: Reactive,
+    target: IValue<T, ExecutionPosition>,
+    delay: number,
+    declaration: StaticPosition,
+    name?: string,
+) {
+    return new DevDebounceReference(createRef<T>(declaration, name), target, delay, ctx);
+}
+
+export function toDevFieldRef(
+    ctx: Reactive,
+    o: IValue<object | undefined | null, ExecutionPosition>,
+    key: string | symbol,
+    declaration: StaticPosition,
+    name?: string,
+) {
+    return new DevSingleFieldReference(createRef(declaration, name), o, key, ctx);
+}
+
+export function toDevDeepFieldRef(
+    ctx: Reactive,
+    o: IValue<object | undefined | null, ExecutionPosition>,
+    key: (string | symbol)[],
+    declaration: StaticPosition,
+    name?: string,
+) {
+    return new DevDeepFieldReference(createRef(declaration, name), o, key, ctx);
 }

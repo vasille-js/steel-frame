@@ -157,10 +157,10 @@ it("Delay", function (done) {
     let element!: HTMLElement;
 
     node.tag("div", { k: n => (element = n as HTMLElement) }, function (f) {
-        Delay({ time: 10 }, f, (f: Fragment<Node, Element, object>) => {
+        Delay({ time: 10 }, f, f => {
             f.tag("div", {});
         });
-        Delay({ time: 20 }, f, (f: Fragment<Node, Element, object>) => {
+        Delay({ time: 20 }, f, f => {
             f.tag("div", {});
         });
     });

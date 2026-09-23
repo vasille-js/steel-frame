@@ -1,12 +1,12 @@
 let common: CSSStyleSheet | undefined;
-let mobile: CSSStyleSheet | undefined;
-let tablet: CSSStyleSheet | undefined;
-let desktop: CSSStyleSheet | undefined;
+export let mobile: CSSStyleSheet | undefined;
+export let tablet: CSSStyleSheet | undefined;
+export let desktop: CSSStyleSheet | undefined;
 let dark: CSSStyleSheet | undefined;
 let light: CSSStyleSheet | undefined;
-let mobileMaxWidth = 440;
-let tabletMaxWidth = 880;
-let laptopMaxWidth = 1320;
+export let mobileMaxWidth = 440;
+export let tabletMaxWidth = 880;
+export let laptopMaxWidth = 1320;
 
 export function setMobileMaxWidth(value: number) {
     mobileMaxWidth = value;

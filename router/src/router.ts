@@ -1,4 +1,4 @@
-import { Fragment } from "vasille";
+import { Fragment, reportError } from "vasille";
 import { Answer, Routing, QueryParams, ScreenProps } from "./types.js";
 
 export interface FallbackScreenProps {
@@ -17,6 +17,7 @@ export interface RouterInitialization<
     Extras extends object,
 > {
     routes: { [K in Routes]: Answer<Node, Element, TagOptions, K, Extras> };
+    initialize?(): Promise<void>;
     checkAccess?(path: string): Promise<boolean>;
     fallbackScreen?(arg: FallbackScreenProps, ctx: Fragment<Node, Element, TagOptions>): void;
     errorScreen?(data: ErrorScreenProps, ctx: Fragment<Node, Element, TagOptions>): void;
@@ -34,6 +35,7 @@ export abstract class Router<
 > {
     protected root: Routing<Node, Element, TagOptions, Routes, Extras>;
     protected init: RouterInitialization<Node, Element, TagOptions, Routes, Extras>;
+    protected initialized = false;
 
     public constructor(init: RouterInitialization<Node, Element, TagOptions, Routes, Extras>) {
         this.root = this.createRouting();
@@ -115,6 +117,15 @@ export abstract class Router<
 
     protected async prepareNavigation(url: string, canNavigate: boolean, async: boolean, ...args: Args) {
         const { target, ...props } = this.targetByUrl(url);
+
+        if (!this.initialized) {
+            try {
+                await this.init.initialize?.();
+                this.initialized = true;
+            } catch (e) {
+                reportError(e);
+            }
+        }
 
         try {
             const hasAccess = (await this.init.checkAccess?.(props.path)) ?? true;

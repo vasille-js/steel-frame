@@ -14,10 +14,11 @@ import {
     SwitchedNode,
     userError,
     Watch as CoreWatch,
+    Zombie as CoreZombie,
 } from "vasille";
 import { ref } from "./internal.js";
 
-interface SlotOptions<Node, Element, TagOptions extends object, T extends object> {
+export interface SlotOptions<Node, Element, TagOptions extends object, T extends object> {
     model?: (input: T, ctx: Fragment<Node, Element, TagOptions>) => void;
     slot?: (input: object, ctx: Fragment<Node, Element, TagOptions>) => void;
 }
@@ -33,6 +34,7 @@ export function Slot<Node, Element, TagOptions extends object, T extends object 
     { model, slot, ...options }: SlotOptions<Node, Element, TagOptions, T> & T,
     ctx: Fragment<Node, Element, TagOptions>,
     defaultSlot?: (ctx: Fragment<Node, Element, TagOptions>) => void,
+    handleError = reportError,
 ) {
     try {
         if (model) {
@@ -43,27 +45,26 @@ export function Slot<Node, Element, TagOptions extends object, T extends object 
             defaultSlot(ctx);
         }
     } catch (e) {
-        reportError(e);
+        handleError(e);
     }
 }
 
-interface SwitchOptions<Node, Element, TagOptions extends object> {
+export interface SwitchOptions<Node, Element, TagOptions extends object> {
     cases: {
-        $case: IValue<unknown>;
+        $case: IValue<unknown, unknown>;
         slot: (ctx: Fragment<Node, Element, TagOptions>) => void;
     }[];
     default?: (ctx: Fragment<Node, Element, TagOptions>) => void;
-    slot?: never;
 }
 
 export function Switch<Node, Element, TagOptions extends object>(
     options: SwitchOptions<Node, Element, TagOptions>,
     ctx: Fragment<Node, Element, TagOptions>,
 ) {
-    ctx.create(new SwitchedNode(ctx.runner, ctx.sDeep + 1, options.cases, options.default));
+    ctx.child(new SwitchedNode(ctx.runner, ctx.sDeep + 1, options.cases, options.default));
 }
 
-interface ForOptions<Node, Element, TagOptions extends object, T, Args extends unknown[]> {
+export interface ForOptions<Node, Element, TagOptions extends object, T, Args extends unknown[]> {
     of: T;
     slot?: (ctx: Fragment<Node, Element, TagOptions>, ...args: Args) => void;
 }
@@ -87,8 +88,8 @@ export function For<
     }
 
     if (model instanceof ArrayModel) {
-        ctx.create(
-            new CoreArrayView<V, Node, Element, TagOptions, Runner<Node, Element, TagOptions>>(
+        ctx.child(
+            new CoreArrayView<V, Node, Element, TagOptions, Runner<Node, Element, TagOptions>, unknown>(
                 ctx.runner,
                 ctx.sDeep + 1,
                 model,
@@ -100,7 +101,7 @@ export function For<
             ),
         );
     } else if (model instanceof MapModel) {
-        ctx.create(
+        ctx.child(
             new CoreMapView<K, V, Node, Element, TagOptions, Runner<Node, Element, TagOptions>>(
                 ctx.runner,
                 ctx.sDeep + 1,
@@ -113,7 +114,7 @@ export function For<
             ),
         );
     } else if (model instanceof SetModel) {
-        ctx.create(
+        ctx.child(
             new CoreSetView<V, Node, Element, TagOptions, Runner<Node, Element, TagOptions>>(
                 ctx.runner,
                 ctx.sDeep + 1,
@@ -155,14 +156,18 @@ export function ArrayView<
     V = T extends (infer R)[] ? R : never,
 >(
     props: {
-        $of: IValue<V[]>;
+        $of: IValue<V[], unknown>;
         key: (value: V) => number | string;
-        slot: (ctx: Fragment<Node, Element, TagOptions>, value: IValue<V>, index: IValue<number>) => void;
+        slot: (
+            ctx: Fragment<Node, Element, TagOptions>,
+            value: IValue<V, unknown>,
+            index: IValue<number, unknown>,
+        ) => void;
     },
     ctx: Fragment<Node, Element, TagOptions>,
 ) {
-    ctx.create(
-        new SinglePassArrayView<V, Node, Element, TagOptions, Runner<Node, Element, TagOptions>>(
+    ctx.child(
+        new SinglePassArrayView<V, Node, Element, TagOptions, Runner<Node, Element, TagOptions>, unknown>(
             ctx.runner,
             ctx.sDeep + 1,
             props.$of,
@@ -176,11 +181,11 @@ export function ArrayView<
 }
 
 export function ArrayModelView<Node, Element, TagOptions extends object, V>(
-    props: Required<ForOptions<Node, Element, TagOptions, ArrayModel<V>, [V, IValue<number>]>>,
+    props: Required<ForOptions<Node, Element, TagOptions, ArrayModel<V>, [V, IValue<number, unknown>]>>,
     ctx: Fragment<Node, Element, TagOptions>,
 ) {
-    ctx.create(
-        new CoreArrayView<V, Node, Element, TagOptions, Runner<Node, Element, TagOptions>>(
+    ctx.child(
+        new CoreArrayView<V, Node, Element, TagOptions, Runner<Node, Element, TagOptions>, unknown>(
             ctx.runner,
             ctx.sDeep + 1,
             props.of,
@@ -192,10 +197,10 @@ export function ArrayModelView<Node, Element, TagOptions extends object, V>(
 }
 
 export function MapModelView<Node, Element, TagOptions extends object, K, V>(
-    props: Required<ForOptions<Node, Element, TagOptions, MapModel<K, V>, [IValue<V>, K]>>,
+    props: Required<ForOptions<Node, Element, TagOptions, MapModel<K, V>, [IValue<V, unknown>, K]>>,
     ctx: Fragment<Node, Element, TagOptions>,
 ) {
-    ctx.create(
+    ctx.child(
         new CoreMapView<K, V, Node, Element, TagOptions, Runner<Node, Element, TagOptions>>(
             ctx.runner,
             ctx.sDeep + 1,
@@ -211,7 +216,7 @@ export function SetModelView<Node, Element, TagOptions extends object, V>(
     props: Required<ForOptions<Node, Element, TagOptions, SetModel<V>, [V]>>,
     ctx: Fragment<Node, Element, TagOptions>,
 ) {
-    ctx.create(
+    ctx.child(
         new CoreSetView<V, Node, Element, TagOptions, Runner<Node, Element, TagOptions>>(
             ctx.runner,
             ctx.sDeep + 1,
@@ -222,8 +227,8 @@ export function SetModelView<Node, Element, TagOptions extends object, V>(
     );
 }
 
-interface WatchOptions<Node, Element, TagOptions extends object, T> {
-    $model: IValue<T>;
+export interface WatchOptions<Node, Element, TagOptions extends object, T, Extra = unknown> {
+    $model: IValue<T, Extra>;
     slot?: (ctx: Fragment<Node, Element, TagOptions>, value: T) => void;
 }
 
@@ -236,25 +241,36 @@ export function Watch<Node, Element, TagOptions extends object, T>(
 
     /* istanbul ignore else */
     if (slot) {
-        ctx.create(new CoreWatch({ model: $model, slot: safe(slot) }, ctx.runner, ctx.sDeep + 1));
+        ctx.child(new CoreWatch({ model: $model, slot: safe(slot) }, ctx.runner, ctx.sDeep + 1));
     }
 }
 
-interface DelayOptions<Node, Element, TagOptions extends object> {
+export interface DelayOptions<
+    Node,
+    Element,
+    TagOptions extends object,
+    Context extends Fragment<Node, Element, TagOptions>,
+> {
     time?: number;
-    slot?: (ctx: Fragment<Node, Element, TagOptions>) => unknown;
+    slot?: (ctx: Context) => unknown;
 }
 
-export function Delay<Node, Element, TagOptions extends object>(
-    { time, slot: _slot }: DelayOptions<Node, Element, TagOptions>,
-    ctx: Fragment<Node, Element, TagOptions>,
-    defaultSlot?: (ctx: Fragment<Node, Element, TagOptions>) => void,
+export function Delay<
+    Node,
+    Element,
+    TagOptions extends object,
+    Context extends Fragment<Node, Element, TagOptions> = Fragment<Node, Element, TagOptions>,
+>(
+    { time, slot: _slot }: DelayOptions<Node, Element, TagOptions, Context>,
+    ctx: Context,
+    defaultSlot?: (ctx: Context) => void,
+    createContext = (ctx: Context) => new Fragment<Node, Element, TagOptions>(ctx.runner, ctx.sDeep + 1),
 ) {
-    const fragment = new Fragment<Node, Element, TagOptions>(ctx.runner, ctx.sDeep + 1);
+    const fragment = createContext(ctx);
     const slot = _slot ?? defaultSlot;
     let timer: number | undefined;
 
-    ctx.create(fragment, function (node) {
+    ctx.child(fragment, function (node: Context) {
         /* istanbul ignore else */
         if (slot) {
             timer = setTimeout(() => {
@@ -268,4 +284,17 @@ export function Delay<Node, Element, TagOptions extends object>(
             }
         });
     });
+}
+
+export interface ZombieOptions<Extra = unknown> {
+    $time: IValue<number, Extra>;
+    trigger(): void;
+}
+
+export function Zombie<Node, Element, TagOptions extends object>(
+    { $time, trigger }: ZombieOptions,
+    ctx: Fragment<Node, Element, TagOptions>,
+    defaultSlot?: (ctx: Fragment<Node, Element, TagOptions>) => void,
+) {
+    ctx.child(new CoreZombie<Node, Element, TagOptions>(ctx.runner, $time, trigger), defaultSlot);
 }

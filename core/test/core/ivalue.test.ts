@@ -1,4 +1,5 @@
-import { Expression, Reactive, Reference } from "../../src/index.js";
+import { Reactive, Reference } from "../../src/index.js";
+import { ReadOnlyReference } from "../../src/value/reference.js";
 import { TestExpression } from "../page.js";
 
 it("ivalue", function () {
@@ -25,4 +26,14 @@ it("expression", function () {
     expect(c.V).toBe(11);
 
     c.destroy();
+});
+
+it("readonly reference", function () {
+    const ref = new ReadOnlyReference(0);
+
+    function test() {
+        ref.V = 2;
+    }
+
+    expect(test).toThrow();
 });

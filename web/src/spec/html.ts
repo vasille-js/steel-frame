@@ -152,7 +152,7 @@ interface ImgAttrs extends TagAttrs {
     referrerpolicy: string;
     decoding: string;
     loading: string;
-    fetchpriority: string;
+    fetchpriority: "high" | "low" | "auto";
 }
 
 interface IframeAttrs extends TagAttrs {

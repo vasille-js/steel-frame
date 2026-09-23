@@ -138,7 +138,7 @@ it("throw test", function () {
 });
 
 interface IValueProps {
-    string?: IValue<string>;
+    string?: IValue<string, unknown>;
     number?: number;
     slot?(node: Fragment<Node, Element, object>): void;
 }
@@ -192,7 +192,7 @@ it("IValue keep test", function () {
     expect(count).toBe(111);
 });
 
-const Model = model((ctx, { x }: { x: Reference<number> }) => {
+const Model = model((ctx, { x }: { x: Reference<number, unknown> }) => {
     const a = ref(2);
     const b = expr(ctx, (a, x) => a + x, [a, x]);
 

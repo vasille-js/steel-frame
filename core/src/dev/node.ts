@@ -1,6 +1,7 @@
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
-import { InspectableReactive, inspector, provideId, StaticPosition, toDevObject } from "./inspectable.js";
+import { processComponentProps } from "./components.js";
+import { InspectableReactive, inspector, provideId, StaticPosition, processDevObject } from "./inspectable.js";
 
 export const ModelId = Symbol("model-id");
 
@@ -27,9 +28,9 @@ export class DevFragment<Node, Element, TagOptions extends object>
             declaration: declaration,
             usage: usage,
             name: name,
-            props: toDevObject(props),
             time: Date.now(),
         });
+        processComponentProps(this.id, props);
     }
 
     public override link(

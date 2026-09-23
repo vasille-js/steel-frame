@@ -3,7 +3,7 @@
   "description": "The same devkit which is designed to build fault tolerant frontends (core library).",
   "main": "lib/index.js",
   "types": "types/index.d.ts",
-  "version": "7.0.0-rc.6",
+  "version": "7.0.0-rc.9",
   "exports": {
     ".": {
       "types": "./types/index.d.ts",
@@ -29,8 +29,8 @@
     "prettier": "npx prettier src test --write",
     "prebuild": "rm -rf types lib",
     "build": "tsc --build tsconfig.json",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
-    "test-coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test-coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "repository": {
     "type": "git",
@@ -67,7 +67,6 @@
     "@types/jest": "^30.0.0",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^24.2.1",
-    "cross-env": "^10.0.0",
     "eslint": "^9.33.0",
     "eslint-plugin-compat": "^6.0.2",
     "jest": "^30.0.5",
@@ -79,6 +78,6 @@
     "typescript-eslint": "^8.39.0"
   },
   "dependencies": {
-    "vasille-css": "^7.0.0-rc.1"
+    "vasille-css": "^7.0.0-rc.3"
   }
 }

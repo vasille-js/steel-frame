@@ -16,7 +16,10 @@ setTabletMaxWidth(400);
 setLaptopMaxWidth(800);
 
 export default page(async () => {
-    <div class={[styles.div]}>Styled</div>;
+    function getClassName() {
+        return "test";
+    }
+    <div class={[styles.div, getClassName()]}>Styled</div>;
 });
 
 const styles = styleSheet({

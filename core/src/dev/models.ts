@@ -6,6 +6,26 @@ import { SetModel } from "../models/set-model.js";
 import { DevReactive } from "./core.js";
 import { inspector, provideId, StaticPosition, toDevValue } from "./inspectable.js";
 
+let updateId = 0;
+
+function shareModelUpdate(modelId: number, method: string, args: unknown[], result: unknown) {
+    const id = ++updateId;
+
+    inspector.updateModel({
+        id: id,
+        modelId: this.id,
+        method: method,
+        return: toDevValue(result),
+        time: Date.now(),
+    });
+    args.forEach((arg, index) => {
+        inspector.updateModelArg({
+            id: id,
+            value: toDevValue(arg),
+        });
+    });
+}
+
 export class DevArrayModel<T> extends ArrayModel<T> implements Destroyable {
     public readonly id: number;
 
@@ -42,46 +62,37 @@ export class DevArrayModel<T> extends ArrayModel<T> implements Destroyable {
     }
 
     public override fill(value: T, start?: number, end?: number): this {
-        this.shareChange("fill", [value, start, end], undefined);
+        shareModelUpdate(this.id, "fill", [value, start, end], undefined);
         return super.fill(value, start, end);
     }
 
     public override pop(): T | undefined {
         const result = super.pop();
-        this.shareChange("pop", [], result);
+        shareModelUpdate(this.id, "pop", [], result);
         return result;
     }
 
     public override push(...items: T[]): number {
         const result = super.push(...items);
-        this.shareChange("push", items, result);
+        shareModelUpdate(this.id, "push", items, result);
         return result;
     }
 
     public override shift(): T | undefined {
         const result = super.shift();
-        this.shareChange("shift", [], result);
+        shareModelUpdate(this.id, "shift", [], result);
         return result;
     }
 
     public override splice(start: number, deleteCount?: number, ...items: T[]): T[] {
-        this.shareChange("splice", [start, deleteCount, ...items], undefined);
+        shareModelUpdate(this.id, "splice", [start, deleteCount, ...items], undefined);
         return super.splice(start, deleteCount, ...items);
     }
 
     public override unshift(...items: T[]): number {
         const result = super.unshift(...items);
-        this.shareChange("unshift", items, result);
+        shareModelUpdate(this.id, "unshift", items, result);
         return result;
-    }
-
-    protected shareChange(method: string, args: unknown[], result: unknown) {
-        inspector.updateModel({
-            id: this.id,
-            method: method,
-            args: args.map(toDevValue),
-            return: toDevValue(result),
-        });
     }
 }
 
@@ -119,28 +130,19 @@ export class DevSetModel<T> extends SetModel<T> implements Destroyable {
     }
 
     public override add(value: T): this {
-        this.shareChange("add", [value], undefined);
+        shareModelUpdate(this.id, "add", [value], undefined);
         return super.add(value);
     }
 
     public override clear(): void {
-        this.shareChange("clear", [], undefined);
+        shareModelUpdate(this.id, "clear", [], undefined);
         return super.clear();
     }
 
     public override delete(value: T): boolean {
         const result = super.delete(value);
-        this.shareChange("delete", [value], result);
+        shareModelUpdate(this.id, "delete", [value], result);
         return result;
-    }
-
-    protected shareChange(method: string, args: unknown[], result: unknown) {
-        inspector.updateModel({
-            id: this.id,
-            method: method,
-            args: args.map(toDevValue),
-            return: toDevValue(result),
-        });
     }
 }
 
@@ -179,27 +181,18 @@ export class DevMapModel<K, T> extends MapModel<K, T> implements Destroyable {
     }
 
     public override clear(): void {
-        this.shareChange("clear", [], undefined);
+        shareModelUpdate(this.id, "clear", [], undefined);
         super.clear();
     }
 
     public override delete(key: K): boolean {
         const result = super.delete(key);
-        this.shareChange("delete", [key], result);
+        shareModelUpdate(this.id, "delete", [key], result);
         return result;
     }
 
     public override set(key: K, value: T): this {
-        this.shareChange("set", [key, value], undefined);
+        shareModelUpdate(this.id, "set", [key, value], undefined);
         return super.set(key, value);
-    }
-
-    protected shareChange(method: string, args: unknown[], result: unknown) {
-        inspector.updateModel({
-            id: this.id,
-            method: method,
-            args: args.map(toDevValue),
-            return: toDevValue(result),
-        });
     }
 }

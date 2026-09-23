@@ -1,7 +1,9 @@
 import { Reactive } from "../core/core.js";
+import { IValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
+import { ReadOnlyReference } from "../value/reference.js";
 import { Listener, removeFragmentFromTree } from "./listener.js";
 
 const enum Ops {
@@ -20,6 +22,7 @@ type Arguments<T> = [Ops.Clear] | [Ops.Remove, T] | [Ops.Add, T];
 export class SetModel<T> extends Set<T> {
     public readonly listener: Listener<Arguments<T>>;
     public readonly rDeep: number;
+    public readonly $size: ReadOnlyReference<number, unknown>;
 
     /**
      * Constructs a set model based on a set
@@ -32,6 +35,7 @@ export class SetModel<T> extends Set<T> {
             super.add(item);
         });
         this.rDeep = ctx?.sDeep || 0;
+        this.$size = new ReadOnlyReference(this.size, ctx);
     }
 
     /**
@@ -41,7 +45,7 @@ export class SetModel<T> extends Set<T> {
      */
     public override add(value: T): this {
         this.listener.emit(Ops.Add, value);
-        return super.add(value);
+        return this.run(() => super.add(value));
     }
 
     /**
@@ -49,7 +53,7 @@ export class SetModel<T> extends Set<T> {
      */
     public override clear() {
         this.listener.emit(Ops.Clear);
-        super.clear();
+        this.run(() => super.clear());
     }
 
     /**
@@ -59,7 +63,13 @@ export class SetModel<T> extends Set<T> {
      */
     public override delete(value: T): boolean {
         this.listener.emit(Ops.Remove, value);
-        return super.delete(value);
+        return this.run(() => super.delete(value));
+    }
+
+    protected run<T>(fn: () => T): T {
+        const result = fn();
+        this.$size.set(this.size);
+        return result;
     }
 }
 

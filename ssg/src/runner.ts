@@ -1,6 +1,7 @@
 import type { TagOptions as WebTagOptions } from "vasille/web-runner";
 import { TextNode as AbstractTextNode, Tag as AbstractTag, Runner as IRunner, IValue } from "vasille";
 import escapeHTML from "escape-html";
+import { CssStyleInjector } from "vasille-css";
 
 export type TagOptions = Omit<WebTagOptions, "slot" | "events" | "callback"> & {
     slot?(ctx: Tag): void;
@@ -49,9 +50,9 @@ export class RawContentNode extends Node {
 }
 
 export class Text extends Node {
-    public readonly text: unknown | IValue<unknown>;
+    public readonly text: unknown | IValue<unknown, unknown>;
 
-    public constructor(text: unknown | IValue<unknown>) {
+    public constructor(text: unknown | IValue<unknown, unknown>) {
         super();
         this.text = text;
     }
@@ -81,6 +82,14 @@ export class Element extends Node {
         super();
         this.name = name;
         this.options = options;
+
+        if(options.c) {
+            for (const item of options.c) {
+                if(item instanceof CssStyleInjector) {
+                    item.inject();
+                }
+            }
+        }
     }
 
     public processAttrs() {
@@ -143,12 +152,17 @@ export class Element extends Node {
                     classes.push(item.V);
                 } else if (typeof item === "string") {
                     classes.push(item);
+                } else if (item instanceof CssStyleInjector) {
+                    classes.push(item.inject());
                 } else {
-                    for (const [name, value] of Object.entries(item)) {
-                        const enabled = value instanceof IValue ? value.V : value;
+                    /* istanbul ignore else */
+                    if (item) {
+                        for (const [name, value] of Object.entries(item)) {
+                            const enabled = value instanceof IValue ? value.V : value;
 
-                        if (enabled) {
-                            classes.push(name);
+                            if (enabled) {
+                                classes.push(name);
+                            }
                         }
                     }
                 }
@@ -359,7 +373,7 @@ export class TextNode extends AbstractTextNode<Node, Element, TagOptions> {
 }
 
 export class Tag extends AbstractTag<Node, Element, TagOptions> {
-    protected node: Element;
+    public node: Element;
 
     public compose() {
         this.node = new Element(this.name, this.options);
@@ -415,11 +429,12 @@ export class Runner implements IRunner<Node, Element, TagOptions> {
         node.appendChild(child);
     }
 
-    textNode(text: unknown): AbstractTextNode<Node, Element, TagOptions> {
-        return new TextNode({ text }, this);
+    textNode(deep: number, text: unknown): AbstractTextNode<Node, Element, TagOptions> {
+        return new TextNode({ text }, this, deep);
     }
 
     tag(
+        deep: number,
         tagName: string,
         input: TagOptions,
         cb?: ((ctx: AbstractTag<Node, Element, TagOptions>) => void) | undefined,
@@ -429,9 +444,9 @@ export class Runner implements IRunner<Node, Element, TagOptions> {
         }
 
         return tagName === "head"
-            ? new HeadTag(input, this, tagName)
+            ? new HeadTag(input, this, tagName, deep)
             : tagName === "body"
-              ? new BodyTag(input, this, tagName)
-              : new Tag(input, this, tagName);
+              ? new BodyTag(input, this, tagName, deep)
+              : new Tag(input, this, tagName, deep);
     }
 }

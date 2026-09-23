@@ -13,6 +13,10 @@ export interface WebRouterInitialization<Routes extends string> extends RouterIn
 > {
     loadingScreen?(props: object, node: Fragment<Node, Element, TagOptions>): void;
     loadingOverlay?(props: object, node: Fragment<Node, Element, TagOptions>): void;
+    wrapper?(
+        data: { slot(data: object, ctx: Fragment<Node, Element, TagOptions>): void },
+        ctx: Fragment<Node, Element, TagOptions>,
+    ): void;
 }
 
 export type NavigationMode = "silent" | "loading-screen" | "loading-overlay";
@@ -25,8 +29,8 @@ export class Router<Routes extends string> extends AbstractRouter<
     {},
     [NavigationMode]
 > {
-    public readonly $currentUrl = new Reference<string>("");
-    public readonly $loadingUrl = new Reference<string | null>(null);
+    public readonly $currentUrl = new Reference<string, unknown>("");
+    public readonly $loadingUrl = new Reference<string | null, unknown>(null);
 
     protected readonly webInit: WebRouterInitialization<Routes>;
     protected readonly window: Window;
@@ -50,9 +54,22 @@ export class Router<Routes extends string> extends AbstractRouter<
         this.node = node;
         this.$currentUrl.V = location.pathname;
 
-        this.build(node, node => (this.loadingNode = node));
-        this.build(node, node => (this.contentNode = node));
-        this.build(node, node => (this.overlayNode = node));
+        let routerNode = node;
+
+        if (init.wrapper) {
+            init.wrapper(
+                {
+                    slot(_data: object, ctx: Fragment<Node, Element, TagOptions>) {
+                        routerNode = ctx;
+                    },
+                },
+                node,
+            );
+        }
+
+        this.build(routerNode, node => (this.loadingNode = node));
+        this.build(routerNode, node => (this.contentNode = node));
+        this.build(routerNode, node => (this.overlayNode = node));
 
         window.addEventListener("popstate", () => {
             this.doNavigate(location.href, false, "loading-screen");
@@ -61,21 +78,21 @@ export class Router<Routes extends string> extends AbstractRouter<
     }
 
     /**
-     * Navigate to new page, showing the loading screen
+     * Navigate to a new page, showing the loading screen
      */
     public goTo(url: string) {
         this.doNavigate(url, true, "loading-screen");
     }
 
     /**
-     * Navigate to new page in an AJAX way, showing a loading overlay
+     * Navigate to a new page in an AJAX way, showing a loading overlay
      */
     public ajax(url: string) {
         this.doNavigate(url, true, "loading-overlay");
     }
 
     /**
-     * Load the new page in background, will throw on errors
+     * Load the new page in the background, will throw on errors
      */
     public load(url: string): Promise<void> {
         return this.prepareNavigation(url, true, true, "silent");
@@ -180,7 +197,7 @@ export class Router<Routes extends string> extends AbstractRouter<
     ) {
         const child = new Fragment<Node, Element, TagOptions>(node.runner, node.sDeep + 1);
 
-        node.create(child, run);
+        node.child(child, run);
     }
 }
 

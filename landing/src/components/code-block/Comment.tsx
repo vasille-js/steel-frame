@@ -2,7 +2,7 @@ import { component, Slot } from "steel-frame";
 
 interface Props {
   isDark: boolean;
-  slot(): void;
+  slot?(): void;
 }
 
 export const Comment = component<Props>(({ isDark, slot }) => {

@@ -3,9 +3,22 @@ import { IValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
+import { ReadOnlyReference } from "../value/reference.js";
 import { Listener } from "./listener.js";
 
 type Arguments<T> = [number, number, T[]] | [number, number];
+
+function fixedIndex(index: number | undefined, length: number, defaultValue: number) {
+    return typeof index === "number"
+        ? index < 0
+            ? index < -length
+                ? 0
+                : length + index
+            : index > length
+              ? length
+              : index
+        : defaultValue;
+}
 
 /**
  * Model based on Array class
@@ -14,6 +27,7 @@ type Arguments<T> = [number, number, T[]] | [number, number];
 export class ArrayModel<T> extends Array<T> {
     public readonly listener: Listener<Arguments<T>>;
     public readonly rDeep: number;
+    public readonly $length: ReadOnlyReference<number, unknown>;
 
     /**
      * @param data {Array} input data
@@ -27,6 +41,7 @@ export class ArrayModel<T> extends Array<T> {
         if (data instanceof Array) {
             super.push(...data);
         }
+        this.$length = new ReadOnlyReference(this.length, ctx);
     }
 
     /* Array members */
@@ -38,19 +53,16 @@ export class ArrayModel<T> extends Array<T> {
      * @param end {?number} end index
      */
     public override fill(value: T, start?: number, end?: number): this {
-        /* istanbul ignore else */
-        if (!start) {
-            start = 0;
-        }
-        /* istanbul ignore else */
-        if (!end) {
-            end = this.length;
+        const length = this.length;
+        const from = fixedIndex(start, length, 0);
+        const to = fixedIndex(end, length, length);
+
+        if (from >= to) {
+            return this;
         }
 
-        for (let i = start; i < end; i++) {
-            this[i] = value;
-        }
-        this.listener.emit(0, this.length, this);
+        super.fill(value, start, end);
+        this.listener.emit(from, to - from, this.slice(from, to));
         return this;
     }
 
@@ -62,7 +74,8 @@ export class ArrayModel<T> extends Array<T> {
         /* istanbul ignore else */
         if (this.length > 0) {
             this.listener.emit(this.length - 1, 1);
-            return super.pop();
+
+            return this.run(() => super.pop());
         }
     }
 
@@ -73,8 +86,7 @@ export class ArrayModel<T> extends Array<T> {
      */
     public override push(...items: Array<T>): number {
         this.listener.emit(this.length, 0, items);
-        super.push(...items);
-        return this.length;
+        return this.run(() => super.push(...items));
     }
 
     /**
@@ -85,7 +97,7 @@ export class ArrayModel<T> extends Array<T> {
         /* istanbul ignore else */
         if (this.length > 0) {
             this.listener.emit(0, 1);
-            return super.shift();
+            return this.run(() => super.shift());
         }
     }
 
@@ -101,7 +113,7 @@ export class ArrayModel<T> extends Array<T> {
         deleteCount = typeof deleteCount === "number" ? deleteCount : this.length - start;
         this.listener.emit(start, deleteCount, items);
 
-        return super.splice(start, deleteCount, ...items);
+        return this.run(() => super.splice(start, deleteCount, ...items));
     }
 
     /**
@@ -111,13 +123,19 @@ export class ArrayModel<T> extends Array<T> {
      */
     public override unshift(...items: Array<T>): number {
         this.listener.emit(0, 0, items);
-        return super.unshift(...items);
+        return this.run(() => super.unshift(...items));
     }
 
     public replace(at: number, with_: T): this {
         this.listener.emit(at, 1, [with_]);
         this[at] = with_;
         return this;
+    }
+
+    protected run<T>(fn: () => T): T {
+        const result = fn();
+        this.$length.set(this.length);
+        return result;
     }
 }
 

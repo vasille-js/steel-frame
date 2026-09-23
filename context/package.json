@@ -1,6 +1,6 @@
 {
   "name": "vasille-context",
-  "version": "6.0.0-rc",
+  "version": "7.0.0-rc.1",
   "description": "Provide contextual data between Vasille.JS components",
   "keywords": [
     "frontend",
@@ -25,8 +25,8 @@
     "prettier": "npx prettier src test --write",
     "prebuild": "rm -rf types lib",
     "build": "tsc --build tsconfig.json",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
-    "test-coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test-coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "repository": {
     "type": "git",
@@ -34,13 +34,12 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "cross-env": "^10.1.0",
     "jest": "^30.2.0",
     "prettier": "^3.8.1",
     "ts-jest": "^29.4.6",
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "vasille": "^6.0.0-rc.4"
+    "vasille": "^7.0.0-rc.9"
   }
 }

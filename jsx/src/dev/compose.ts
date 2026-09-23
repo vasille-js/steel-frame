@@ -64,7 +64,7 @@ export function devView<Node, Element, TagOptions extends object, In extends Com
         const { callback } = props;
         const frag = new DevFragment<Node, Element, TagOptions>(parent.runner, declaration, usage ?? null, name, props);
 
-        parent.create(frag);
+        parent.child(frag);
 
         try {
             const result = renderer(frag, props);
@@ -74,7 +74,7 @@ export function devView<Node, Element, TagOptions extends object, In extends Com
             }
         } catch (e) {
             inspector.reportComponentError({
-                targetId: frag.id,
+                id: frag.id,
                 error: errorToString(e),
                 time: Date.now(),
             });
@@ -99,7 +99,7 @@ export function devView<Node, Element, TagOptions extends object, In extends Com
             props.slot = slot;
         }
 
-        node.create(frag);
+        node.child(frag);
         fragments.set(frag, { props, node: frag, usage });
         frag.runOnDestroy(() => fragments.delete(frag));
         safeRun(frag, props, usage);
@@ -135,7 +135,9 @@ export function devModel<In extends object, Out extends object>(
             usage,
             name,
             time: Date.now(),
-            props: remapObject(o as { [k: string]: unknown }, toDevIdOrValue),
+        });
+        Object.entries(o).forEach(([key, value]) => {
+            inspector.customModelProperty({ id, key, value: toDevIdOrValue(value) });
         });
         if (parent) {
             parent.runOnDestroy(() => ctx.destroy(ctx.sDeep));
@@ -161,7 +163,7 @@ export function devMount<T>(
     // share information about created stores
     inspector.connect(devInspector);
 
-    root.create(frag, function () {
+    root.child(frag, function () {
         view($, frag);
     });
 

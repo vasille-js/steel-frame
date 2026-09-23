@@ -11,6 +11,7 @@ export {
     DevMapModelView,
     DevArrayModelView,
     DevArrayView,
+    DevZombie,
 } from "./components.js";
 export {
     devStore,
@@ -32,12 +33,16 @@ export {
     devSet,
     devSafeRef,
     devSafeExpr,
+    toDevDeepFieldRef,
+    toDevFieldRef,
+    devDebounceRef,
+    devEdgeRef,
 } from "./internal.js";
 export { devAwaited } from "./library.js";
 
 function devErrorHandler(e: unknown) {
     inspector.reportError({
-        targetId: 0,
+        id: 0,
         error: errorToString(e),
         time: Date.now(),
     });

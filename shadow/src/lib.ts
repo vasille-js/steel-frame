@@ -1,6 +1,7 @@
 import { App, Fragment, Reference } from "vasille";
-import { match, ref, set } from "vasille-jsx";
-import { Runner, TagOptions } from "vasille/web-runner";
+import { ref } from "vasille-jsx";
+import { Runner, Tag, TagOptions } from "vasille/web-runner";
+import { ShadowCssStyleInjector, StyleSheetsManager } from "./css.js";
 
 const any = 0;
 const string = 1;
@@ -11,24 +12,49 @@ interface PropsDeclaration {
     [key: string]: typeof string | typeof number | typeof boolean | typeof any;
 }
 
-class ShadowFragment extends Fragment<Node, Element, TagOptions> {
-    protected shadowApp: App<Node, Element, TagOptions>;
+class ShadowTag extends Tag<TagOptions, ShadowRunner> {
+    public applyOptions(options: TagOptions) {
+        if (options.c) {
+            for (const className of options.c) {
+                if (className instanceof ShadowCssStyleInjector) {
+                    className.link(this.runner.styles);
+                }
+            }
+        }
+        super.applyOptions(options);
+    }
+}
 
-    public constructor(shadowApp: App<Node, Element, TagOptions>, parent?: Fragment<Node, Element, TagOptions>) {
-        const parentNode = parent ?? shadowApp;
+class ShadowFragment extends Fragment<Node, Element, TagOptions, ShadowRunner> {
+    public constructor(app: App<Node, Element, TagOptions, ShadowRunner>) {
+        super(app.runner, app.sDeep + 1);
+        this.parent = app;
+    }
+}
 
-        super(parentNode.runner, parentNode.sDeep + 1);
-        this.shadowApp = shadowApp;
-        this.parent = parentNode;
+class ShadowRunner extends Runner<TagOptions> {
+    public readonly styles: StyleSheetsManager;
+
+    public constructor(document: Document, styles: StyleSheetsManager) {
+        super(document);
+        this.styles = styles;
     }
 
-    public appendNode(node: Node) {
-        this.shadowApp.appendNode(node);
+    tag(
+        deep: number,
+        tagName: string,
+        input: TagOptions,
+        cb?: ((ctx: Tag<TagOptions, ShadowRunner>) => void) | undefined,
+    ): Tag<TagOptions, ShadowRunner> {
+        if (cb) {
+            input.l = cb;
+        }
+        return new ShadowTag(input, this, tagName, deep);
     }
 }
 
 function toKebabCase(propName: string) {
-    let index = propName[0] === "$" ? 1 : 0;
+    let index = propName.startsWith("$") ? 1 : 0;
     let name = propName[index].toLowerCase();
 
     for (index++; index < propName.length; index++) {
@@ -53,7 +79,7 @@ function readRef(ref: unknown) {
 }
 
 function matchAndSet(o: object, key: string, value: unknown) {
-    if (key[0] === "$") {
+    if (key.startsWith("$")) {
         if (value instanceof Reference) {
             o[key] = value;
         } else {
@@ -71,6 +97,7 @@ export function shadow(
 ): void {
     const observableAttributes: string[] = [];
     const attributesNamesMap = new Map<string, string>();
+    const styleManager = new StyleSheetsManager();
 
     for (const key in props) {
         if (props[key]) {
@@ -87,8 +114,7 @@ export function shadow(
 
             protected props: { [k: string]: unknown };
             protected events: { [k: string]: unknown };
-            protected root: App<Node, Element, TagOptions>;
-            protected $vasille?: Fragment<Node, Element, TagOptions>;
+            protected root: App<Node, Element, TagOptions, ShadowRunner>;
 
             public constructor() {
                 super();
@@ -98,7 +124,7 @@ export function shadow(
 
                 for (const key in props) {
                     const isEvent = key.startsWith("on");
-                    const isReactive = key[0] === "$";
+                    const isReactive = key.startsWith("$");
                     const container = isEvent ? entityEvents : entityProps;
 
                     Object.defineProperty(this, isReactive ? key.slice(1) : key, {
@@ -120,14 +146,17 @@ export function shadow(
                     }
                 }
 
-                this.root = new App<Node, Element, TagOptions>(
-                    this.attachShadow({ mode: "open" }) as unknown as Element,
-                    new Runner(document),
+                const shadowRoot = this.attachShadow({ mode: "open" });
+
+                styleManager.addRoot(shadowRoot);
+                this.root = new App<Node, Element, TagOptions, ShadowRunner>(
+                    shadowRoot as unknown as Element,
+                    new ShadowRunner(document, styleManager),
                 );
             }
 
             public connectedCallback() {
-                const result = renderer(new ShadowFragment(this.root, this.$vasille), this.props);
+                const result = renderer(new ShadowFragment(this.root), this.props);
 
                 /* istanbul ignore else */
                 if (result && typeof result === "object" && result.constructor === Object) {

@@ -1,7 +1,7 @@
 import { beforeMount, page, prompt, Slot, view } from "steel-frame";
 
 interface Props {
-    slot(): void;
+    slot?(): void;
 }
 
 const promptError = prompt(() => {});
@@ -18,7 +18,7 @@ export default page(async () => {
     beforeMount(() => {
         controller = {
             promptError() {
-                promptError({});
+                promptError(null as any, {});
             },
         };
     });

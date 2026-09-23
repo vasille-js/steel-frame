@@ -1,9 +1,9 @@
-import { Reactive } from "vasille";
+import type { Reactive } from "vasille";
 
 const searchMap = new Map<Reactive, Map<unknown, unknown>>();
 
 function lookUp(node: Reactive, key: unknown): unknown {
-  let it: Reactive|null = node;
+  let it: Reactive | null = node;
 
   while (it) {
     const value = searchMap.get(it)?.get(key);
@@ -12,7 +12,7 @@ function lookUp(node: Reactive, key: unknown): unknown {
       return value;
     }
 
-    it = "parent" in it ? it.parent as Reactive : null;
+    it = "parent" in it ? (it.parent as Reactive) : null;
   }
 }
 
@@ -89,14 +89,17 @@ export function receive(node: Reactive, key: unknown): unknown {
 }
 
 export function receiveOptional<Args extends unknown[], Value>(
-    node: Reactive,
-    ctx: SteelContext<Args, Value>,
-): Value|undefined;
+  node: Reactive,
+  ctx: SteelContext<Args, Value>,
+): Value | undefined;
 export function receiveOptional<Class>(
-    node: Reactive,
-    className: abstract new (...args: unknown[]) => Class,
-): Class|undefined;
-export function receiveOptional(node: Reactive, key: string): string|undefined;
+  node: Reactive,
+  className: abstract new (...args: unknown[]) => Class,
+): Class | undefined;
+export function receiveOptional(
+  node: Reactive,
+  key: string,
+): string | undefined;
 export function receiveOptional(node: Reactive, key: unknown): unknown {
   return lookUp(node, key);
 }

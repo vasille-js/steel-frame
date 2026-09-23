@@ -47,7 +47,7 @@ export abstract class BaseDevReference<T> extends Reference<T, ExecutionPosition
 }
 
 export class DevReference<T> extends BaseDevReference<T> implements Destroyable {
-    public readonly id: number;
+    public override readonly id: number;
 
     public constructor(value: T, ctx: Reactive | undefined, declaration: StaticPosition, name?: string) {
         super(value, ctx);
@@ -87,7 +87,7 @@ export class DevReference<T> extends BaseDevReference<T> implements Destroyable 
 
     protected shareError(error: unknown, position?: ExecutionPosition) {
         inspector.reportReferenceError({
-            targetId: this.id,
+            id: this.id,
             time: Date.now(),
             error: errorToString(error),
             position: position,
@@ -96,7 +96,7 @@ export class DevReference<T> extends BaseDevReference<T> implements Destroyable 
 }
 
 export class ExpressionDevReference<T> extends BaseDevReference<T> {
-    public readonly id: number;
+    public override readonly id: number;
 
     public constructor(id: number, value: T) {
         super(value);
@@ -106,7 +106,7 @@ export class ExpressionDevReference<T> extends BaseDevReference<T> {
 
     protected override shareError(error: unknown, position: ExecutionPosition) {
         inspector.reportReferenceError({
-            targetId: this.id,
+            id: this.id,
             time: Date.now(),
             error: errorToString(error),
             position: position,
@@ -119,7 +119,7 @@ export class ExpressionDevReference<T> extends BaseDevReference<T> {
 }
 
 export class DevExpression<T, Args extends unknown[]> extends Expression<T, Args, ExecutionPosition> {
-    public readonly id: number;
+    declare public readonly id: number;
     public readonly isWatch: boolean;
 
     public constructor(
@@ -143,7 +143,7 @@ export class DevExpression<T, Args extends unknown[]> extends Expression<T, Args
                     initialValue = func.apply(null, args);
                 } catch (e) {
                     inspector.reportExpressionCalculationError({
-                        targetId: id,
+                        id: id,
                         time: Date.now(),
                         error: errorToString(e),
                         deps: args.map(toDevValue),
@@ -170,10 +170,10 @@ export class DevExpression<T, Args extends unknown[]> extends Expression<T, Args
             isWatch: isWatch,
             value: toDevValue(this.sync.V),
             deps: values.map((dep, index) => {
-                if (dep instanceof DevReference || dep instanceof DevExpression) {
+                if (dep instanceof IValue) {
                     return {
                         code: depsCode[index]!,
-                        id: dep.id,
+                        id: dep.id!,
                         value: toDevValue(dep.V),
                     } satisfies Dependency;
                 }
@@ -217,7 +217,7 @@ export class DevExpression<T, Args extends unknown[]> extends Expression<T, Args
                 }
             } catch (e) {
                 inspector.reportExpressionCalculationError({
-                    targetId: this.id,
+                    id: this.id,
                     time: Date.now(),
                     error: errorToString(e),
                     position: position,

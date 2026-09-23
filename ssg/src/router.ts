@@ -82,8 +82,7 @@ export class Router extends AbstractRouter<Node, Element, TagOptions, string, {}
     ): Promise<void> {
         this.runner.head.children.splice(0);
         this.runner.body.children.splice(0);
-        this.node.children.clear();
-        this.node.lastChild = undefined;
+        this.node.children.splice(0);
 
         await this.renderScreen(target.screen, props);
     }
@@ -103,8 +102,8 @@ export function routerApp(init: RouterInitialization<Node, Element, TagOptions, 
     const body = new Element("body", {});
     const runner = new Runner(head, body);
     const app = new App(body, runner);
-    const fragment = new Fragment<Node, Element, TagOptions>(runner);
+    const fragment = new Fragment<Node, Element, TagOptions>(runner, 1);
 
-    app.create(fragment);
+    app.child(fragment);
     return new Router(runner, fragment, init, mode);
 }

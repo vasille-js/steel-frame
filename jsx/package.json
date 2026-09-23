@@ -1,6 +1,6 @@
 {
   "name": "vasille-jsx",
-  "version": "7.0.0-rc.4",
+  "version": "7.0.0-rc.7",
   "description": "The same devkit which is designed to build fault tolerant frontends (JSX components)",
   "main": "lib/index.js",
   "exports": {
@@ -21,8 +21,8 @@
     "prettier": "npx prettier src test --write",
     "prebuild": "rm -rf lib types",
     "build": "tsc --build tsconfig.json",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
-    "test-coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test-coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "type": "module",
   "keywords": [
@@ -65,6 +65,6 @@
     "typescript-eslint": "^8.39.1"
   },
   "dependencies": {
-    "vasille": "7.0.0-rc.5"
+    "vasille": "^7.0.0-rc.9"
   }
 }

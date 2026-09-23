@@ -1,4 +1,4 @@
-import { Fragment, reportError, safe } from "vasille";
+import { Fragment, reportError } from "vasille";
 
 export type QueueItem<Node, Element, TagOptions extends object> = {
     node: Fragment<Node, Element, TagOptions>;
@@ -60,7 +60,7 @@ export function QueuedRender<Node, Element, TagOptions extends object>(
         };
 
         // mount the newly created node to the parent
-        ctx.create(node);
+        ctx.child(node);
 
         if (props.priority === "high") {
             queue.splice(workingIndex + 1, 0, item);

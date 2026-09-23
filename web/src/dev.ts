@@ -24,14 +24,14 @@ function createPortal<Runner extends IRunner<Node, Element, TagOptions>>(
     name: string | undefined,
 ) {
     const portal = new DevPortal<Node, Element, TagOptions, Runner>(
-        { node: document.body },
+        document.body,
         node.runner as Runner,
         declaration,
         usage,
         name,
     );
 
-    node.create(portal);
+    node.child(portal);
 
     return portal;
 }
@@ -82,7 +82,7 @@ export function devModal<T extends CompositionProps>(
             input.slot = slot;
         }
 
-        node.create(frag);
+        node.child(frag);
         fragments.set(frag, { props: input, node: frag, usage });
         run(frag, input, usage);
     };
@@ -162,7 +162,7 @@ export function devPrompt<T extends PromptProps>(
     ) => {
         const frag = new DevFragment<Node, Element, TagOptions>(node.runner, null, null, name, {});
 
-        node.create(frag);
+        node.child(frag);
         fragments.set(frag, { props: input, node: frag, usage });
         return run(frag, input, timeout, usage);
     };

@@ -24,6 +24,15 @@ it("array model", function () {
     array.fill(0);
     expect(array.join()).toEqual([0, 0, 0].join());
 
+    array.fill(1, 1, -1);
+    expect(array.join()).toEqual([0, 1, 0].join());
+
+    array.fill(2, 2, 0);
+    expect(array.join()).toEqual([0, 1, 0].join());
+
+    array.fill(0, -5, 5);
+    expect(array.join()).toEqual([0, 0, 0].join());
+
     expect(array.pop()).toBe(0);
     expect(array.join()).toEqual([0, 0].join());
 

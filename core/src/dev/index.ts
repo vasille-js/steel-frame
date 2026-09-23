@@ -1,5 +1,6 @@
 export { DevReactive } from "./core.js";
-export { DevApp, DevPortal, DevSwitchedNode, DevWatch } from "./components.js";
+export { DevApp, DevPortal, DevSwitchedNode, DevWatch, DevZombie, processComponentProps } from "./components.js";
+export { InspectedCssStyleInjector, devStyleSheet } from "./css.js";
 export {
     type Dependency,
     type DevValue,
@@ -30,7 +31,7 @@ export {
     type ProtocolDevValue,
     type ProtocolSlotError,
     type ProtocolRouterStateChange,
-    type ProtocolRoutes,
+    type ProtocolRoute,
     type ProtocolRouterTargetResult,
     type ProtocolFunctionError,
     type ProtocolFunctionResult,
@@ -44,6 +45,20 @@ export {
     type ProtocolObjectProperty,
     type DestroyData,
     type EraseData,
+    type ProtocolCustomModelProperty,
+    type ProtocolComponentProperty,
+    type ProtocolModelUpdateArg,
+    type ProtocolRouterTargetResultQueryArg,
+    type ProtocolTagAttr,
+    type ProtocolTagBind,
+    type ProtocolTagCallback,
+    type ProtocolTagClass,
+    type ProtocolTagEvent,
+    type ProtocolTagOnDestroy,
+    type ProtocolTagStyle,
+    type ProtocolCssInjector,
+    type ProtocolCssRule,
+    type ProtocolFunctionCallArg,
     executionPosition,
     provideId,
     setupPosition,
@@ -53,7 +68,7 @@ export {
     registerReference,
     toDevId,
     toDevIdOrValue,
-    toDevObject,
+    processDevObject,
     toDevValue,
     errorToString,
     wrapObject,

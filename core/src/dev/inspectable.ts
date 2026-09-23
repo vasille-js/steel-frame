@@ -1,5 +1,13 @@
 import { IValue } from "../core/ivalue.js";
-import { DevExpression, DevReference } from "./state.js";
+import { DevArrayModel, DevMapModel, DevSetModel } from "./models.js";
+import {
+    DevDebounceReference,
+    DevDeepFieldReference,
+    DevEdgeReference,
+    DevExpression,
+    DevReference,
+    DevSingleFieldReference,
+} from "./state.js";
 
 export type StaticPosition = [string, number, number, number, number];
 export type ExecutionPosition = number;
@@ -28,6 +36,10 @@ export interface Inspectable {
     id: number;
 }
 
+export interface Timed {
+    time: number;
+}
+
 export interface InspectableReactive {
     id: number;
 }
@@ -37,26 +49,20 @@ export interface Dependency extends Inspectable {
     value: DevValue;
 }
 
-export interface ProtocolPosition {
-    id: number;
+export interface ProtocolPosition extends Inspectable {
     declaration: StaticPosition;
 }
 
-export interface ProtocolReference extends ProtocolPosition {
+export interface ProtocolReference extends ProtocolPosition, Timed {
     value: DevValue;
-    time: number;
 }
 
-export interface ProtocolReferenceUpdate {
-    id: number;
-    time: number;
+export interface ProtocolReferenceUpdate extends Inspectable, Timed {
     value: DevValue;
     position?: ExecutionPosition;
 }
 
-export interface ProtocolError {
-    targetId: number;
-    time: number;
+export interface ProtocolError extends Inspectable, Timed {
     error: string;
 }
 
@@ -82,17 +88,18 @@ export interface ProtocolDependency {
     dependency: number;
 }
 
-export interface ProtocolComponent {
-    id: number;
+export interface ProtocolComponent extends Inspectable, Timed {
     name: string;
-    props: { [k: string]: number | DevValue };
     declaration?: StaticPosition | null;
     usage?: StaticPosition | null;
-    time: number;
 }
 
-export interface ProtocolState {
-    id: number;
+export interface ProtocolComponentProperty extends Inspectable {
+    name: string;
+    value: number | DevValue;
+}
+
+export interface ProtocolState extends Inspectable {
     name: string;
     stateId: number;
 }
@@ -102,22 +109,46 @@ export interface ProtocolParent {
     parent: number;
 }
 
-export interface ProtocolTag {
-    id: number;
-    time: number;
+export interface ProtocolTag extends Inspectable, Timed {
     usage: StaticPosition | undefined;
     tagName: string;
-    attr?: { [k: string]: number | DevValue };
-    class?: (number | string | { [k: string]: number | DevValue })[];
-    style?: { [k: string]: number | string };
-    events?: { [k: string]: DevValue };
-    bind?: { [k: string]: number | DevValue };
-    callback?: number | DevValue;
 }
 
-export interface ProtocolNode {
-    id: number;
-    time: number;
+export interface ProtocolTagAttr extends Inspectable {
+    name: string;
+    value: number | DevValue;
+}
+
+export interface ProtocolTagClass extends Inspectable {
+    name: string;
+    value: number | string;
+    condition?: number | DevValue;
+}
+
+export interface ProtocolTagStyle extends Inspectable {
+    name: string;
+    value: number | DevValue;
+}
+
+export interface ProtocolTagEvent extends Inspectable {
+    name: string;
+    value: number | DevValue;
+}
+
+export interface ProtocolTagBind extends Inspectable {
+    name: string;
+    value: number | DevValue;
+}
+
+export interface ProtocolTagCallback extends Inspectable {
+    value: number | DevValue;
+}
+
+export interface ProtocolTagOnDestroy extends Inspectable {
+    value: number | DevValue;
+}
+
+export interface ProtocolNode extends Inspectable, Timed {
     text: number | DevValue;
     position: StaticPosition;
 }
@@ -126,16 +157,11 @@ export interface ProtocolSlotError extends ProtocolError {
     usage: StaticPosition;
 }
 
-export interface ProtocolComposeTime {
-    id: number;
-    time: number;
-}
+export interface ProtocolComposeTime extends Inspectable, Timed {}
 
-export interface ProtocolModel {
-    id: number;
+export interface ProtocolModel extends Inspectable, Timed {
     type: "array" | "set" | "map";
     usage: StaticPosition;
-    time: number;
 }
 
 export interface ProtocolModelItem {
@@ -144,74 +170,86 @@ export interface ProtocolModelItem {
     value: DevValue;
 }
 
-export interface ProtocolModelUpdate {
-    id: number;
+export interface ProtocolModelUpdate extends Inspectable, Timed {
+    modelId: number;
     method: string;
-    args: DevValue[];
     return: DevValue;
 }
 
-export interface ProtocolStore extends ProtocolPosition {
-    name: string;
-    time: number;
+export interface ProtocolModelUpdateArg extends Inspectable {
+    value: DevValue;
 }
 
-export interface ProtocolCustomModel extends ProtocolPosition {
-    time: number;
+export interface ProtocolStore extends ProtocolPosition, Timed {
+    name: string;
+}
+
+export interface ProtocolCustomModel extends ProtocolPosition, Timed {
     usage: StaticPosition;
     name: string;
-    props: { [k: string]: number | DevValue };
 }
 
-export interface ProtocolRouterTargetResult {
-    time: number;
+export interface ProtocolCustomModelProperty extends Inspectable {
+    key: string;
+    value: number | DevValue;
+}
+
+export interface ProtocolRouterTargetResult extends Inspectable, Timed {
     url: string;
     path: string;
-    query: { [k: string]: string[] };
     hash: string;
     targetFound: boolean;
     params: object;
 }
 
-export interface ProtocolExecutionPosition {
-    id: number;
+export interface ProtocolRouterTargetResultQueryArg extends Inspectable {
+    name: string;
+    value: string;
+}
+
+export interface ProtocolExecutionPosition extends Inspectable {
     position: StaticPosition;
     stack: string;
 }
 
-export interface ProtocolDevValue {
-    id: number;
+export interface ProtocolDevValue extends Inspectable {
     pos: StaticPosition;
 }
 
-export interface ProtocolRoutes {
-    time: number;
-    paths: string[];
+export interface ProtocolRoute {
+    path: string;
 }
 
-export interface ProtocolRouterStateChange {
-    time: number;
+export interface ProtocolRouterStateChange extends Timed {
     name: string;
     value: string | null | undefined;
 }
 
-export interface ProtocolRouterActionCall {
-    time: number;
+export interface ProtocolRouterActionCall extends Timed {
     name: string;
     path: string;
 }
 
-export interface ProtocolFunctionCall {
+export interface ProtocolFunctionCall extends Inspectable, Timed {
     position: StaticPosition;
-    id: number;
-    args: DevValue[];
-    time: number;
 }
 
-export interface ProtocolEventTrigger {
+export interface ProtocolFunctionCallArg extends Inspectable {
+    value: DevValue | number;
+}
+
+export interface ProtocolFunctionResult extends Inspectable, Timed {
+    result: DevValue;
+    async: boolean;
+}
+
+export interface ProtocolFunctionError extends ProtocolError {
+    async: boolean;
+}
+
+export interface ProtocolEventTrigger extends Timed {
     target: number;
     eventName: string;
-    time: number;
     position?: StaticPosition;
     result?: {
         value?: DevValue;
@@ -219,38 +257,29 @@ export interface ProtocolEventTrigger {
     };
 }
 
-export interface ProtocolFunctionResult {
-    id: number;
-    result: DevValue;
-    async: boolean;
-    time: number;
-}
-
-export interface ProtocolFunctionError extends ProtocolError {
-    async: boolean;
-}
-
-export interface ProtocolObject {
-    id: number;
+export interface ProtocolObject extends Inspectable, Timed {
     constructor: string;
     position?: StaticPosition;
-    time: number;
 }
 
-export interface ProtocolObjectProperty {
-    id: number;
+export interface ProtocolObjectProperty extends Inspectable, Timed {
     name: string;
     value: DevValue;
-    time: number;
 }
 
-export interface ProtocolObjectUpdate {
-    id: number;
-    time: number;
+export interface ProtocolObjectUpdate extends Inspectable, Timed {}
+
+export interface ProtocolCssInjector extends Inspectable, Timed {
+    className: string;
+    position: StaticPosition;
 }
 
-export interface DestroyData {
-    id: number;
+export interface ProtocolCssRule extends Inspectable {
+    success: boolean;
+    rule: string | [number, string];
+}
+
+export interface DestroyData extends Inspectable {
     time: number;
 }
 
@@ -274,7 +303,15 @@ export interface Inspector {
 
     // Components
     createComponent(comp: ProtocolComponent): void;
+    componentProperty(prop: ProtocolComponentProperty): void;
     createTag(tag: ProtocolTag): void;
+    tagAttr(attr: ProtocolTagAttr): void;
+    tagClass(cls: ProtocolTagClass): void;
+    tagStyle(style: ProtocolTagStyle): void;
+    tagEvent(event: ProtocolTagEvent): void;
+    tagBind(bind: ProtocolTagBind): void;
+    tagCallback(callback: ProtocolTagCallback): void;
+    tagOnDestroy(onDestroy: ProtocolTagOnDestroy): void;
     createNode(node: ProtocolNode): void;
     addContextState(state: ProtocolState): void;
     setElementParent(parent: ProtocolParent): void;
@@ -286,17 +323,21 @@ export interface Inspector {
     createModel(model: ProtocolModel): void;
     createModelItem(item: ProtocolModelItem): void;
     updateModel(update: ProtocolModelUpdate): void;
+    updateModelArg(arg: ProtocolModelUpdateArg): void;
     createStore(store: ProtocolStore): void;
     createCustomModel(model: ProtocolCustomModel): void;
+    customModelProperty(item: ProtocolCustomModelProperty): void;
 
     // routes
-    registeredRoutes(routes: ProtocolRoutes): void;
+    registeredRoute(routes: ProtocolRoute): void;
     routerStateChange(change: ProtocolRouterStateChange): void;
     routerActionCall(call: ProtocolRouterActionCall): void;
     routerTargetResult(data: ProtocolRouterTargetResult): void;
+    routerTargetResultQueryArg(arg: ProtocolRouterTargetResultQueryArg): void;
 
     // function
     functionCall(call: ProtocolFunctionCall): void;
+    functionCallArg(arg: ProtocolFunctionCallArg): void;
     functionReturn(result: ProtocolFunctionResult): void;
     functionThrows(error: ProtocolFunctionError): void;
     eventTrigger(call: ProtocolEventTrigger): void;
@@ -306,145 +347,209 @@ export interface Inspector {
     updateObject(update: ProtocolObjectUpdate): void;
     objectProperty(prop: ProtocolObjectProperty): void;
 
+    // css
+    cssInjector(injector: ProtocolCssInjector): void;
+    cssRule(rule: ProtocolCssRule): void;
+
     // any
     destroy(data: DestroyData): void;
     erase(data: EraseData): void;
 }
 
 export abstract class AbstractInspector implements Inspector {
-    createModelItem(item: ProtocolModelItem): void {
-        this.send(this.createModelItem.name, item);
-    }
-    newObject(obj: ProtocolObject): void {
-        this.send(this.newObject.name, obj);
-    }
-    updateObject(update: ProtocolObjectUpdate): void {
-        this.send(this.updateObject.name, update);
-    }
-    objectProperty(prop: ProtocolObjectProperty): void {
-        this.send(this.objectProperty.name, prop);
-    }
     public addContextState(state: ProtocolState): void {
-        this.send(this.addContextState.name, state);
+        this.send("addContextState", state);
+    }
+
+    public componentProperty(prop: ProtocolComponentProperty): void {
+        this.send("componentProperty", prop);
     }
 
     public composeTime(time: ProtocolComposeTime): void {
-        this.send(this.composeTime.name, time);
+        this.send("composeTime", time);
     }
 
     public createComponent(comp: ProtocolComponent): void {
-        this.send(this.createComponent.name, comp);
+        this.send("createComponent", comp);
     }
 
     public createCustomModel(model: ProtocolCustomModel): void {
-        this.send(this.createCustomModel.name, model);
+        this.send("createCustomModel", model);
     }
 
     public createModel(model: ProtocolModel): void {
-        this.send(this.createModel.name, model);
+        this.send("createModel", model);
+    }
+
+    public createModelItem(item: ProtocolModelItem): void {
+        this.send("createModelItem", item);
     }
 
     public createNode(node: ProtocolNode): void {
-        this.send(this.createNode.name, node);
+        this.send("createNode", node);
     }
 
     public createStore(store: ProtocolStore): void {
-        this.send(this.createStore.name, store);
+        this.send("createStore", store);
     }
 
     public createTag(tag: ProtocolTag): void {
-        this.send(this.createTag.name, tag);
+        this.send("createTag", tag);
+    }
+
+    public cssInjector(injector: ProtocolCssInjector): void {
+        this.send("cssInjector", injector);
+    }
+
+    public cssRule(rule: ProtocolCssRule): void {
+        this.send("cssRule", rule);
+    }
+
+    public customModelProperty(item: ProtocolCustomModelProperty): void {
+        this.send("customModelProperty", item);
     }
 
     public destroy(data: DestroyData): void {
-        this.send(this.destroy.name, data);
+        this.send("destroy", data);
     }
 
     public erase(data: EraseData) {
-        this.send(this.erase.name, data);
+        this.send("erase", data);
     }
 
     public eventTrigger(call: ProtocolEventTrigger) {
-        this.send(this.eventTrigger.name, call);
+        this.send("eventTrigger", call);
     }
 
     public functionCall(call: ProtocolFunctionCall): void {
-        this.send(this.functionCall.name, call);
+        this.send("functionCall", call);
+    }
+
+    public functionCallArg(arg: ProtocolFunctionCallArg): void {
+        this.send("functionCallArg", arg);
     }
 
     public functionReturn(result: ProtocolFunctionResult): void {
-        this.send(this.functionReturn.name, result);
+        this.send("functionReturn", result);
     }
 
     public functionThrows(error: ProtocolFunctionError): void {
-        this.send(this.functionThrows.name, error);
+        this.send("functionThrows", error);
     }
 
     public newExpression(expr: ProtocolExpression): void {
-        this.send(this.newExpression.name, expr);
+        this.send("newExpression", expr);
+    }
+
+    public newObject(obj: ProtocolObject): void {
+        this.send("newObject", obj);
     }
 
     public newReference(ref: ProtocolReference): void {
-        this.send(this.newReference.name, ref);
+        this.send("newReference", ref);
+    }
+
+    public objectProperty(prop: ProtocolObjectProperty): void {
+        this.send("objectProperty", prop);
     }
 
     public registerExecutionPosition(pos: ProtocolExecutionPosition): void {
-        this.send(this.registerExecutionPosition.name, pos);
+        this.send("registerExecutionPosition", pos);
     }
 
-    public registeredRoutes(routes: ProtocolRoutes): void {
-        this.send(this.registeredRoutes.name, routes);
+    public registeredRoute(routes: ProtocolRoute): void {
+        this.send("registeredRoute", routes);
     }
 
     public reportComponentError(error: ProtocolError): void {
-        this.send(this.reportComponentError.name, error);
+        this.send("reportComponentError", error);
     }
 
     public reportComponentSlotError(error: ProtocolSlotError): void {
-        this.send(this.reportComponentSlotError.name, error);
+        this.send("reportComponentSlotError", error);
     }
 
     public reportError(err: ProtocolError) {
-        this.send(this.reportError.name, err);
+        this.send("reportError", err);
     }
 
     public reportExpressionCalculationError(error: ProtocolExpressionError): void {
-        this.send(this.reportExpressionCalculationError.name, error);
+        this.send("reportExpressionCalculationError", error);
     }
 
     public reportReferenceError(error: ProtocolReferenceError): void {
-        this.send(this.reportReferenceError.name, error);
+        this.send("reportReferenceError", error);
     }
 
     public routerActionCall(call: ProtocolRouterActionCall): void {
-        this.send(this.routerActionCall.name, call);
+        this.send("routerActionCall", call);
     }
 
     public routerStateChange(change: ProtocolRouterStateChange): void {
-        this.send(this.routerStateChange.name, change);
+        this.send("routerStateChange", change);
     }
 
     public routerTargetResult(data: ProtocolRouterTargetResult): void {
-        this.send(this.routerTargetResult.name, data);
+        this.send("routerTargetResult", data);
+    }
+
+    public routerTargetResultQueryArg(arg: ProtocolRouterTargetResultQueryArg): void {
+        this.send("routerTargetResultQueryArg", arg);
     }
 
     public setElementParent(parent: ProtocolParent): void {
-        this.send(this.setElementParent.name, parent);
+        this.send("setElementParent", parent);
+    }
+
+    public tagAttr(attr: ProtocolTagAttr): void {
+        this.send("tagAttr", attr);
+    }
+
+    public tagBind(bind: ProtocolTagBind): void {
+        this.send("tagBind", bind);
+    }
+
+    public tagCallback(callback: ProtocolTagCallback): void {
+        this.send("tagCallback", callback);
+    }
+
+    public tagClass(cls: ProtocolTagClass): void {
+        this.send("tagClass", cls);
+    }
+
+    public tagEvent(event: ProtocolTagEvent): void {
+        this.send("tagEvent", event);
+    }
+
+    public tagOnDestroy(onDestroy: ProtocolTagOnDestroy): void {
+        this.send("tagOnDestroy", onDestroy);
+    }
+
+    public tagStyle(style: ProtocolTagStyle): void {
+        this.send("tagStyle", style);
     }
 
     public updateExpression(update: ProtocolExpressionUpdate): void {
-        this.send(this.updateExpression.name, update);
+        this.send("updateExpression", update);
     }
 
     public updateModel(update: ProtocolModelUpdate): void {
-        this.send(this.updateModel.name, update);
+        this.send("updateModel", update);
+    }
+
+    public updateModelArg(arg: ProtocolModelUpdateArg): void {
+        this.send("updateModelArg", arg);
+    }
+
+    public updateObject(update: ProtocolObjectUpdate): void {
+        this.send("updateObject", update);
     }
 
     public updateReference(update: ProtocolReferenceUpdate): void {
-        this.send(this.updateReference.name, update);
+        this.send("updateReference", update);
     }
 
-    protected abstract send(name: string, data: object): void;
+    protected abstract send(name: keyof Inspector, data: object): void;
 }
 
 export class EarlyInspector extends AbstractInspector {
@@ -481,6 +586,7 @@ export interface DevValue {
     type: string;
     value?: string | undefined;
     id?: number;
+    length?: number;
 }
 
 const primitiveTypes: string[] = ["number", "string", "boolean"] as const;
@@ -536,9 +642,9 @@ export function runFn<Args extends unknown[], Result extends object>(
     inspector.functionCall({
         id: id,
         position: declaration,
-        args: args.map(toDevValue),
         time: Date.now(),
     });
+    args.forEach(arg => inspector.functionCallArg({ id, value: toDevIdOrValue(arg) }));
 
     try {
         let result: Result = fn(...args);
@@ -556,9 +662,9 @@ export function runFn<Args extends unknown[], Result extends object>(
                 });
                 result.catch(e => {
                     inspector.functionThrows({
-                        targetId: id,
+                        id: id,
                         error: errorToString(e),
-                        async: false,
+                        async: true,
                         time: Date.now(),
                     });
                     reject(e);
@@ -576,7 +682,7 @@ export function runFn<Args extends unknown[], Result extends object>(
         }
     } catch (e) {
         inspector.functionThrows({
-            targetId: id,
+            id: id,
             error: errorToString(e),
             async: false,
             time: Date.now(),
@@ -585,8 +691,7 @@ export function runFn<Args extends unknown[], Result extends object>(
     }
 }
 
-interface ObjectMetaData {
-    id: number;
+interface ObjectMetaData extends Inspectable {
     fields: { [k: string]: unknown };
 }
 
@@ -669,16 +774,23 @@ export function toDevValue(value: unknown): DevValue {
         value:
             primitiveTypes.includes(type) || value === null
                 ? JSON.stringify(value)
-                : type === "object"
-                  ? `${processObject(value as object)}`
-                  : type === "function"
-                    ? JSON.stringify(getPosition(value as Function))
+                : typeof value === "object"
+                  ? `${processObject(value)}`
+                  : typeof value === "function"
+                    ? (JSON.stringify(getPosition(value)) ?? value.name)
                     : undefined,
+        id: toDevId(value),
+        length: Array.isArray(value) ? value.length : typeof value === "string" ? value.length : undefined,
     };
 }
 
 export function toDevId(value: unknown): number | undefined {
-    if (value instanceof DevReference || value instanceof DevExpression) {
+    if (
+        value instanceof IValue ||
+        value instanceof DevArrayModel ||
+        value instanceof DevMapModel ||
+        value instanceof DevSetModel
+    ) {
         return value.id;
     }
 
@@ -689,14 +801,11 @@ export function toDevIdOrValue(value: unknown): number | DevValue {
     return toDevId(value) ?? toDevValue(value);
 }
 
-export function toDevObject(value: object): { [k: string]: number | DevValue } {
-    return Object.entries(value).reduce(
-        (obj, [prop, value]) => {
-            return {
-                ...obj,
-                [prop]: toDevIdOrValue(value),
-            };
-        },
-        {} as { [k: string]: number | DevValue },
-    );
+export function processDevObject(
+    value: object | undefined,
+    run: (key: string, value: number | DevValue) => void,
+): void {
+    if (value) {
+        Object.entries(value).forEach(([key, value]) => run(key, toDevIdOrValue(value)));
+    }
 }

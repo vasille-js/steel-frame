@@ -17,6 +17,7 @@ export {
     expr,
     expr as bind,
     expr as calculate,
+    expr as computed,
     expr as watch,
     set,
     Delay,
@@ -37,6 +38,15 @@ export {
     MapModelView,
     SetModelView,
     QueuedRender,
+    debounceRef,
+    edgeRef,
+    safeExpr,
+    safeInit,
+    safeRef,
+    toDeepFieldRef,
+    toFieldRef,
+    Zombie,
+    abortSignal,
 } from "vasille-jsx";
 
 export {
@@ -56,9 +66,9 @@ export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth } from "vasille
 export { context, impute, receive, share, receiveOptional } from "vasille-context";
 
 function createPortal(node: Fragment<Node, Element, TagOptions>) {
-    const portal = new Portal<Node, Element, TagOptions>({ node: document.body }, node.runner, node.sDeep + 1);
+    const portal = new Portal<Node, Element, TagOptions>(document.body, node.runner, node.sDeep + 1);
 
-    node.create(portal);
+    node.child(portal);
 
     return portal;
 }

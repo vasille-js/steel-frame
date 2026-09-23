@@ -39,6 +39,26 @@ it("test field reference of undefined", function () {
     field.destroy();
 });
 
+it("test field reference with dependency", function () {
+    const ctx = new Reactive(0);
+    const obj = new Reference<object, unknown>({});
+    const fieldName = new Reference("test");
+    const field = new SingleFieldReference(v => new Reference(v), obj, fieldName, ctx);
+
+    expect(field.V).toBeUndefined();
+    obj.V = { test: 22 };
+    expect(field.V).toBe(22);
+    obj.V = { test: 33, test2: 22 };
+    expect(field.V).toBe(33);
+    fieldName.V = "test2";
+    expect(field.V).toBe(22);
+    field.V = 25;
+    expect(obj.V).toEqual({ test2: 25, test: 33 });
+    field.destroy();
+    fieldName.V = "test3";
+    expect(field.V).toBe(25);
+});
+
 it("test deep field reference", function () {
     const ctx = new Reactive(0);
     const obj = new Reference<object, unknown>({ test: { test2: 22 } });
@@ -86,6 +106,30 @@ it("test deep field reference context destroy", function () {
     ctx1.destroy(1);
     field.V = 24;
     expect(field.V).toBeUndefined();
+});
+
+it("test deep filed reference with dependencies", function () {
+    const ctx = new Reactive(0);
+    const obj = new Reference<object, unknown>({});
+    const f1 = new Reference("a");
+    const f2 = new Reference("1");
+    const field = new DeepFieldReference(v => new Reference(v), obj, [f1, "z", f2], ctx);
+
+    expect(field.V).toBeUndefined();
+    field.V = 25;
+    expect(obj.V).toEqual({ a: { z: { 1: 25 } } });
+    f1.V = "b";
+    expect(field.V).toBeUndefined();
+    field.V = 26;
+    expect(obj.V).toEqual({ a: { z: { 1: 25 } }, b: { z: { 1: 26 } } });
+    f2.V = "2";
+    expect(field.V).toBeUndefined();
+    field.V = 27;
+    expect(obj.V).toEqual({ a: { z: { 1: 25 } }, b: { z: { 1: 26, 2: 27 } } });
+    field.destroy();
+    f1.V = "c";
+    f2.V = "3";
+    expect(field.V).toBe(27);
 });
 
 it("test reactivity edge ref", function () {
