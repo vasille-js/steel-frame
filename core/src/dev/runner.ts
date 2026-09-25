@@ -34,7 +34,7 @@ export function positionedText(text: unknown, position: StaticPosition) {
 }
 
 export class DevTextNode extends TextNode<DevTagOptions, DevRunner> {
-    public readonly id: number;
+    public override id: number;
 
     public constructor(input: TextProps, runner: DevRunner, deep: number, usage: StaticPosition) {
         super(input, runner, deep);
@@ -73,7 +73,7 @@ export function remapObject<Before, After>(
 }
 
 export class DevTag extends Tag<DevTagOptions, DevRunner> {
-    public readonly id: number;
+    public override id: number;
 
     public constructor(
         options: DevTagOptions,

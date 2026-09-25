@@ -2,6 +2,7 @@
   "include": ["src/**/*", "test/**/*"],
 
   "compilerOptions": {
+    "rootDir": "./src",
     "allowJs": false,
     "declaration": false,
     "noEmit": true,

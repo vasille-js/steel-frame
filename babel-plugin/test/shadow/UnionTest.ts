@@ -8,7 +8,7 @@ interface Props {
   $e: number | string;
   $f: number | boolean;
   $g: number[] | string[];
-  $h;
+  $h: any;
 }
 
 export const UnionTest = component<Props>(() => {});

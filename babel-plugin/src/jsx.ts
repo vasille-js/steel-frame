@@ -2,7 +2,7 @@ import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { ctx, Internal } from "./internal.js";
 import { bodyHasJsx } from "./jsx-detect.js";
-import { checkNonReactiveName, checkReactiveName, err, Errors, exprCall, toKebabCase } from "./lib.js";
+import { checkNonReactiveName, checkReactiveName, err, Errors, exprCall, nodeIsUnsafe, toKebabCase } from "./lib.js";
 import { compose, meshExpression } from "./mesh.js";
 import { nodeToStaticPosition } from "./transformer";
 
@@ -90,11 +90,15 @@ export function transformJsxArray(
       if (conditionalJsx.length) {
         result.push(...conditionalJsx);
       } else {
-        const value = transformJsxExpressionContainer(path, internal, false, false, true, true, false);
+        const value = transformJsxExpressionContainer(path, internal, ["acceptsReactive", "acceptsRaw", "acceptsSafe"]);
         /* istanbul ignore else */
         if (!t.isJSXEmptyExpression(value)) {
-          const call = t.callExpression(t.memberExpression(ctx, t.identifier("text")), [
-            internal.devLayer ? internal.positionedText(value, value) : value,
+          const unsafe = nodeIsUnsafe(path, internal);
+          const method = unsafe ? "sText" : "text";
+          const arg = internal.devLayer ? internal.positionedText(value, value) : value;
+
+          const call = t.callExpression(t.memberExpression(ctx, t.identifier(method)), [
+            unsafe ? t.arrowFunctionExpression([], arg) : arg,
           ]);
 
           call.loc = value.loc;
@@ -133,7 +137,7 @@ function checkIfExpressionIsConditionalJsx(expr: types.Expression): boolean {
 }
 
 function processReactiveCondition(path: NodePath<types.Expression>, internal: Internal) {
-  const reactive = exprCall(path, path.node, internal, {}, path.node);
+  const reactive = exprCall(path, path.node, internal, {}, path.node, true);
 
   return { reactive, condition: path.node };
 }
@@ -211,12 +215,16 @@ function tryForConditionalJsx(path: NodePath<types.JSXExpressionContainer>, inte
 function transformJsxExpressionContainer(
   path: NodePath<types.JSXExpressionContainer>,
   internal: Internal,
-  acceptSlots: boolean,
-  isInternalSlot: boolean,
-  acceptsReactive: boolean,
-  acceptsRaw: boolean,
-  skipParamsCheck: boolean,
+  options: (
+    "acceptSlots" | "isInternalSlot" | "acceptsReactive" | "acceptsRaw" | "skipParamsCheck" | "acceptsSafe" | false
+  )[],
 ): types.Expression {
+  const acceptSlots = options.includes("acceptSlots");
+  const isInternalSlot = options.includes("isInternalSlot");
+  const acceptsReactive = options.includes("acceptsReactive");
+  const acceptsRaw = options.includes("acceptsRaw");
+  const skipParamsCheck = options.includes("skipParamsCheck");
+  const acceptsSafe = options.includes("acceptsSafe");
   const expression = path.get("expression");
   const loc = expression.node.loc;
 
@@ -247,10 +255,19 @@ function transformJsxExpressionContainer(
   if (expression.isExpression()) {
     if (acceptsReactive) {
       // two-side binding
-      const isReactive = exprCall(expression, expression.node, internal, { strong: !acceptsRaw }, expression.node);
+      const isReactive = exprCall(
+        expression,
+        expression.node,
+        internal,
+        { strong: !acceptsRaw },
+        expression.node,
+        acceptsSafe,
+      );
 
       if (!isReactive && !acceptsRaw) {
-        expression.replaceWith(internal.ref(expression.node, expression.node, undefined));
+        expression.replaceWith(
+          internal.ref(expression.node, expression.node, undefined, acceptsSafe && nodeIsUnsafe(expression, internal)),
+        );
       }
     } else {
       meshExpression(expression, internal);
@@ -299,7 +316,7 @@ function processConditionItem(
   cases: NonNullable<ConditionCollection["cases"]>,
   index: number,
   _default?: types.FunctionExpression | types.ArrowFunctionExpression,
-) {
+): types.Statement | null {
   if (index === cases.length) {
     if (_default) {
       return functionToStatement(_default);
@@ -324,7 +341,7 @@ export function processConditions(
   }
 
   const ret = conditions.cases.every(item => !item.reactive)
-    ? [processConditionItem(conditions.cases, 0, _default)]
+    ? [processConditionItem(conditions.cases, 0, _default)].filter(item => item !== null)
     : [
         t.expressionStatement(
           internal.Switch(
@@ -408,7 +425,7 @@ function transformJsxElement(
                     elementPath.node.operator === "&&" &&
                     t.isStringLiteral(elementPath.node.right)
                   ) {
-                    exprCall(elementPath.get("left"), elementPath.node.left, internal, {}, elementPath.node);
+                    exprCall(elementPath.get("left"), elementPath.node.left, internal, {}, elementPath.node, true);
 
                     classObject.push(idToProp(elementPath.node.right, elementPath.node.left));
                   }
@@ -422,7 +439,7 @@ function transformJsxElement(
 
                         /* istanbul ignore else */
                         if (valuePath.isExpression()) {
-                          exprCall(valuePath, valuePath.node, internal, {}, elementPath.node);
+                          exprCall(valuePath, valuePath.node, internal, {}, elementPath.node, true);
                         }
 
                         if (keyPath.isExpression() && !keyPath.isIdentifier()) {
@@ -447,7 +464,7 @@ function transformJsxElement(
                   }
                   // class={[..]}
                   else {
-                    exprCall(elementPath, elementPath.node, internal, { strong: true }, elementPath.node);
+                    exprCall(elementPath, elementPath.node, internal, { strong: true }, elementPath.node, true);
 
                     classElements.push(elementPath.node);
                   }
@@ -466,7 +483,9 @@ function transformJsxElement(
             else if (expressionPath && expressionPath.isExpression()) {
               const isTemplate = t.isTemplateLiteral(expressionPath.node);
 
-              if (exprCall(expressionPath, expressionPath.node, internal, { strong: true }, expressionPath.node)) {
+              if (
+                exprCall(expressionPath, expressionPath.node, internal, { strong: true }, expressionPath.node, true)
+              ) {
                 internal.reportError("This will slow down your application", attrPath.node);
               }
               if (isTemplate) {
@@ -493,7 +512,7 @@ function transformJsxElement(
 
                   /* istanbul ignore else */
                   if (valuePath.isExpression()) {
-                    exprCall(valuePath, valuePath.node, internal, { strong: true }, prop.node);
+                    exprCall(valuePath, valuePath.node, internal, { strong: true }, prop.node, true);
                   }
 
                   const value = valuePath.node;
@@ -555,7 +574,9 @@ function transformJsxElement(
             else {
               /* istanbul ignore else */
               if (expressionPath && expressionPath.isExpression()) {
-                if (exprCall(expressionPath, expressionPath.node, internal, { strong: true }, expressionPath.node)) {
+                if (
+                  exprCall(expressionPath, expressionPath.node, internal, { strong: true }, expressionPath.node, true)
+                ) {
                   internal.reportError("This will slow down your application", attrPath.node);
                 }
 
@@ -567,7 +588,7 @@ function transformJsxElement(
             callback = expressionPath.node;
           } else {
             if (expressionPath && expressionPath.isExpression()) {
-              exprCall(expressionPath, expressionPath.node, internal, {}, expressionPath.node);
+              exprCall(expressionPath, expressionPath.node, internal, {}, expressionPath.node, true);
               attrs.push(idToProp(name, expressionPath.node));
             } else if (t.isStringLiteral(attr.value)) {
               attrs.push(idToProp(name, attr.value));
@@ -583,7 +604,7 @@ function transformJsxElement(
             if (expressionPath) {
               /* istanbul ignore else */
               if (expressionPath.isExpression()) {
-                exprCall(expressionPath, expressionPath.node, internal, { strong: true }, expressionPath.node);
+                exprCall(expressionPath, expressionPath.node, internal, { strong: true }, expressionPath.node, true);
                 bind.push(idToProp(name.name, expressionPath.node));
                 pushed = true;
               }
@@ -654,7 +675,6 @@ function transformJsxElement(
     return [...processConditions(conditions, internal), t.expressionStatement(call)];
   }
   if (t.isJSXIdentifier(name)) {
-    const element = path.node;
     const opening = path.get("openingElement");
     const props: (types.ObjectProperty | types.SpreadElement)[] = [];
     const attrs = new Map<string, NodePath<types.Expression>>();
@@ -671,7 +691,7 @@ function transformJsxElement(
         // <A prop=".."/>
         if (valuePath && valuePath.isStringLiteral()) {
           props.push(
-            idToProp(attr.name, needReactive ? internal.ref(valuePath.node, attr, undefined) : valuePath.node),
+            idToProp(attr.name, needReactive ? internal.ref(valuePath.node, attr, undefined, false) : valuePath.node),
           );
           attrs.set(attr.name.name, valuePath);
         }
@@ -687,15 +707,13 @@ function transformJsxElement(
             mapped in strongSlotMap &&
             attr.name.name === "slot" &&
             precheckSlotParams(mapped, valuePath, internal);
-          const value = transformJsxExpressionContainer(
-            valuePath,
-            internal,
-            !isSystem || attr.name.name === "slot",
-            isSystem && attr.name.name === "slot",
-            requiresReactive,
-            acceptPassive,
-            prechecked,
-          );
+          const value = transformJsxExpressionContainer(valuePath, internal, [
+            (!isSystem || attr.name.name === "slot") && "acceptSlots",
+            isSystem && attr.name.name === "slot" && "isInternalSlot",
+            requiresReactive && "acceptsReactive",
+            acceptPassive && "acceptsRaw",
+            prechecked && "skipParamsCheck",
+          ]);
           const exprPath = valuePath.get("expression");
 
           props.push(idToProp(attr.name, value));
@@ -709,7 +727,7 @@ function transformJsxElement(
             props.push(
               idToProp(
                 attr.name,
-                needReactive ? internal.ref(t.booleanLiteral(true), attr, undefined) : t.booleanLiteral(true),
+                needReactive ? internal.ref(t.booleanLiteral(true), attr, undefined, false) : t.booleanLiteral(true),
               ),
             );
           }
@@ -771,7 +789,7 @@ function transformJsxElement(
       if (mapped === "If" || mapped === "ElseIf") {
         /* istanbul ignore else */
         if (condition?.isExpression() && (t.isFunctionExpression(slot) || t.isArrowFunctionExpression(slot))) {
-          const reactive = exprCall(condition, condition.node, internal, {}, condition.node);
+          const reactive = exprCall(condition, condition.node, internal, {}, condition.node, true);
 
           if (!conditions.cases) {
             conditions.cases = [{ reactive, condition: condition.node, slot }];

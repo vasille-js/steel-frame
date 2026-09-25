@@ -3,11 +3,9 @@ import { Destroyable } from "../core/destroyable.js";
 import { IValue } from "../core/ivalue.js";
 import { reportError } from "../functional/safety.js";
 import { DebounceReference } from "../value/debounce.js";
-import { EdgeReference } from "../value/edge.js";
 import { Expression, KindOfIValue } from "../value/expression.js";
 import { DeepFieldReference, SingleFieldReference } from "../value/field.js";
 import { Reference } from "../value/reference.js";
-import { DevReactive } from "./core.js";
 import {
     Dependency,
     errorToString,
@@ -60,7 +58,7 @@ export class DevReference<T> extends BaseDevReference<T> implements Destroyable 
             value: toDevValue(this.state),
             time: Date.now(),
         });
-        if (ctx instanceof DevReactive && name) {
+        if (ctx?.id && name) {
             inspector.addContextState({
                 id: ctx.id,
                 name: name,
@@ -182,7 +180,7 @@ export class DevExpression<T, Args extends unknown[]> extends Expression<T, Args
             }),
             time: Date.now(),
         });
-        if (ctx instanceof DevReactive && name) {
+        if (ctx?.id && name) {
             inspector.addContextState({
                 id: ctx.id,
                 name: name,
@@ -240,21 +238,6 @@ export class DevDebounceReference<T> extends DebounceReference<T, ExecutionPosit
     ) {
         super(createRef, target, delay, ctx);
         ctx.bind(this.sync);
-    }
-}
-
-export class DevEdgeReference<T> extends EdgeReference<T, ExecutionPosition> {
-    declare protected readonly sync: DevReference<T>;
-
-    public constructor(
-        createRef: (v: T, ctx?: Reactive) => DevReference<T>,
-        getter: () => T,
-        setter: (v: T) => void,
-        ctx?: Reactive,
-        subscriber?: (setter: (v: T) => void) => void | (() => void),
-    ) {
-        super(createRef, getter, setter, ctx, subscriber);
-        ctx?.bind(this.sync);
     }
 }
 

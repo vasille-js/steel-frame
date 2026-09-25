@@ -137,27 +137,11 @@ it("class expression name starts with $", function () {
 });
 
 it("prompt called outside of context", function () {
-  throwTest(__dirname, "prompt", "Prompts can be constructed only from components");
+  throwTest(__dirname, "prompt", "ctx() can be called only from components");
 });
 
 it("double mesh bug", function () {
   runJsxTest(__dirname, "double-mesh-bug");
-});
-
-it("restricted name in params", function () {
-  throwTest(__dirname, "restricted-name-param", "This name is restricted (start with `prompt` or ends with `Model`)");
-});
-
-it("restricted variable name", function () {
-  throwTest(__dirname, "restricted-name-let", "This name is restricted (start with `prompt` or ends with `Model`)");
-});
-
-it("restricted name in compose body", function () {
-  throwTest(
-    __dirname,
-    "restricted-name-in-compose",
-    "This name is restricted (start with `prompt` or ends with `Model`)",
-  );
 });
 
 it("object reference", function () {

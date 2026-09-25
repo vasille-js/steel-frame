@@ -1,6 +1,6 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
-import { calls, FnNames } from "./call.js";
+import { calledFn, calls, FnNames, styleOnly } from "./call.js";
 import { Internal } from "./internal.js";
 import { err, Errors } from "./lib";
 
@@ -55,29 +55,23 @@ function processValue(
   name: string,
   path: NodePath<types.Expression>,
   pseudo: string,
-  theme: string,
+  themes: string[],
   media: string,
   mediaDefault: number[],
   allowFallback: boolean,
   internal: Internal,
 ): Rule[] {
-  if (calls(path, ["theme"], internal)) {
+  const called = calledFn(path, styleOnly, internal);
+  const initialPath = path;
+
+  // theme
+  if (called === "theme") {
     const call = path.node as types.CallExpression;
 
-    if (theme) {
-      err(Errors.Dilemma, path, "The theme seems the be defined twice", internal, false);
-    }
     if (t.isStringLiteral(call.arguments[0])) {
-      return processValue(
-        name,
-        (path as NodePath<types.CallExpression>).get("arguments")[1] as NodePath<types.Expression>,
-        pseudo,
-        `body.${call.arguments[0].value}`,
-        media,
-        mediaDefault,
-        false,
-        internal,
-      );
+      path = (path as NodePath<types.CallExpression>).get("arguments")[1] as NodePath<types.Expression>;
+      themes.push(`body.${call.arguments[0].value}`);
+      allowFallback = false;
     } else {
       return err(
         Errors.TokenNotSupported,
@@ -88,73 +82,62 @@ function processValue(
       );
     }
   }
-  if (calls(path, ["dark"], internal)) {
-    if (theme) {
-      err(Errors.Dilemma, path, "The theme seems the be defined twice", internal);
-    }
+  // dark
+  else if (called === "dark") {
+    path = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
+    themes.push(`.dark`);
+    allowFallback = false;
+  }
+  // light
+  else if (called === "light") {
+    path = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
+    themes.push(`.light`);
+    allowFallback = false;
+  }
+  // allLight
+  else if (called === "allLight") {
+    path = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
+    themes.push(".light");
+    mediaDefault.push(mediaDefaults.indexOf("prefersLight") + 1);
+    allowFallback = false;
+  }
+  // allDark
+  else if (called === "allDark") {
+    path = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
+    themes.push(".dark");
+    mediaDefault.push(mediaDefaults.indexOf("prefersDark") + 1);
+  }
+  // mobile/tablet/laptop/prefersDark/prefersLight
+  else if (called && mediaDefaults.includes(called)) {
+    const index = mediaDefaults.indexOf(called) + 1;
 
-    return processValue(
-      name,
-      (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>,
-      pseudo,
-      `.dark`,
-      media,
-      mediaDefault,
-      false,
-      internal,
-    );
+    path = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
+    mediaDefault.push(index);
+    allowFallback = false;
   }
 
-  const called = mediaDefaults.map(item => calls(path, [item], internal));
-
-  if (called.some(v => v)) {
-    const index = called.indexOf(true) + 1;
-
-    if (mediaDefault.includes(index)) {
-      return processValue(
-        name,
-        (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>,
-        pseudo,
-        theme,
-        media,
-        mediaDefault,
-        false,
-        internal,
-      );
-    }
-
-    return processValue(
-      name,
-      (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>,
-      pseudo,
-      theme,
-      media,
-      [...mediaDefault, index],
-      false,
-      internal,
-    );
+  if (path !== initialPath) {
+    return processValue(name, path, pseudo, themes, media, mediaDefault, allowFallback, internal);
   }
 
   function composeRules(value: string): Rule[] {
-    return mediaDefault.length
-      ? mediaDefault.map(index => {
-          return {
-            defaultMediaRule: index,
-            mediaRule: media,
-            pseudo: pseudo,
-            theme: theme,
-            rule: `${name}:${value}`,
-          } satisfies Rule;
-        })
-      : [
-          {
-            defaultMediaRule: 0,
-            mediaRule: media,
-            pseudo: pseudo,
-            theme: theme,
-            rule: `${name}:${value}`,
-          } satisfies Rule,
-        ];
+    const themesList = themes.length ? [...new Set(themes)] : [""];
+    const mediaList = mediaDefault.length ? [...new Set(mediaDefault)] : [0];
+
+    return mediaList
+      .map(index =>
+        themesList.map(
+          theme =>
+            ({
+              defaultMediaRule: index,
+              mediaRule: media,
+              pseudo: pseudo,
+              theme: theme,
+              rule: `${name}:${value}`,
+            }) satisfies Rule,
+        ),
+      )
+      .flat(1);
   }
 
   if (path.isStringLiteral()) {
@@ -176,7 +159,7 @@ function processValue(
                 name,
                 path as NodePath<types.Expression>,
                 pseudo,
-                theme,
+                themes,
                 media,
                 mediaDefault,
                 false,
@@ -253,7 +236,7 @@ function processProp(path: NodePath<types.ObjectProperty>, pseudo: string, media
     }
   }
 
-  return processValue(name, path.get("value") as NodePath<types.Expression>, pseudo, "", media, [], true, internal);
+  return processValue(name, path.get("value") as NodePath<types.Expression>, pseudo, [], media, [], true, internal);
 }
 
 export function findStyleInNode(path: NodePath<types.Node | null | undefined>, internal: Internal) {

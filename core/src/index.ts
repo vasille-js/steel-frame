@@ -12,7 +12,6 @@ export { Zombie } from "./node/zombie.js";
 export { Expression, type KindOfIValue } from "./value/expression.js";
 export { Reference } from "./value/reference.js";
 export { DebounceReference } from "./value/debounce.js";
-export { EdgeReference } from "./value/edge.js";
 export { SingleFieldReference, DeepFieldReference } from "./value/field.js";
 export { userError } from "./core/errors.js";
 export { Watch } from "./node/watch.js";

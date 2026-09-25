@@ -5,12 +5,15 @@ import type { ScreenProps } from "vasille-router";
 import type { Router } from "vasille-router/web-router";
 import type { VasilleSlot } from "vasille-web/jsx-runtime";
 import type { CssStyleInjector } from "vasille-css";
+import { Context } from "node:vm";
 
 export type { StyleProps } from "vasille-web";
 export type ClassItem = string | CssStyleInjector | Record<string, boolean> | false;
 export type { FallbackScreenProps, ErrorScreenProps } from "vasille-router";
 export { safe } from "vasille";
 export type { AppSide, IdeSide } from "../types/communication.d.ts";
+
+declare class ComponentContext {}
 
 /** Set a handler for component errors */
 export declare function setErrorHandler(handler: (e: unknown) => void): void;
@@ -35,6 +38,10 @@ declare type ComposedNoCallback<In extends object, Out> = (
 export declare function compose<In extends object, Out extends NonNullable<unknown>>(
     renderer: (input: In) => Out,
 ): Composed<In, Out>;
+/**
+ * Composes a component (v3), which can receive external reactive values via props
+ * @deprecated use `component` instead
+ * */
 export declare function compose<In extends object>(renderer: (input: In) => void): ComposedNoCallback<In, void>;
 
 /** Composes a component (v4), which can receive external reactive values via props */
@@ -88,7 +95,7 @@ export declare function edgeRef<T>(
 export declare function debounceRef<T>(v: T, delay: number): T;
 
 /** Returns a reactive reference to the object field */
-export declare function toFieldRef<T>(v: T): T;
+export declare function fieldRef<T>(v: T): T;
 
 /** Returns a reactive-computed form of expression value */
 export declare function bind<T>(v: T): T;
@@ -240,10 +247,12 @@ type ReadonlyState<T> =
 export declare function store<Return extends object>(fn: () => Return): ReadonlyState<Return>;
 
 /** Creates a model (state) constructor */
-export declare function model<Return extends object>(fn: () => Return): () => ReadonlyState<Return>;
+export declare function model<Return extends object>(
+    fn: () => Return,
+): (context: ComponentContext) => ReadonlyState<Return>;
 export declare function model<Input extends object, Return extends object>(
     fn: (input: Input) => Return,
-): (input: Input) => ReadonlyState<Return>;
+): (context: ComponentContext, input: Input) => ReadonlyState<Return>;
 
 export { QueryParams, ScreenProps, RouteParameters } from "vasille-router";
 export { type Router, NavigationMode } from "vasille-router/web-router";
@@ -322,13 +331,11 @@ export declare function beforeDestroy(fn: () => void): void;
 /** Returns the current used router */
 export declare function router(): Router<string> | undefined;
 
-declare class ComponentContext {}
-
 /** Returns the current component context */
 export declare function ctx(): ComponentContext;
 
 /** Composes a modal window (v4+) */
-export declare function modal<T extends object>(modal: (input: T) => void): (ctx: ComponentContext, input: T) => void;
+export declare function modal<T extends object>(modal: (input: T) => void): (input: T) => void;
 
 /** Describes properties of a prompt window */
 export interface PromptProps<T> {

@@ -1,6 +1,6 @@
 import { beforeMount, compose, ref } from "steel-frame";
 
-let o1 = {
+const o1 = {
   $x: ref(1),
 };
 

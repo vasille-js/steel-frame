@@ -1,4 +1,4 @@
-import { beforeMount, compose, prompt, PromptProps } from "steel-frame";
+import { beforeMount, compose, ctx, prompt, PromptProps } from "steel-frame";
 
 const promptName = prompt<string>(props => {
   function save() {
@@ -19,7 +19,7 @@ const promptWithRules = prompt<string, Props>(props => {
 
 const App = compose(() => {
   beforeMount(() => {
-    promptName({}) satisfies Promise<string>;
-    promptWithRules({ rules: ["x"] }) satisfies Promise<string>;
+    promptName(ctx(), {}) satisfies Promise<string>;
+    promptWithRules(ctx(), { rules: ["x"] }) satisfies Promise<string>;
   });
 });

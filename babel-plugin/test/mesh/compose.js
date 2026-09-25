@@ -5,13 +5,13 @@ const C = compose(function C(Vasille, {
   ...rest
 }) {
   const model = [{
-    $name: VasilleRef("name1"),
+    $name: VasilleRef("name1", Vasille),
     $data: VasilleRef({
       id: "x",
       width: 1,
       height: 4
-    }),
-    $more: VasilleRef("more")
+    }, Vasille),
+    $more: VasilleRef("more", Vasille)
   }];
   VasilleSafe(() => console.log($d.V.id, $d.V.width, $d.V.height, $name.V, rest.$more?.V))();
   Vasille.tag("div", {}, Vasille => {
@@ -28,8 +28,8 @@ const C = compose(function C(Vasille, {
   For({
     of: model,
     slot: (Vasille, {
-      $name = VasilleRef("xName"),
-      $data = VasilleRef(),
+      $name = VasilleRef("xName", Vasille),
+      $data = VasilleRef(void 0, Vasille),
       ...rest2
     }) => {
       Vasille.tag("div", {}, Vasille => {

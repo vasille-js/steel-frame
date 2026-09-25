@@ -3,7 +3,6 @@ import { Destroyable } from "../core/destroyable.js";
 import { ArrayModel } from "../models/array-model.js";
 import { MapModel } from "../models/map-model.js";
 import { SetModel } from "../models/set-model.js";
-import { DevReactive } from "./core.js";
 import { inspector, provideId, StaticPosition, toDevValue } from "./inspectable.js";
 
 let updateId = 0;
@@ -48,7 +47,7 @@ export class DevArrayModel<T> extends ArrayModel<T> implements Destroyable {
                 value: toDevValue(item),
             });
         });
-        if (ctx instanceof DevReactive && name) {
+        if (ctx?.id && name) {
             inspector.addContextState({
                 id: ctx.id,
                 name: name,
@@ -116,7 +115,7 @@ export class DevSetModel<T> extends SetModel<T> implements Destroyable {
                 value: toDevValue(item),
             });
         }
-        if (ctx instanceof DevReactive && name) {
+        if (ctx?.id && name) {
             inspector.addContextState({
                 id: ctx.id,
                 name: name,
@@ -167,7 +166,7 @@ export class DevMapModel<K, T> extends MapModel<K, T> implements Destroyable {
                 value: toDevValue(value),
             });
         }
-        if (ctx instanceof DevReactive && name) {
+        if (ctx?.id && name) {
             inspector.addContextState({
                 id: ctx.id,
                 name: name,

@@ -12,6 +12,7 @@ import {
     DebounceReference,
     SingleFieldReference,
     DeepFieldReference,
+    reportError,
 } from "vasille";
 
 export function expr<T, Args extends unknown[]>(
@@ -129,21 +130,12 @@ export function set(
  * It safely initializes a child component.
  * 1. `<Child x={y.z}/>` to `safeInit(() => Child({x: y.z}))`
  */
-export function safeInit(fn: () => void) {
-    safe(fn)();
-}
-
-/**
- * Create an edge reference, which can be linked to external reactivity systems
- */
-export function edgeRef<T>(
-    ctx: Reactive | undefined,
-    getter: () => T,
-    setter: (v: T) => void,
-    subscriber?: (setter: (v: T) => void) => void | (() => void),
-    createRef = ref,
-) {
-    return new EdgeReference(createRef, getter, setter, ctx, subscriber);
+export function safeInit<T>(fn: () => T): T | undefined {
+    try {
+        return fn();
+    } catch (e) {
+        reportError(e);
+    }
 }
 
 /**

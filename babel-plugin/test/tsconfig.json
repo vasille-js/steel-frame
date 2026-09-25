@@ -2,6 +2,7 @@
   "include": ["./**/*.ts", "./**/*.tsx"],
 
   "compilerOptions": {
+    "rootDir": "./",
     "allowJs": true,
     "declaration": false,
     "noEmit": true,

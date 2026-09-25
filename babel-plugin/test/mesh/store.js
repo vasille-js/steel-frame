@@ -1,25 +1,25 @@
 import { arrayModel, bind, calculate, compose, mapModel, ref, setModel, store, watch, safe as VasilleSafe } from "vasille-web";
 const cStore = store(Vasille => {
-  const $a = ref(2);
-  const $b = ref(2);
+  const $a = ref(2, Vasille);
+  const $b = ref(2, Vasille);
   const $c = calculate(Vasille, (Vasille_0, Vasille_1) => Vasille_0 + Vasille_1, [$a, $b]);
-  const $d = ref($c.V);
+  const $d = ref($c.V, Vasille);
   const e = [1, 2];
   const f = new Set([1, 2]);
   const g = new Map([[1, 2]]);
   const h = {
     a: 1
   };
-  const $i = ref($a.V + $b.V);
+  const $i = ref($a.V + $b.V, Vasille);
   const j = arrayModel(Vasille);
   const $k = watch(Vasille, (Vasille_0, Vasille_1) => Vasille_0 + Vasille_1, [$a, $b]);
   const $o = ref({
     a: {
       b: 1
     }
-  });
+  }, Vasille);
   const $m = bind(Vasille, (Vasille_0, Vasille_1) => Vasille_0 + Vasille_1, [$a, $b]);
-  const $n = ref(2);
+  const $n = ref(2, Vasille);
   const p = 3;
   const q = arrayModel(Vasille);
   const r = setModel(Vasille);
@@ -36,7 +36,7 @@ const cStore = store(Vasille => {
     e: e,
     f: f,
     ["g"]: g,
-    ["$$h"]: ref(h),
+    ["$$h"]: ref(h, Vasille),
     $i: $i,
     j: j,
     $k: $k,

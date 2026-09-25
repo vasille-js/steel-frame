@@ -11,7 +11,6 @@ import {
   numericLiteral,
   objectExpression,
   objectProperty,
-  stringLiteral,
   TSTypeElement,
 } from "@babel/types";
 import { Internal } from "./internal";

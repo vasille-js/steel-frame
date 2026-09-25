@@ -1,12 +1,13 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
-import { calls, dependencyInjections, hintFunctions, unwrapFunctions } from "./call.js";
+import { calledFn, calls, dependencyInjections, hintFunctions, refFunctions, unwrapFunctions } from "./call.js";
 import { ctx, Internal, StackedStates, V } from "./internal.js";
-import { checkNonReactiveName, err, Errors, ref } from "./lib";
+import { checkNonReactiveName, err, Errors } from "./lib";
 import { ignoreParams, meshAllUnknown, meshExpression } from "./mesh";
 import { routerReplace } from "./router";
 import { stringify } from "./utils";
-import { assignmentToBinaryOperator, assignmentToLogicalOperator, meshAssigment } from "./operators";
+import { meshAssigment } from "./operators";
+import { hasBreakPoint } from "./field-reference";
 
 export interface Dependency {
   node: types.Expression;
@@ -92,42 +93,10 @@ export function memberIsIValueInExpr(
   path: NodePath<types.MemberExpression | types.OptionalMemberExpression>,
   search: Search,
 ) {
-  const node = path.node;
-  const isIValue = memberIsIValue(node);
-
-  if (isIValue) {
-    let it: types.Expression = node;
-
-    while (t.isMemberExpression(it) || t.isOptionalMemberExpression(it)) {
-      it = it.object;
-    }
-
-    if (t.isIdentifier(it) && search.stack.get(it.name, true)) {
-      err(
-        Errors.RulesOfVasille,
-        path,
-        "This value looks like a reactive but is not. Move code to standalone function or wrap value in raw call.",
-        search.external,
-      );
-    }
-  }
-
-  return isIValue;
+  return !hasBreakPoint(path, search.external) && memberIsIValue(path.node);
 }
 
-export function exprIsSure(path: NodePath<types.Expression | null | undefined>, internal: Internal) {
-  if (
-    (path.isMemberExpression() &&
-      path.node.computed &&
-      (!t.isStringLiteral(path.node.property) || /^\d+$/.test(path.node.property.value))) ||
-    path.isOptionalMemberExpression()
-  ) {
-    return false;
-  }
-  if (!path.isMemberExpression() || !stringify(path.node.property).startsWith("$")) {
-    return true;
-  }
-
+export function memberIsSure(path: NodePath<types.Expression | null | undefined>, internal: Internal) {
   let it: types.Expression | null | undefined = path.node;
   let names: string[] = [];
 
@@ -139,7 +108,18 @@ export function exprIsSure(path: NodePath<types.Expression | null | undefined>, 
   const reactivityData = t.isIdentifier(it) && internal.stack.get(it.name);
   const propPath = names.reverse().join(".");
 
-  return (reactivityData && reactivityData[propPath]) || t.isMemberExpression(path.parent);
+  return reactivityData && reactivityData[propPath];
+}
+
+export function exprIsSure(path: NodePath<types.Expression | null | undefined>, internal: Internal) {
+  const isTs = internal.filename.endsWith(".ts") || internal.filename.endsWith(".tsx");
+
+  return (
+    (!path.isMemberExpression() && !path.isCallExpression()) ||
+    (isTs && path.isMemberExpression() && !memberIsIValue(path.node)) ||
+    memberIsSure(path, internal) ||
+    t.isMemberExpression(path.parent)
+  );
 }
 
 function meshMember(path: NodePath<types.MemberExpression | types.OptionalMemberExpression>) {
@@ -201,13 +181,6 @@ export function checkNode(
     if (memberIsIValue(path.node)) {
       search.self = path.node;
     }
-  }
-  if (path.isExpression() && calls(path, ["ref"], internal)) {
-    const refValue = path.node.arguments[0];
-
-    meshAllUnknown(path.get("arguments"), internal);
-    path.replaceWith(ref(refValue, internal, area, name));
-    search.self = path.node;
   }
   if (path.isTSAsExpression() || path.isTSSatisfiesExpression()) {
     return checkNode(path.get("expression") as NodePath<types.Expression>, internal, area, name);
@@ -359,7 +332,17 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
       const path = nodePath as NodePath<types.MemberExpression | types.OptionalMemberExpression>;
 
       if (memberIsIValueInExpr(path, search)) {
+        if (path.isOptionalMemberExpression()) {
+          err(
+            Errors.RulesOfVasille,
+            path,
+            "Optional chaining is not allowed here, it due to errors in runtime.",
+            search.external,
+            null,
+          );
+        }
         addExpression(path, search);
+        meshExpression(path, search.external);
       } else {
         checkExpression(path.get("object"), search);
         checkOrIgnoreExpression<types.PrivateName>(path.get("property"), search);
@@ -369,6 +352,16 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
     }
     case "BinaryExpression": {
       const path = nodePath as NodePath<types.BinaryExpression>;
+
+      if (path.node.operator === "in" && t.isStringLiteral(path.node.left) && path.node.left.value.startsWith("$")) {
+        err(
+          Errors.RulesOfVasille,
+          path,
+          "The 'in' operator is not allowed here. It will not work as expected.",
+          search.external,
+          null,
+        );
+      }
 
       checkOrIgnoreExpression<types.PrivateName>(path.get("left"), search);
       checkExpression(path.get("right"), search);
@@ -457,32 +450,7 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
     case "ObjectExpression": {
       const path = nodePath as NodePath<types.ObjectExpression>;
 
-      for (const propPath of path.get("properties")) {
-        if (propPath.isObjectProperty()) {
-          const keyPath = propPath.get("key");
-          const valuePath = propPath.get("value");
-
-          if (
-            propPath.node.computed ||
-            !(
-              keyPath.isIdentifier() &&
-              valuePath.isIdentifier() &&
-              keyPath.node.name.startsWith("$") === valuePath.node.name.startsWith("$")
-            )
-          ) {
-            if (propPath.node.computed) {
-              checkOrIgnoreExpression(propPath.get("key"), search);
-            }
-            checkOrIgnoreExpression<
-              types.ArrayPattern | types.AssignmentPattern | types.ObjectPattern | types.RestElement | types.VoidPattern
-            >(valuePath, search);
-          }
-        } else if (propPath.isObjectMethod()) {
-          checkFunction(propPath, search);
-        } else {
-          checkAllUnknown([propPath as NodePath<t.SpreadElement>], search);
-        }
-      }
+      checkObject(path, search, search.external.isComposing ? "yes" : "no");
       break;
     }
     case "FunctionExpression": {
@@ -500,6 +468,49 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
     case "JSXElement": {
       err(Errors.IncompatibleContext, nodePath, "JSX element is not allowed here", search.external, null);
       break;
+    }
+  }
+}
+
+export function checkObject(
+  path: NodePath<types.ObjectExpression>,
+  search: Search,
+  acceptRefs: "yes" | "no" | "explicit",
+) {
+  for (const propPath of path.get("properties")) {
+    if (propPath.isObjectProperty()) {
+      const keyPath = propPath.get("key");
+      const valuePath = propPath.get("value");
+
+      if (propPath.node.computed || !(keyPath.isIdentifier() && keyPath.node.name.startsWith("$"))) {
+        if (propPath.node.computed) {
+          checkOrIgnoreExpression(propPath.get("key"), search);
+        }
+        checkOrIgnoreExpression<
+          types.ArrayPattern | types.AssignmentPattern | types.ObjectPattern | types.RestElement | types.VoidPattern
+        >(valuePath, search);
+      } else {
+        const calledRef = calledFn(valuePath, refFunctions, search.external);
+
+        if (acceptRefs === "no" || (acceptRefs === "explicit" && !calledRef)) {
+          err(Errors.RulesOfVasille, keyPath, "This object cannot contain reactive values", search.external);
+        } else if (valuePath.isObjectExpression()) {
+          checkObject(valuePath, search, "no");
+        } else if (
+          (valuePath.isMemberExpression() || valuePath.isOptionalMemberExpression()) &&
+          memberIsIValue(valuePath.node)
+        ) {
+          hasBreakPoint(valuePath, search.external);
+        } else if (!valuePath.isIdentifier()) {
+          checkOrIgnoreExpression<
+            types.ArrayPattern | types.AssignmentPattern | types.ObjectPattern | types.RestElement | types.VoidPattern
+          >(valuePath, search);
+        }
+      }
+    } else if (propPath.isObjectMethod()) {
+      checkFunction(propPath, search);
+    } else {
+      checkAllUnknown([propPath as NodePath<t.SpreadElement>], search);
     }
   }
 }

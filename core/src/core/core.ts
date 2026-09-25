@@ -10,6 +10,9 @@ export class Reactive implements Destroyable {
     public readonly sDeep: number;
     public rDeep: number;
 
+    /** use it for debugging */
+    declare public id: number | undefined;
+
     public constructor(deep: number) {
         this.sDeep = this.rDeep = deep;
     }

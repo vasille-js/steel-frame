@@ -13,11 +13,14 @@ const ignoreMembers = new Set([
   "unwrap",
   "theme",
   "dark",
+  "light",
   "mobile",
   "tablet",
   "laptop",
   "prefersDark",
+  "allDark",
   "prefersLight",
+  "allLight",
   "bridge",
   "router",
   "beforeMount",
@@ -28,6 +31,8 @@ const ignoreMembers = new Set([
   "Else",
   "Iterate",
   "ForEach",
+  "ctx",
+  "toFieldRef",
 ]);
 const filePathId = t.identifier("VasilleFilePath");
 
@@ -207,7 +212,9 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
   const used = new Set<string>();
   const ids = {
     ref: "VasilleRef",
+    safeRef: "VasilleSafeRef",
     expr: "VasilleExpr",
+    safeExpr: "VasilleSafeExpr",
     setModel: "VasilleSetModel",
     mapModel: "VasilleMapModel",
     arrayModel: "VasilleArrayModel",
@@ -221,8 +228,9 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     wrapFn: "VasilleWrap",
     setupPosition: "VasilleSetupPosition",
     positionedText: "VasillePosText",
-    earlyInspector: "VasilleInspector",
-    registerReference: "VasilleRefence",
+    safeInit: "VasilleSafeInit",
+    toDeepFieldRef: "VasilleToDeepFieldRef",
+    toFieldRef: "VasilleToFieldRef",
   };
 
   function call(
@@ -266,18 +274,23 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     shadow: opts.shadow,
     hmr: opts.hmr ? [] : undefined,
     asyncComposing: opts.asyncComposing,
-    ref(arg, area, name) {
+    ref(arg, area, name, safe) {
+      const fnName = safe ? "safeRef" : "ref";
+      const fixedArg = arg ? (safe ? t.arrowFunctionExpression([], arg) : arg) : t.buildUndefinedNode();
+
       if (opts.devLayer) {
-        return named(call("ref", [arg ? arg : t.buildUndefinedNode(), getCtx(), nodeToStaticPosition(area)]), name);
+        return named(call(fnName, [fixedArg, getCtx(), nodeToStaticPosition(area)]), name);
       }
 
-      return call("ref", arg ? [arg] : []);
+      const ctx = getCtx();
+
+      return call(fnName, t.isIdentifier(ctx) ? [fixedArg, ctx] : arg ? [fixedArg] : []);
     },
-    expr(func, values, codes, area, name) {
+    expr(func, values, codes, area, name, safe) {
       if (opts.devLayer) {
         return named(
-          call("expr", [
-            getCtx(),
+          call(safe ? "safeExpr" : "expr", [
+            ctx,
             func,
             t.arrayExpression(values),
             t.arrayExpression(codes.map(item => t.stringLiteral(item))),
@@ -287,7 +300,22 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
         );
       }
 
-      return call("expr", [getCtx(), func, t.arrayExpression(values)]);
+      return call(safe ? "safeExpr" : "expr", [getCtx(), func, t.arrayExpression(values)]);
+    },
+    fieldRef(obj: types.Expression, field: types.Expression, area: types.Node, name?: string): types.Expression {
+      if (internal.devLayer) {
+        return named(call("toFieldRef", [getCtx(), obj, field, nodeToStaticPosition(area)]), name);
+      }
+      return call("toFieldRef", [getCtx(), obj, field]);
+    },
+    deepFieldRef(obj: types.Expression, fields: types.Expression[], area: types.Node, name?: string): types.Expression {
+      if (internal.devLayer) {
+        return named(
+          call("toDeepFieldRef", [getCtx(), obj, t.arrayExpression(fields), nodeToStaticPosition(area)]),
+          name,
+        );
+      }
+      return call("toDeepFieldRef", [getCtx(), obj, t.arrayExpression(fields)]);
     },
     setModel(arg, usage, name) {
       if (opts.devLayer) {
@@ -331,10 +359,10 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     },
     set(obj, field, value, area) {
       if (opts.devLayer) {
-        return call("set", [obj, field, value, getCtx(), nodeToStaticPosition(area), getExecutionPosition(area)]);
+        return call("set", [obj, field, value, getCtx(), nodeToStaticPosition(area)]);
       }
 
-      return call("set", [obj, field, value]);
+      return call("set", [getCtx(), obj, field, value]);
     },
     Switch(arg) {
       return call("Switch", [arg, ctx]);
@@ -345,7 +373,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
       left: types.Expression,
       right: types.Expression,
     ): types.Expression {
-      return t.callExpression(t.memberExpression(left, t.identifier("update")), [right, getExecutionPosition(assign)]);
+      return t.callExpression(t.memberExpression(left, t.identifier("up")), [right, getExecutionPosition(assign)]);
     },
     wrapFunctionBody(
       fn: types.FunctionDeclaration | types.ObjectMethod | types.ClassMethod | types.ClassPrivateMethod,

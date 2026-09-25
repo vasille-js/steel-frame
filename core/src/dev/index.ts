@@ -1,4 +1,3 @@
-export { DevReactive } from "./core.js";
 export { DevApp, DevPortal, DevSwitchedNode, DevWatch, DevZombie, processComponentProps } from "./components.js";
 export { InspectedCssStyleInjector, devStyleSheet } from "./css.js";
 export {
@@ -65,7 +64,6 @@ export {
     getPosition,
     runFn,
     wrapFn,
-    registerReference,
     toDevId,
     toDevIdOrValue,
     processDevObject,
@@ -95,7 +93,6 @@ export {
     ExpressionDevReference,
     DevDebounceReference,
     DevDeepFieldReference,
-    DevEdgeReference,
     DevSingleFieldReference,
 } from "./state.js";
 export { DevArrayView, DevMapView, DevSetView, DevSinglePassArrayView } from "./views.js";

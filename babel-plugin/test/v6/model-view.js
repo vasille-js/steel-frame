@@ -1,6 +1,6 @@
 import { arrayModel, ArrayModelView, ArrayView, compose, mapModel, MapModelView, setModel, SetModelView, ref as VasilleRef, expr as VasilleExpr } from "vasille-web";
 const C = compose(Vasille => {
-  const $arr = VasilleRef([1, 2, 3]);
+  const $arr = VasilleRef([1, 2, 3], Vasille);
   const am = arrayModel(Vasille, [1, 2, 3]);
   const sm = setModel(Vasille, arr);
   const mm = mapModel(Vasille, [[1, 2], [3, 4]]);

@@ -27,7 +27,7 @@ export function assignmentToBinaryOperator(
   operator: string,
 ): (typeof assigmentToBinaryMap)[keyof typeof assigmentToBinaryMap] | undefined {
   if (operator in assigmentToBinaryMap) {
-    return assigmentToBinaryMap[operator];
+    return assigmentToBinaryMap[operator as keyof typeof assigmentToBinaryMap];
   }
 }
 
@@ -35,7 +35,7 @@ export function assignmentToLogicalOperator(
   operator: string,
 ): (typeof assigmentToLogicalMap)[keyof typeof assigmentToLogicalMap] | undefined {
   if (operator in assigmentToLogicalMap) {
-    return assigmentToLogicalMap[operator];
+    return assigmentToLogicalMap[operator as keyof typeof assigmentToLogicalMap];
   }
 }
 

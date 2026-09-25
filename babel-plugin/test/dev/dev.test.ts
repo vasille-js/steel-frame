@@ -24,10 +24,6 @@ it("calculate", function () {
   runTest(__dirname, "calculate", true);
 });
 
-it("calculate 2", function () {
-  runJsxTest(__dirname, "calculate-2", true);
-});
-
 it("object", function () {
   runTest(__dirname, "object", true);
 });

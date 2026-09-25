@@ -115,10 +115,9 @@ export function devSet(
     value: unknown,
     ctx: Reactive | undefined,
     declaration: StaticPosition,
-    executionPosition: ExecutionPosition,
 ) {
     if (o[key] instanceof IValue) {
-        o[key].up(value, executionPosition);
+        o[key].up(value, executionPosition(declaration, new Error()));
         return value;
     }
 
@@ -127,17 +126,6 @@ export function devSet(
 
 function createRef<T>(declaration: StaticPosition, name?: string): (value: T, ctx?: Reactive) => DevReference<T> {
     return (value, ctx) => new DevReference(value, ctx, declaration, name);
-}
-
-export function devEdgeRef<T>(
-    ctx: Reactive | undefined,
-    getter: () => T,
-    setter: (v: T) => void,
-    subscriber: ((setter: (v: T) => void) => void | (() => void)) | undefined,
-    declaration: StaticPosition,
-    name?: string,
-) {
-    return new DevEdgeReference(createRef<T>(declaration, name), getter, setter, ctx, subscriber);
 }
 
 export function devDebounceRef<T>(

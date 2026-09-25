@@ -3,7 +3,7 @@ import { Identifier } from "@babel/types";
 import * as t from "@babel/types";
 import { checkNode, Dependency, exprIsSure } from "./expression.js";
 import { Internal, ctx } from "./internal.js";
-import { bindFunctions, calls } from "./call.js";
+import { bindFunctions, calledFn, calls } from "./call.js";
 import { meshAllUnknown } from "./mesh";
 import { nodeToStaticPosition } from "./transformer";
 
@@ -30,6 +30,15 @@ export function err<T>(e: Errors, node: NodePath<unknown>, content: string, inte
   internal.reportError(`${Errors[e]}: ${content}`, node.node as types.Node, error);
 
   return ret;
+}
+
+export function nodeIsUnsafe(
+  path: NodePath<types.Expression | types.JSXExpressionContainer | null | undefined>,
+  internal: Internal,
+) {
+  const isTs = internal.filename.endsWith(".ts") || internal.filename.endsWith(".tsx");
+
+  return path.find(path => (!isTs && path.isMemberExpression()) || path.isCallExpression()) === null;
 }
 
 export function processCalculateCall(
@@ -91,7 +100,9 @@ export function parseCalculateCall(
   area: types.Node,
   name: string | undefined,
 ): boolean {
-  if (path.isCallExpression() && calls(path, ["calculate", "watch"], internal)) {
+  const called = calledFn(path, ["calculate", "watch", "computed", "safeComputed"], internal);
+
+  if (path.isCallExpression() && called) {
     return processCalculateCall(path, internal, area, name);
   }
   return false;
@@ -102,14 +113,15 @@ export function bindCall(
   expr: types.Expression | null | undefined,
   data: Map<string, Dependency>,
   internal: Internal,
-  name?: string,
+  name: string | undefined,
+  safe: boolean,
 ) {
   const names = [...data.values()].map(item => item.paramName);
   const dependencies = [...data.values()].map(item => item.node);
   const codes = [...data.keys()];
 
   if (names.length > 0 && expr) {
-    path.replaceWith(internal.expr(t.arrowFunctionExpression(names, expr), dependencies, codes, expr, name));
+    path.replaceWith(internal.expr(t.arrowFunctionExpression(names, expr), dependencies, codes, expr, name, safe));
 
     return true;
   }
@@ -126,9 +138,17 @@ export function exprCall(
     strong?: boolean;
   },
   area: types.Node,
+  acceptsSafe: boolean,
 ): boolean {
   if (path.isTSAsExpression() || path.isTSSatisfiesExpression()) {
-    return exprCall(path.get("expression") as NodePath<types.Expression>, path.node.expression, internal, opts, area);
+    return exprCall(
+      path.get("expression") as NodePath<types.Expression>,
+      path.node.expression,
+      internal,
+      opts,
+      area,
+      acceptsSafe,
+    );
   }
   if (parseCalculateCall(path, internal, area, opts.name)) {
     return true;
@@ -140,7 +160,7 @@ export function exprCall(
 
   if (
     t.isCallExpression(expr) &&
-    calls(path, ["bind"], internal) &&
+    calls(path, ["bind", "safeBind"], internal) &&
     expr.arguments.length === 1 &&
     t.isExpression(expr.arguments[0])
   ) {
@@ -171,12 +191,13 @@ export function exprCall(
         }
       }
     } else {
-      path.replaceWith(internal.ref(argPath.node, area, opts.name));
+      path.replaceWith(internal.ref(argPath.node, area, opts.name, acceptsSafe && nodeIsUnsafe(argPath, internal)));
     }
 
     return true;
   }
 
+  const unsafe = nodeIsUnsafe(path, internal);
   const exprData = checkNode(path, internal, area, opts.name);
 
   if (exprData.self) {
@@ -189,11 +210,17 @@ export function exprCall(
     return true;
   }
 
-  return bindCall(path, expr, exprData.found, internal, opts.name);
+  return bindCall(path, expr, exprData.found, internal, opts.name, acceptsSafe && unsafe);
 }
 
-export function ref(expr: types.Node | null | undefined, internal: Internal, area: types.Node, name?: string) {
-  return internal.ref(t.isExpression(expr) ? expr : null, area, name);
+export function ref(
+  expr: types.Node | null | undefined,
+  internal: Internal,
+  area: types.Node,
+  name: string | undefined,
+  safe: boolean,
+) {
+  return internal.ref(t.isExpression(expr) ? expr : null, area, name, safe);
 }
 
 export function arrayModel(
@@ -276,8 +303,4 @@ export function toKebabCase(name: string) {
   }
 
   return fixed;
-}
-
-export function nameIsRestricted(name: string) {
-  return name.endsWith("Model") || name.startsWith("prompt");
 }

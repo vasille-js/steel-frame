@@ -2,6 +2,7 @@
   "include": ["src/**/*"],
 
   "compilerOptions": {
+    "rootDir": "./src",
     "allowJs": true,
     "declaration": true,
     "declarationDir": "./types",

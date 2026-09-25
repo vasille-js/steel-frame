@@ -26,7 +26,7 @@ const C = compose(() => {
     // @ts-ignore
     const v7 = ($a, ++$b);
     const v8 = await (<Promise<number>>($a as unknown));
-    const v9 = tag.bind(null, $s);
+    const v9 = tag.bind(null, $s as any);
     const VMap = Map<string, number>;
     const v10 = new VMap([[$s, $a]]);
     const v11 = $a as number;
@@ -42,7 +42,7 @@ const C = compose(() => {
       ...{ s: $s },
     };
 
-    function* generator(i) {
+    function* generator(i: number) {
       yield i + $a;
       yield i + 10 + $a;
     }

@@ -9,7 +9,7 @@ export class DevFragment<Node, Element, TagOptions extends object>
     extends Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>
     implements InspectableReactive
 {
-    id: number;
+    override id: number;
     declaration: StaticPosition | null;
 
     public constructor(

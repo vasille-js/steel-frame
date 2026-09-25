@@ -27,7 +27,7 @@ export function processComponentProps(id: number, props: object): void {
 }
 
 export class DevWatch<Node, Element, TagOptions extends object, T> extends Watch<Node, Element, TagOptions, T> {
-    public readonly id: number;
+    public override id: number;
 
     public constructor(
         input: WatchOptions<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, T>,
@@ -55,7 +55,7 @@ export class DevWatch<Node, Element, TagOptions extends object, T> extends Watch
 }
 
 export class DevApp<Node, Element, TagOptions extends object> extends App<Node, Element, TagOptions> {
-    public readonly id: number;
+    public override id: number;
 
     public constructor(node: Element, runner: IRunner<Node, Element, TagOptions>) {
         super(node, runner);
@@ -81,7 +81,7 @@ export class DevPortal<
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
 > extends Portal<Node, Element, TagOptions, Runner> {
-    public readonly id: number;
+    public override id: number;
 
     constructor(
         node: Element,
@@ -116,7 +116,7 @@ export class DevSwitchedNode<Node, Element, TagOptions extends object> extends S
     TagOptions,
     IRunner<Node, Element, TagOptions>
 > {
-    public readonly id: number;
+    public override id: number;
 
     public constructor(
         usage: StaticPosition,
@@ -161,7 +161,7 @@ export class DevZombie<Node, Element, TagOptions extends object> extends Zombie<
     TagOptions,
     IRunner<Node, Element, TagOptions>
 > {
-    public readonly id: number;
+    public override id: number;
 
     public constructor(
         usage: StaticPosition,

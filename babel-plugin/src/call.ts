@@ -14,6 +14,7 @@ export type FnNames =
   | "prompt"
   | "awaited"
   | "calculate"
+  | "computed"
   | "forward"
   | "watch"
   | "ref"
@@ -30,15 +31,25 @@ export type FnNames =
   | "router"
   | "theme"
   | "dark"
+  | "light"
   | "mobile"
   | "tablet"
   | "laptop"
   | "prefersDark"
   | "prefersLight"
+  | "allDark"
+  | "allLight"
   | "styleSheet"
   | "share"
   | "receive"
-  | "impute";
+  | "impute"
+  | "fieldRef"
+  | "debounceRef"
+  | "safeRef"
+  | "safeBind"
+  | "safeComputed"
+  | "abortSignal"
+  | "ctx";
 
 export const dynamicModulesFunctions = [
   "compose",
@@ -52,23 +63,41 @@ export const dynamicModulesFunctions = [
 
 export const composeFunctions = [...dynamicModulesFunctions, "store", "model"] as const satisfies FnNames[];
 
-export const refFunctions = ["ref"] as const satisfies FnNames[];
+export const refFunctions = ["ref", "safeRef"] as const satisfies FnNames[];
 
 export const asyncFunctions = ["awaited"] as const satisfies FnNames[];
 
-export const bindFunctions = ["watch", "calculate", "bind", "expr"] as const satisfies FnNames[];
+export const inlineBindFunctions = ["bind", "safeBind"] as const satisfies FnNames[];
+
+export const bindFunctions = [
+  ...inlineBindFunctions,
+  "watch",
+  "calculate",
+  "expr",
+  "computed",
+  "safeComputed",
+] as const satisfies FnNames[];
 
 export const modelFunctions = ["arrayModel", "mapModel", "setModel"] as const satisfies FnNames[];
 
-export const composeOnly = ["router", "beforeMount", "afterMount", "beforeDestroy"] as const satisfies FnNames[];
+export const composeOnly = [
+  "router",
+  "beforeMount",
+  "afterMount",
+  "beforeDestroy",
+  "abortSignal",
+] as const satisfies FnNames[];
 export const styleOnly = [
   "theme",
   "dark",
+  "light",
   "mobile",
   "tablet",
   "laptop",
   "prefersDark",
   "prefersLight",
+  "allDark",
+  "allLight",
   "styleSheet",
 ] as const satisfies FnNames[];
 
@@ -86,6 +115,8 @@ export const hintFunctions: FnNames[] = [
   ...styleOnly,
   ...dependencyInjections,
   ...unwrapFunctions,
+  "debounceRef",
+  "fieldRef",
 ];
 
 function checkCall<T extends string>(name: T, internal: Internal): T {
@@ -109,6 +140,14 @@ export function calls(
   names: FnNames[],
   internal: Internal,
 ): path is NodePath<types.CallExpression> {
+  return !!calledFn(path, names, internal);
+}
+
+export function calledFn<T extends FnNames>(
+  path: NodePath<types.Node | null | undefined>,
+  names: T[],
+  internal: Internal,
+): T | null {
   const node = path.node;
   const set = new Set<string>(names);
   const callee = t.isCallExpression(node) ? node.callee : null;
@@ -118,9 +157,9 @@ export function calls(
       const mapped = internal.mapping.get(callee.name);
 
       if (mapped && set.has(mapped) && internal.stack.get(callee.name) === undefined) {
-        return !!checkCall(mapped, internal);
+        return checkCall(mapped as T, internal);
       }
-      return false;
+      return null;
     }
 
     let propName: string | null = null;
@@ -144,9 +183,9 @@ export function calls(
       callee.object.name === internal.global &&
       internal.stack.get(internal.global) === undefined
     ) {
-      return !!checkCall(propName, internal);
+      return checkCall(propName as T, internal);
     }
   }
 
-  return false;
+  return null;
 }

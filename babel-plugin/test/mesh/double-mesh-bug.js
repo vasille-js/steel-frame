@@ -1,8 +1,8 @@
 import { component, ref as VasilleRef } from "vasille-web";
 const Accordion = component(Vasille => {
-  const $bodyHeight = VasilleRef(0);
+  const $bodyHeight = VasilleRef(0, Vasille);
   const o = {
-    $bodyHeight: VasilleRef(0)
+    $bodyHeight: VasilleRef(0, Vasille)
   };
   const resizeObserver = new ResizeObserver(entries => {
     o.$bodyHeight.V = $bodyHeight.V = entries[0].contentRect.height;

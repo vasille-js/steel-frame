@@ -1,13 +1,5 @@
 import { IValue } from "../core/ivalue.js";
 import { DevArrayModel, DevMapModel, DevSetModel } from "./models.js";
-import {
-    DevDebounceReference,
-    DevDeepFieldReference,
-    DevEdgeReference,
-    DevExpression,
-    DevReference,
-    DevSingleFieldReference,
-} from "./state.js";
 
 export type StaticPosition = [string, number, number, number, number];
 export type ExecutionPosition = number;
@@ -590,20 +582,6 @@ export interface DevValue {
 }
 
 const primitiveTypes: string[] = ["number", "string", "boolean"] as const;
-
-export function registerReference<T extends Inspectable & IValue<unknown, unknown>>(
-    value: T,
-    declaration: StaticPosition,
-): T {
-    inspector.newReference({
-        id: value.id,
-        value: toDevValue(value.V),
-        declaration: declaration,
-        time: Date.now(),
-    });
-
-    return value;
-}
 
 const positionKey = Symbol("vasille-position");
 const objectKey = Symbol("vasille-object");

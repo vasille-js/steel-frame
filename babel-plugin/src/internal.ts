@@ -64,14 +64,19 @@ export interface Internal {
   reportError(message: string, node: types.Node, e?: Error): void;
 
   // reactivity
-  ref(arg: types.Expression | null, area: types.Node, name: string | undefined): types.Expression;
+  ref(arg: types.Expression | null, area: types.Node, name: string | undefined, safe: boolean): types.Expression;
   expr(
     func: types.Expression,
     values: types.Expression[],
     codes: string[],
     area: types.Node,
     name: string | undefined,
+    safe: boolean,
   ): types.Expression;
+
+  // advanced
+  fieldRef(obj: types.Expression, field: types.Expression, area: types.Node, name?: string): types.Expression;
+  deepFieldRef(obj: types.Expression, fields: types.Expression[], area: types.Node, name?: string): types.Expression;
 
   // models
   setModel(

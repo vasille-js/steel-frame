@@ -25,7 +25,7 @@ export class DevArrayView<Node, Element, TagOptions extends object, T> extends A
     IRunner<Node, Element, TagOptions>,
     ExecutionPosition
 > {
-    public readonly id: number;
+    public override id: number;
 
     public constructor(
         runner: IRunner<Node, Element, TagOptions>,
@@ -52,6 +52,11 @@ export class DevArrayView<Node, Element, TagOptions extends object, T> extends A
         });
         processComponentProps(this.id, { model });
     }
+
+    override destroy(deep: number, keepNodes?: boolean) {
+        inspector.destroy({ id: this.id, time: Date.now() });
+        super.destroy(deep, keepNodes);
+    }
 }
 
 export class DevSinglePassArrayView<Node, Element, TagOptions extends object, T> extends SinglePassArrayView<
@@ -62,7 +67,7 @@ export class DevSinglePassArrayView<Node, Element, TagOptions extends object, T>
     IRunner<Node, Element, TagOptions>,
     ExecutionPosition
 > {
-    public readonly id: number;
+    public override id: number;
 
     public constructor(
         runner: IRunner<Node, Element, TagOptions>,
@@ -98,6 +103,11 @@ export class DevSinglePassArrayView<Node, Element, TagOptions extends object, T>
         });
         processComponentProps(this.id, { model, key, slot });
     }
+
+    override destroy(deep: number, keepNodes?: boolean) {
+        inspector.destroy({ id: this.id, time: Date.now() });
+        super.destroy(deep, keepNodes);
+    }
 }
 
 export class DevSetView<Node, Element, TagOptions extends object, T> extends SetView<
@@ -107,7 +117,7 @@ export class DevSetView<Node, Element, TagOptions extends object, T> extends Set
     TagOptions,
     IRunner<Node, Element, TagOptions>
 > {
-    public readonly id: number;
+    public override id: number;
 
     public constructor(
         runner: IRunner<Node, Element, TagOptions>,
@@ -126,6 +136,11 @@ export class DevSetView<Node, Element, TagOptions extends object, T> extends Set
         });
         processComponentProps(this.id, { model, slot });
     }
+
+    override destroy(deep: number, keepNodes?: boolean) {
+        inspector.destroy({ id: this.id, time: Date.now() });
+        super.destroy(deep, keepNodes);
+    }
 }
 
 export class DevMapView<Node, Element, TagOptions extends object, K, T> extends MapView<
@@ -136,7 +151,7 @@ export class DevMapView<Node, Element, TagOptions extends object, K, T> extends 
     TagOptions,
     IRunner<Node, Element, TagOptions>
 > {
-    public readonly id: number;
+    public override id: number;
 
     public constructor(
         runner: IRunner<Node, Element, TagOptions>,
@@ -162,5 +177,10 @@ export class DevMapView<Node, Element, TagOptions extends object, K, T> extends 
             time: Date.now(),
         });
         processComponentProps(this.id, { model, slot });
+    }
+
+    override destroy(deep: number, keepNodes?: boolean) {
+        inspector.destroy({ id: this.id, time: Date.now() });
+        super.destroy(deep, keepNodes);
     }
 }

@@ -19,7 +19,7 @@ export const LocalComponent = component<{}>(() => {
   />;
   // this will trigger an error when field name is changed
   // match it with previous one
-  <div bind:autofocus>
+  <div property:autofocus>
     <span></span>
   </div>;
   // this must not be threaded as a local component

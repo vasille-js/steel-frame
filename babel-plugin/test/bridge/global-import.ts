@@ -5,7 +5,7 @@ const $a = Web.ref(2);
 const C = Web.compose(() => {
   function overrideTest() {
     const Web = {
-      ref(x) {
+      ref(x: number) {
         return x;
       },
     };

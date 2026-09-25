@@ -4,13 +4,13 @@ const obj = {
   b: 2
 };
 const sStore = store(Vasille => {
-  const $a = VasilleRef(2);
-  const $b = VasilleRef(3);
+  const $a = VasilleRef(2, Vasille);
+  const $b = VasilleRef(3, Vasille);
   const o = {
     a: 1,
     $b: VasilleRef({
       c: 3
-    })
+    }, Vasille)
   };
   VasilleSafe(() => console.log(o.$b.V.c))();
   return {
