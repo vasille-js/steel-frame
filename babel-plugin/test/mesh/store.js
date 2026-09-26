@@ -45,25 +45,35 @@ const cStore = store(Vasille => {
 });
 const c = cStore;
 const Component = compose(Vasille => {
+  const {
+    $a = ref(void 0, Vasille),
+    $b = ref(void 0, Vasille),
+    $d = ref(void 0, Vasille),
+    $$h = ref(void 0, Vasille),
+    $k = ref(void 0, Vasille),
+    $o = ref(void 0, Vasille),
+    $i = ref(void 0, Vasille),
+    $c = ref(void 0, Vasille)
+  } = c;
   watch(Vasille, (Vasille_0, Vasille_1, Vasille_2, Vasille_3, Vasille_4, Vasille_5, Vasille_6, Vasille_7) => {
     console.log(Vasille_0, Vasille_1, Vasille_2, Vasille_3);
     console.log(c.e, c.f, c.g);
     console.log(Vasille_4.a, Vasille_5, c.j);
     console.log(Vasille_6, Vasille_7.a.b);
-  }, [c.$a, c.$b, c.$c, c.$d, c.$$h, c.$i, c.$k, c.$o]);
+  }, [$a, $b, $c, $d, $$h, $i, $k, $o]);
   VasilleSafe(() => console.log(c["$a"]?.V, c.$b?.V, c.$c?.V, c.$d?.V, c.e, c.f, c.g, c["$$h"].V.a, c.$i?.V, c.j, c.$k?.V, c.$o.V.a.b))();
   Vasille.tag("div", {}, Vasille => {
-    Vasille.text(c.$a);
-    Vasille.text(c.$b);
-    Vasille.text(c.$c);
-    Vasille.text(c.$d);
+    Vasille.text($a);
+    Vasille.text($b);
+    Vasille.text($c);
+    Vasille.text($d);
     Vasille.text(c.e);
     Vasille.text(c.f);
     Vasille.text(c.g);
-    Vasille.text(watch(Vasille, Vasille_0 => Vasille_0.a, [c.$$h]));
-    Vasille.text(c.$i);
+    Vasille.text(watch(Vasille, Vasille_0 => Vasille_0.a, [$$h]));
+    Vasille.text($i);
     Vasille.text(c.j);
-    Vasille.text(c.$k);
-    Vasille.text(watch(Vasille, Vasille_0 => Vasille_0.a.b, [c.$o]));
+    Vasille.text($k);
+    Vasille.text(watch(Vasille, Vasille_0 => Vasille_0.a.b, [$o]));
   });
 });

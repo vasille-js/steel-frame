@@ -19,11 +19,12 @@ const s = sStore;
 const Component = compose(() => {
   const $a = s.$a;
   const $b = s.$b;
-  const $bc1 = s.o.$b.c;
-  const $bc2 = s.o.$b?.c;
+  const $ob = s.o.$b;
+  const $bc1 = $ob.c;
+  const $bc2 = $ob?.c;
 
   watch(() => {
-    console.log($a, $b, s.o.$b.c, s.o.$b?.c);
+    console.log($a, $b, $ob.c, $ob?.c);
   });
 
   beforeMount(() => console.log($a, $b, s.o.$b.c, s.o.$b?.c));
@@ -31,7 +32,7 @@ const Component = compose(() => {
   <div>
     {$a}
     {$b}
-    {s.o.$b.c}
-    {s.o.$b?.c}
+    {$ob.c}
+    {$ob?.c}
   </div>;
 });

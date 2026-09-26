@@ -23,16 +23,17 @@ const s = sStore;
 const Component = compose(Vasille => {
   const $a = VasilleEnsure(s, "$a");
   const $b = VasilleEnsure(s, "$b");
-  const $bc1 = watch(Vasille, Vasille_0 => Vasille_0.c, [s.o.$b]);
-  const $bc2 = watch(Vasille, Vasille_0 => Vasille_0?.c, [s.o.$b]);
+  const $ob = VasilleEnsure(s.o, "$b");
+  const $bc1 = watch(Vasille, Vasille_0 => Vasille_0.c, [$ob]);
+  const $bc2 = watch(Vasille, Vasille_0 => Vasille_0?.c, [$ob]);
   watch(Vasille, (Vasille_0, Vasille_1, Vasille_2) => {
     console.log(Vasille_0, Vasille_1, Vasille_2.c, Vasille_2?.c);
-  }, [$a, $b, s.o.$b]);
+  }, [$a, $b, $ob]);
   VasilleSafe(() => console.log($a.V, $b.V, s.o.$b.V.c, s.o.$b?.V?.c))();
   Vasille.tag("div", {}, Vasille => {
     Vasille.text($a);
     Vasille.text($b);
-    Vasille.text(watch(Vasille, Vasille_0 => Vasille_0.c, [s.o.$b]));
-    Vasille.text(watch(Vasille, Vasille_0 => Vasille_0?.c, [s.o.$b]));
+    Vasille.text(watch(Vasille, Vasille_0 => Vasille_0.c, [$ob]));
+    Vasille.text(watch(Vasille, Vasille_0 => Vasille_0?.c, [$ob]));
   });
 });

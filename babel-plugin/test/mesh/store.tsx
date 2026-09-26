@@ -56,27 +56,28 @@ const cStore = store(() => {
 const c = cStore;
 
 const Component = compose(() => {
+  const { $a, $b, $d, $$h, $k, $o, $i, $c } = c;
   watch(() => {
-    console.log(c.$a, c.$b, c.$c, c.$d);
+    console.log($a, $b, $c, $d);
     console.log(c.e, c.f, c.g);
-    console.log(c.$$h.a, c.$i, c.j);
-    console.log(c.$k, c.$o.a.b);
+    console.log($$h.a, $i, c.j);
+    console.log($k, $o.a.b);
   });
 
   beforeMount(() => console.log(c["$a"], c.$b, c.$c, c.$d, c.e, c.f, c.g, c["$$h"].a, c.$i, c.j, c.$k, c.$o.a.b));
 
   <div>
-    {c.$a}
-    {c.$b}
-    {c.$c}
-    {c.$d}
+    {$a}
+    {$b}
+    {$c}
+    {$d}
     {c.e as any}
     {c.f as any}
     {c.g as any}
-    {c.$$h.a as any}
-    {c.$i as any}
+    {$$h.a as any}
+    {$i as any}
     {c.j as any}
-    {bind(c.$k as any) as any}
-    {c.$o.a.b as any}
+    {bind($k as any) as any}
+    {$o.a.b as any}
   </div>;
 });

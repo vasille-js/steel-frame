@@ -332,16 +332,19 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
       const path = nodePath as NodePath<types.MemberExpression | types.OptionalMemberExpression>;
 
       if (memberIsIValueInExpr(path, search)) {
-        if (path.isOptionalMemberExpression()) {
-          err(
-            Errors.RulesOfVasille,
-            path,
-            "Optional chaining is not allowed here, it due to errors in runtime.",
-            search.external,
-            null,
-          );
-        }
-        addExpression(path, search);
+        const code = path.getSource().replace(/[\s\n]+/g, " ");
+        const name = !path.node.computed && t.isIdentifier(path.node.property) ? path.node.property.name : "$value";
+        err(
+          Errors.RulesOfVasille,
+          path,
+          [
+            "Reactive member access are not allowed in bind/computed expressions. TODO:",
+            `1. Add "const ${name} = ${code};" before the bind/computed expression.`,
+            `2. Replace "${code}" with "${name}" here.`,
+          ].join("\n"),
+          search.external,
+          null,
+        );
         meshExpression(path, search.external);
       } else {
         checkExpression(path.get("object"), search);
