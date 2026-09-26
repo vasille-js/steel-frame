@@ -1,5 +1,6 @@
 import * as DX from "steel-frame";
 
-const C = DX["compose"](({ a }: { a: number }) => {
+const C = DX["compose"]((props: { a: number }) => {
+  let { a } = props;
   DX.beforeMount(() => (a = 3));
 });

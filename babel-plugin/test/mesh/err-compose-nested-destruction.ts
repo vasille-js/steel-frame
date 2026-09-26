@@ -6,4 +6,8 @@ interface Props {
   };
 }
 
-const C = compose(({ $a: { b } }: Props) => {});
+const C = compose((props: Props) => {
+  const {
+    $a: { b },
+  } = props;
+});

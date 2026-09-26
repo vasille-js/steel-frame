@@ -3,16 +3,18 @@ const C = compose(Vasille => {
   const arr = [{
     x: 1
   }];
-  for (const {
-    x
-  } of arr) {
+  for (const item of arr) {
+    const {
+      x
+    } = item;
     Vasille.tag("div", {}, Vasille => {
       Vasille.text(x);
     });
   }
-  arr.forEach(({
-    x
-  }, index) => {
+  arr.forEach((item, index) => {
+    const {
+      x
+    } = item;
     Vasille.tag("div", {}, Vasille => {
       Vasille.text(x + index);
     });

@@ -5,13 +5,15 @@ const C = compose(() => {
 
   <Iterate
     value={arr}
-    slot={({ x }) => {
+    slot={item => {
+      const { x } = item;
       <div>{x}</div>;
     }}
   />;
   <ForEach
     value={arr}
-    slot={({ x }, index) => {
+    slot={(item, index) => {
+      const { x } = item;
       <div>{x + index}</div>;
     }}
   />;

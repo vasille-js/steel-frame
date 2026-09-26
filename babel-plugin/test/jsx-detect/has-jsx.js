@@ -4,8 +4,8 @@ const C = compose((Vasille, {
 }) => {
   Slot({
     model: slot02,
-    "$a": VasilleRef(1),
-    "$b": VasilleRef(2)
+    "$a": VasilleRef(1, Vasille),
+    "$b": VasilleRef(2, Vasille)
   }, Vasille);
 });
 const C1 = compose(Vasille => {
@@ -17,8 +17,8 @@ const C1 = compose(Vasille => {
       console.log(a, b);
     },
     slot02: ({
-      $a = VasilleRef(),
-      $b = VasilleRef()
+      $a = VasilleRef(void 0, Vasille),
+      $b = VasilleRef(void 0, Vasille)
     }, Vasille) => {
       Vasille.tag("div", {});
       VasilleSafe(() => console.log($a.V, $b.V))();

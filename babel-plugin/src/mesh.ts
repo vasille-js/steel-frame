@@ -467,6 +467,8 @@ export function ignoreParams(
   path: NodePath<types.LVal | types.VoidPattern | null | undefined>,
   internal: Internal,
   allowReactiveId: false | ("id" | "array")[],
+  restrictDestruction: boolean = false,
+  restrictRestElement: boolean = false,
 ) {
   // param with default value
   if (path.isAssignmentPattern()) {
@@ -489,6 +491,9 @@ export function ignoreParams(
   }
   // param is object destruction
   else if (path.isObjectPattern()) {
+    if (restrictDestruction) {
+      err(Errors.RulesOfVasille, path, "Move destruction inside the function body", internal);
+    }
     ignoreObjectPattern(path, internal);
   }
   // param is array destruction
@@ -505,6 +510,9 @@ export function ignoreParams(
   }
   // rest element
   else if (path.isRestElement()) {
+    if (restrictRestElement) {
+      err(Errors.RulesOfVasille, path, "Rest element can not be used in slots of internal components", internal);
+    }
     ignoreParams(path.get("argument"), internal, false);
   }
   // something else
@@ -985,7 +993,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
           idPath.isIdentifier() && checkNonReactiveName(idPath, internal);
 
           if (initPath.isObjectExpression() && t.isIdentifier(declaration.node.id) && _path.node.kind === "const") {
-            internal.stack.set(declaration.node.id.name, processObjectExpression(initPath, internal));
+            internal.stack.set(declaration.node.id.name, processObjectExpression(initPath, internal, false));
           } else {
             meshExpression(initPath, internal);
           }
@@ -1469,7 +1477,7 @@ export function compose(
 
   if (!skipCheckParams) {
     for (const param of path.get("params")) {
-      ignoreParams(param, internal, false);
+      ignoreParams(param, internal, false, true, isInternalSlot);
     }
   }
 

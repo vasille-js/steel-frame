@@ -1,9 +1,10 @@
 import { compose, For, ref as VasilleRef, safe as VasilleSafe, expr as VasilleExpr } from "vasille-web";
-const C = compose(function C(Vasille, {
-  $name = VasilleRef("name"),
-  ["$data"]: $d = VasilleRef(),
-  ...rest
-}) {
+const C = compose(function C(Vasille, props) {
+  const {
+    $name = VasilleRef("name", Vasille),
+    ["$data"]: $d = VasilleRef(void 0, Vasille),
+    ...rest
+  } = props;
   const model = [{
     $name: VasilleRef("name1", Vasille),
     $data: VasilleRef({
@@ -27,11 +28,12 @@ const C = compose(function C(Vasille, {
   });
   For({
     of: model,
-    slot: (Vasille, {
-      $name = VasilleRef("xName", Vasille),
-      $data = VasilleRef(void 0, Vasille),
-      ...rest2
-    }) => {
+    slot: (Vasille, props) => {
+      const {
+        $name = VasilleRef("xName", Vasille),
+        $data = VasilleRef(void 0, Vasille),
+        ...rest2
+      } = props;
       Vasille.tag("div", {}, Vasille => {
         Vasille.text(VasilleExpr(Vasille, Vasille_0 => Vasille_0.id, [$data]));
         Vasille.text(":");

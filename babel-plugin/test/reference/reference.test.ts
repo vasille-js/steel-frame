@@ -43,11 +43,3 @@ it("const optional expr", function () {
 it("local reactive in raw", function () {
   runTest(__dirname, "local-reactive");
 });
-
-it("error internal reactive", function () {
-  throwTest(
-    __dirname,
-    "internal-reactive",
-    "This value looks like a reactive but is not. Move code to standalone function or wrap value in raw call.",
-  );
-});

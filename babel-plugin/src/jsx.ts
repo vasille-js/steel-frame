@@ -231,7 +231,7 @@ function transformJsxExpressionContainer(
   if (
     acceptSlots &&
     (expression.isFunctionExpression() || expression.isArrowFunctionExpression()) &&
-    bodyHasJsx(expression.node.body)
+    bodyHasJsx(expression.get("body") as NodePath<types.BlockStatement | types.Expression>)
   ) {
     compose(expression, internal, isInternalSlot, true, skipParamsCheck);
 
@@ -598,7 +598,7 @@ function transformJsxElement(
           }
         }
         if (t.isJSXNamespacedName(name)) {
-          if (name.namespace.name === "bind") {
+          if (name.namespace.name === "property") {
             let pushed = false;
 
             if (expressionPath) {

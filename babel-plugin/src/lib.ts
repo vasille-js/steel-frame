@@ -201,7 +201,7 @@ export function exprCall(
   const exprData = checkNode(path, internal, area, opts.name);
 
   if (exprData.self) {
-    if (!opts.strong || exprIsSure(path, internal)) {
+    if (!opts.strong || (exprIsSure(path, internal) && !path.isOptionalMemberExpression())) {
       path.replaceWith(exprData.self);
     } else {
       path.replaceWith(internal.ensure(exprData.self as types.MemberExpression, area));

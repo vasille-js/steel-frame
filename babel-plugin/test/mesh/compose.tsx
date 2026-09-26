@@ -10,7 +10,8 @@ interface Props {
   $more: string;
 }
 
-const C = compose(function C({ $name = "name", ["$data"]: $d, ...rest }: Props) {
+const C = compose(function C(props: Props) {
+  const { $name = "name", ["$data"]: $d, ...rest } = props;
   const model: Props[] = [{ $name: "name1", $data: { id: "x", width: 1, height: 4 }, $more: "more" }];
 
   beforeMount(() => console.log($d.id, $d.width, $d.height, $name, rest.$more));
@@ -21,7 +22,9 @@ const C = compose(function C({ $name = "name", ["$data"]: $d, ...rest }: Props) 
 
   <For
     of={model}
-    slot={({ $name = "xName", $data, ...rest2 }) => {
+    slot={(props: Props) => {
+      const { $name = "xName", $data, ...rest2 } = props;
+
       <div>
         {$data.id}:{$name} {$data.width}/{$data.height}...{rest2.$more}
       </div>;
