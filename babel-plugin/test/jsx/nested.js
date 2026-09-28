@@ -3,21 +3,21 @@ const C1 = compose((Vasille, props) => {
   Vasille.tag("div", {});
 });
 const C2 = compose(Vasille => {
-  const $a = VasilleRef(1);
+  const $a = VasilleRef(1, Vasille);
   Vasille.tag("div", {}, Vasille => {
     C1({
-      "$bool": VasilleRef(true),
-      "$a": VasilleRef(1),
-      "$b": VasilleRef(2),
-      "$c": VasilleRef("text"),
+      "$bool": VasilleRef(true, Vasille),
+      "$a": VasilleRef(1, Vasille),
+      "$b": VasilleRef(2, Vasille),
+      "$c": VasilleRef("text", Vasille),
       str: "str"
     }, Vasille, (_VasilleWeb, Vasille) => {
       C1({
         ...{
-          $a: VasilleRef(1)
+          $a: VasilleRef(1, Vasille)
         },
         "$b": VasilleExpr(Vasille, Vasille_0 => Vasille_0 + 1, [$a]),
-        "$bool": VasilleRef(true)
+        "$bool": VasilleRef(true, Vasille)
       }, Vasille, (_VasilleWeb, Vasille) => {
         Vasille.tag("div", {});
         Vasille.tag("span", {}, Vasille => {

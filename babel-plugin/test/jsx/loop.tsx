@@ -1,4 +1,4 @@
-import { For, compose, arrayModel, mapModel } from "steel-frame";
+import { For, compose, arrayModel, mapModel, beforeMount } from "steel-frame";
 
 const C = compose(() => {
   const a = arrayModel([1, 2, 3]);
@@ -13,7 +13,9 @@ const C = compose(() => {
   <For
     of={map}
     slot={(value, key) => {
-      console.log(value, key);
+      beforeMount(() => {
+        console.log(value, key);
+      });
     }}
   />;
 });

@@ -1,6 +1,6 @@
 import { compose, ref as VasilleRef, Switch as VasilleSwitch } from "vasille-web";
 const C = compose(Vasille => {
-  const $condition = VasilleRef(true);
+  const $condition = VasilleRef(true, Vasille);
   VasilleSwitch({
     cases: [{
       $case: $condition,

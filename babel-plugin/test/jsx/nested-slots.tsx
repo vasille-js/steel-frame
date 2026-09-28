@@ -1,6 +1,7 @@
 import { Slot, compose, afterMount, beforeMount } from "steel-frame";
 
-const C1 = compose(({ slot }: { slot(props: { $a: number }): void }) => {
+const C1 = compose((props: { slot(props: { $a: number }): void }) => {
+  const { slot } = props;
   let $a = 0;
 
   <div>
@@ -12,12 +13,14 @@ const C2 = compose(() => {
   let $a = 2;
 
   <C1
-    slot={({ $a }) => {
-      console.log($a);
+    slot={(props: { $a: number }) => {
+      const { $a } = props;
+      beforeMount(() => console.log($a));
     }}
   />;
   <C1
-    slot={({ $a }) => {
+    slot={props => {
+      const { $a } = props;
       beforeMount(() => console.log($a));
 
       <>{$a}</>;

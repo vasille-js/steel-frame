@@ -1,8 +1,8 @@
 import { compose, ref as VasilleRef, expr as VasilleExpr } from "vasille-web";
 let c = "c";
 const C = compose(Vasille => {
-  const $a = VasilleRef("a");
-  const $b = VasilleRef(false);
+  const $a = VasilleRef("a", Vasille);
+  const $b = VasilleRef(false, Vasille);
   Vasille.tag("div", {
     a: {
       class: "static1 static2"
