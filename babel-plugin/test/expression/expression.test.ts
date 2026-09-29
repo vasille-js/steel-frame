@@ -21,11 +21,11 @@ it("reactive field set", function () {
 });
 
 it("nested observable error", function () {
-  throwTest(__dirname, "nested-observable", "The reactive/observable value is nested");
+  throwTest(__dirname, "nested-observable", "Reactive member access are not allowed in bind/computed expressions");
 });
 
 it("local observable error", function () {
-  throwTest(__dirname, "local-observable", "Usage of hints is restricted here");
+  throwTest(__dirname, "local-observable", 'Usage of hint "ref" is restricted here');
 });
 
 it("mesh lvalue", function () {
@@ -45,7 +45,7 @@ it("dependency", function () {
 });
 
 it("restricted hints error", function () {
-  throwTest(__dirname, "restricted-hint", "Usage of hints is restricted here");
+  throwTest(__dirname, "restricted-hint", 'Usage of hint "arrayModel" is restricted here');
 });
 
 it("function name starts with $", function () {

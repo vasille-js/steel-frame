@@ -7,10 +7,10 @@ function tag2(a1, a2) {
   return a1 + a2;
 }
 const C = compose(Vasille => {
-  const $a = VasilleRef(3);
+  const $a = VasilleRef(3, Vasille);
   const $b = bind(Vasille, Vasille_0 => Vasille_0 + 1, [$a]);
-  const $s = VasilleRef("s");
-  const $f = VasilleRef(null);
+  const $s = VasilleRef("s", Vasille);
+  const $f = VasilleRef(null, Vasille);
   const o = {
     m: {
       n: 0

@@ -1,13 +1,15 @@
-import { compose, ref, watch } from "vasille-web";
+import { compose, ref, watch, ensure as VasilleEnsure } from "vasille-web";
 class Class {
   #obj = {
     $prop: ref(2)
   };
   compose() {
     return compose(Vasille => {
+      const $prop1 = VasilleEnsure(this.#obj, "$prop");
+      const $prop2 = VasilleEnsure(this.#obj, "$prop");
       watch(Vasille, (Vasille_0, Vasille_1) => {
         let x = [Vasille_0, Vasille_1];
-      }, [this.#obj.$prop, this.#obj["$prop"]]);
+      }, [$prop1, $prop2]);
     });
   }
 }

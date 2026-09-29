@@ -8,15 +8,16 @@ const obj = {
 
 const C = compose(() => {
   let $a = 2;
+  const $nested = obj.$nested;
   const $sum = calculate(() => {
-    return $a + obj.$nested.level2;
+    return $a + $nested.level2;
   });
 
   watch(function update() {
     let rest;
 
     $a = 3;
-    obj.$nested.level2 = 3;
-    [$a, obj.$nested.level2, ...rest] = [obj.$nested.level2, $a];
+    $nested.level2 = 3;
+    [$a, $nested.level2, ...rest] = [$nested.level2, $a];
   });
 });

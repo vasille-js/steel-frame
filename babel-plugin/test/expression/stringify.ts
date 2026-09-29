@@ -7,8 +7,10 @@ class Class {
 
   compose() {
     return compose(() => {
+      const $prop1 = this.#obj.$prop;
+      const $prop2 = this.#obj["$prop"];
       watch(() => {
-        let x = [this.#obj.$prop, this.#obj["$prop"]];
+        let x = [$prop1, $prop2];
       });
     });
   }

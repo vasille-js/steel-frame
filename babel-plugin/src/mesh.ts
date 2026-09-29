@@ -989,7 +989,8 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
           if (_path.node.kind === "const") {
             internal.stack.set(id.name, processObjectExpression(initPath, internal, true));
           } else {
-            processObjectExpression(initPath, internal, false);
+            processObjectExpression(initPath, internal, true);
+            internal.stack.set(id.name, {});
           }
         }
         // variable declaration
