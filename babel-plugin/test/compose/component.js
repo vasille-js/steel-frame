@@ -1,6 +1,6 @@
 import { component, ref } from "vasille-web";
 const C = component(Vasille => {
-  const $a = ref(0);
+  const $a = ref(0, Vasille);
   return {
     $a
   };

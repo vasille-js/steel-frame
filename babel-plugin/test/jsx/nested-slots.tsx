@@ -15,7 +15,7 @@ const C2 = compose(() => {
   <C1
     slot={(props: { $a: number }) => {
       const { $a } = props;
-      beforeMount(() => console.log($a));
+      console.log($a);
     }}
   />;
   <C1

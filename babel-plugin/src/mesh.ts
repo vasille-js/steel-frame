@@ -427,7 +427,7 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
       break;
     }
     case "ObjectExpression": {
-      processObjectExpression(nodePath as NodePath<types.ObjectExpression>, internal, false);
+      processObjectExpression(nodePath as NodePath<types.ObjectExpression>, internal, true);
       break;
     }
     case "FunctionExpression": {

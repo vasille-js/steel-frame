@@ -1,6 +1,6 @@
 import { modal, ref } from "vasille-web";
 const TestModal = modal((Vasille, props) => {
-  const $b = ref(props.$a?.V);
+  const $b = ref(props.$a?.V, Vasille);
 });
 const NoPropsModal = modal(Vasille => {});
 TestModal({

@@ -14,11 +14,11 @@ const C1 = compose((Vasille, props) => {
 const C2 = compose(Vasille => {
   const $a = VasilleRef(2, Vasille);
   C1({
-    slot: (props, Vasille) => {
+    slot: props => {
       const {
         $a = VasilleRef(void 0, Vasille)
       } = props;
-      VasilleSafe(() => console.log($a.V))();
+      console.log($a.V);
     }
   }, Vasille);
   C1({
