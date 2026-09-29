@@ -53,7 +53,7 @@ it("invalid compose call error", function () {
 });
 
 it("style hint error", function () {
-  throwTest(__dirname, "style-hint", "Usage of hints is restricted here");
+  throwTest(__dirname, "style-hint", 'Usage of hint "prefersDark" is restricted here');
 });
 
 it("calculate call error", function () {
@@ -61,7 +61,7 @@ it("calculate call error", function () {
 });
 
 it("store reactive value name error", function () {
-  throwTest(__dirname, "store-reactive-value", "Reactive field name must start with $");
+  throwTest(__dirname, "store-reactive-value", "Reactivity mismatch between field name and value");
 });
 
 it("store not reactive value name error", function () {
