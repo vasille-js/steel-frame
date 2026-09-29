@@ -1,8 +1,5 @@
-import { compose, ref as VasilleRef, match as VasilleMatch } from "vasille-web";
-const key = "a";
-const C = compose(Vasille => {
-  const a = {
-    $a: VasilleRef(1),
-    [key]: VasilleMatch(key, 2)
-  };
-});
+const key3 = "a1";
+const a = {
+  a: 1,
+  [key3]: 2
+};

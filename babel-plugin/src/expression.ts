@@ -298,8 +298,10 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
         meshAllUnknown(path.get("arguments"), search.external);
         path.node.arguments.unshift(ctx);
       } else {
-        if (calls(path, hintFunctions, search.external)) {
-          err(Errors.IncompatibleContext, path, "Usage of hints is restricted here", search.external, null);
+        const hint = calledFn(path, hintFunctions, search.external);
+
+        if (hint) {
+          err(Errors.IncompatibleContext, path, `Usage of hint "${hint}" is restricted here`, search.external, null);
         }
 
         checkOrIgnoreExpression<types.V8IntrinsicIdentifier>(path.get("callee"), search);

@@ -1,10 +1,6 @@
-import { compose } from "steel-frame";
+const key3 = "a1";
 
-const key = "a";
-
-const C = compose(() => {
-  const a = {
-    $a: 1,
-    [key]: 2,
-  };
-});
+const a = {
+  a: 1,
+  [key3]: 2,
+};

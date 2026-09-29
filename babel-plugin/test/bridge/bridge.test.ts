@@ -25,7 +25,7 @@ it("array item set test", function () {
 });
 
 it("router outside of compose error", function () {
-  throwTest(__dirname, "router", "Usage of hints is restricted here");
+  throwTest(__dirname, "router", 'Usage of hint "router" is restricted here');
 });
 
 it("router in store error 1", function () {
@@ -41,7 +41,7 @@ it("router in store error 3", function () {
 });
 
 it("bind in object error", function () {
-  throwTest(__dirname, "bind-in-object", "Objects can not contains bind expressions");
+  throwTest(__dirname, "bind-in-object", 'Usage of hint "bind" is restricted here');
 });
 
 it("field renaming error", function () {
@@ -53,7 +53,7 @@ it("field renaming error 2", function () {
 });
 
 it("property is not reactive error", function () {
-  throwTest(__dirname, "prop-not-reactive", "This property is not a reactive");
+  throwTest(__dirname, "prop-not-reactive", "Reactivity mismatch between field name and value");
 });
 
 it("raw without args error", function () {

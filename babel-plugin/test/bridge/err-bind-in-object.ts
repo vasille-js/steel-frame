@@ -5,6 +5,6 @@ const C = compose(() => {
     $b = 2;
 
   const o = {
-    $sum: $a + $b,
+    $sum: bind($a + $b),
   };
 });

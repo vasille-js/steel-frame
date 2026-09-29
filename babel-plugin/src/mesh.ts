@@ -268,8 +268,10 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
       }
       // call any other functions invalid if code calls a hint
       else {
-        if (calls(path, hintFunctions, internal)) {
-          err(Errors.IncompatibleContext, path, `Usage of hints is restricted here`, internal);
+        const hint = calledFn(path, hintFunctions, internal);
+
+        if (hint) {
+          err(Errors.IncompatibleContext, path, `Usage of hint "${hint}" is restricted here`, internal);
         }
 
         meshOrIgnoreExpression<types.V8IntrinsicIdentifier>(path.get("callee"), internal);
@@ -716,12 +718,15 @@ function procedureProcessObjectExpression(
         }
 
         if ((state[name] === 1) !== name.startsWith("$")) {
-          err(Errors.RulesOfVasille, keyPath, "Reactive field name must start with $", internal);
+          err(Errors.RulesOfVasille, keyPath, "Reactivity mismatch between field name and value", internal);
         } else {
+          if (!state[name]) {
+            meshExpression(valuePath, internal);
+          }
           state[name] = 1;
         }
       } else {
-        if (property.node.computed) {
+        if (property.node.computed && internal.isComposing) {
           err(Errors.RulesOfVasille, prop.get("key"), "Computed property can not be used in object", internal);
         }
         if (valuePath.isObjectExpression()) {
@@ -989,14 +994,13 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
         }
         // variable declaration
         else {
-          ignoreParams(declaration.get("id"), internal, ["id", "array"]);
-          idPath.isIdentifier() && checkNonReactiveName(idPath, internal);
-
           if (initPath.isObjectExpression() && t.isIdentifier(declaration.node.id) && _path.node.kind === "const") {
             internal.stack.set(declaration.node.id.name, processObjectExpression(initPath, internal, false));
           } else {
             meshExpression(initPath, internal);
           }
+          ignoreParams(declaration.get("id"), internal, ["id", "array"]);
+          idPath.isIdentifier() && checkNonReactiveName(idPath, internal);
         }
       }
       break;

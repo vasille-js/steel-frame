@@ -1,3 +1,4 @@
 const arr = [1, 2, 3];
+const index = 1;
 
-arr[1] = 3;
+arr[index] = 3;
