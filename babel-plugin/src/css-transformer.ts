@@ -70,7 +70,7 @@ function processValue(
 
     if (t.isStringLiteral(call.arguments[0])) {
       path = (path as NodePath<types.CallExpression>).get("arguments")[1] as NodePath<types.Expression>;
-      themes.push(`body.${call.arguments[0].value}`);
+      themes = [...themes, `body.${call.arguments[0].value}`];
       allowFallback = false;
     } else {
       return err(
@@ -85,34 +85,43 @@ function processValue(
   // dark
   else if (called === "dark") {
     path = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
-    themes.push(`.dark`);
+    themes = [...themes, ".dark"];
     allowFallback = false;
   }
   // light
   else if (called === "light") {
     path = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
-    themes.push(`.light`);
+    themes = [...themes, ".light"];
     allowFallback = false;
   }
   // allLight
   else if (called === "allLight") {
-    path = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
-    themes.push(".light");
-    mediaDefault.push(mediaDefaults.indexOf("prefersLight") + 1);
-    allowFallback = false;
+    const newPath = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
+    const newtThemes = [...themes, ".light"];
+    const newMediaDefault = [...mediaDefault, mediaDefaults.indexOf("prefersLight") + 1];
+
+    return [
+      ...processValue(name, newPath, pseudo, newtThemes, media, mediaDefault, false, internal),
+      ...processValue(name, newPath, pseudo, themes, media, newMediaDefault, false, internal),
+    ];
   }
   // allDark
   else if (called === "allDark") {
-    path = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
-    themes.push(".dark");
-    mediaDefault.push(mediaDefaults.indexOf("prefersDark") + 1);
+    const newPath = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
+    const newtThemes = [...themes, ".dark"];
+    const newMediaDefault = [...mediaDefault, mediaDefaults.indexOf("prefersDark") + 1];
+
+    return [
+      ...processValue(name, newPath, pseudo, newtThemes, media, mediaDefault, false, internal),
+      ...processValue(name, newPath, pseudo, themes, media, newMediaDefault, false, internal),
+    ];
   }
   // mobile/tablet/laptop/prefersDark/prefersLight
   else if (called && mediaDefaults.includes(called)) {
     const index = mediaDefaults.indexOf(called) + 1;
 
     path = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
-    mediaDefault.push(index);
+    mediaDefault = [...mediaDefault, index];
     allowFallback = false;
   }
 

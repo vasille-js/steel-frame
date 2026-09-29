@@ -8,5 +8,6 @@ export const styles = styleSheet({
   c6: [[4, ".{}{color:#222}"], [5, ".{}{color:#fff}"]],
   c7: [".{}{background:#fff}", ".dark .{}{background:#000}"],
   c8: ["body.red .{}{color:#f00}", "body.green .{}{color:#0f0}", "body.blue .{}{color:#00f}"],
-  c9: [".{}{display:block;display:flex}"]
+  c9: [".{}{display:block;display:flex}"],
+  v7: [".light .{}{color:#fff;background:#fff}", ".dark .{}{color:#000}", ".{}{background:#000}", [4, ".{}{color:#000}"], [5, ".{}{color:#fff}"]]
 });

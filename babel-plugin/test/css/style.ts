@@ -1,4 +1,16 @@
-import { styleSheet, dark, prefersDark, prefersLight, mobile, laptop, tablet, theme } from "steel-frame";
+import {
+  styleSheet,
+  dark,
+  prefersDark,
+  prefersLight,
+  mobile,
+  laptop,
+  tablet,
+  theme,
+  allLight,
+  allDark,
+  light,
+} from "steel-frame";
 
 export const styles = styleSheet({
   c1: {
@@ -41,5 +53,9 @@ export const styles = styleSheet({
   },
   c9: {
     display: ["block", "flex"],
+  },
+  v7: {
+    color: [allLight("#fff"), allDark("#000")],
+    background: ["#000", light("#fff")],
   },
 });

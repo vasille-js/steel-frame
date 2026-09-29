@@ -12,16 +12,8 @@ it("spread element in object", function () {
   throwTest(__dirname, "object-spread-element", "Spread element not supported here");
 });
 
-it("theme is defined twice", function () {
-  throwTest(__dirname, "theme-twice", "The theme seems the be defined twice");
-});
-
 it("theme name is not string literal", function () {
   throwTest(__dirname, "theme-not-string", "Expected string literal");
-});
-
-it("dark conflict with themes", function () {
-  throwTest(__dirname, "dark-vs-theme", "The theme seems the be defined twice");
 });
 
 it("spread element in array", function () {
