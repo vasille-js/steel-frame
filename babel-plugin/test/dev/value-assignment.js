@@ -8,8 +8,8 @@ const C = component(Vasille => {
   };
   function update(...VasilleArgs) {
     return VasilleRun(a => {
-      $a.update(a, VasilleExePos([VasilleFilePath, 8, 4, 8, 10], new Error("execution-position")));
-      o.$a.update(a, VasilleExePos([VasilleFilePath, 9, 4, 9, 12], new Error("execution-position")));
+      $a.up(a, VasilleExePos([VasilleFilePath, 8, 4, 8, 10]));
+      o.$a.up(a, VasilleExePos([VasilleFilePath, 9, 4, 9, 12]));
       o.c = 3;
     }, VasilleArgs, [VasilleFilePath, 7, 2, 11, 3]);
   }
@@ -22,8 +22,8 @@ const obj = {
 };
 function update1(...VasilleArgs) {
   return VasilleRun(a => {
-    $b.update(a, VasilleExePos([VasilleFilePath, 21, 2, 21, 8], new Error("execution-position")));
-    obj.$r.update(2, VasilleExePos([VasilleFilePath, 22, 2, 22, 12], new Error("execution-position")));
+    $b.up(a, VasilleExePos([VasilleFilePath, 21, 2, 21, 8]));
+    obj.$r.up(2, VasilleExePos([VasilleFilePath, 22, 2, 22, 12]));
     obj.x = 3;
   }, VasilleArgs, [VasilleFilePath, 20, 0, 24, 1]);
 }

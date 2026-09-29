@@ -6,13 +6,13 @@ export type ExecutionPosition = number;
 
 let positionId: number = 1;
 
-export function executionPosition(pathLineAndChar: StaticPosition, error: Error): ExecutionPosition {
+export function executionPosition(pathLineAndChar: StaticPosition): ExecutionPosition {
     const id = positionId++;
 
     inspector.registerExecutionPosition({
         id: id,
         position: pathLineAndChar,
-        stack: error.stack ?? "",
+        stack: new Error().stack ?? "",
     });
 
     return id;

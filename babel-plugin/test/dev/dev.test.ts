@@ -52,10 +52,6 @@ it("ensure", function () {
   runTest(__dirname, "ensure", true);
 });
 
-it("match", function () {
-  runTest(__dirname, "match", true);
-});
-
 it("set value", function () {
   runTest(__dirname, "set-value", true);
 });

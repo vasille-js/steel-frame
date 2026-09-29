@@ -219,7 +219,6 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     mapModel: "VasilleMapModel",
     arrayModel: "VasilleArrayModel",
     ensure: "VasilleEnsure",
-    match: "VasilleMatch",
     set: "VasilleSet",
     Switch: "VasilleSwitch",
     safe: "VasilleSafe",
@@ -350,13 +349,6 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
 
       return call("ensure", [object, property]);
     },
-    match(name, arg, area) {
-      if (opts.devLayer) {
-        return call("match", [name, arg, nodeToStaticPosition(area), getCtx()]);
-      }
-
-      return call("match", [name, arg]);
-    },
     set(obj, field, value, area) {
       if (opts.devLayer) {
         return call("set", [obj, field, value, getCtx(), nodeToStaticPosition(area)]);
@@ -442,10 +434,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
   }
 
   function getExecutionPosition(area: types.Node) {
-    return call("executionPosition", [
-      nodeToStaticPosition(area),
-      t.newExpression(t.identifier("Error"), [t.stringLiteral("execution-position")]),
-    ]);
+    return call("executionPosition", [nodeToStaticPosition(area)]);
   }
 
   for (const statementPath of path.get("body")) {

@@ -98,29 +98,23 @@ export function devPrompt<T extends PromptProps>(
     node: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
     input: T,
     timeout: number | undefined,
-    usage: StaticPosition | undefined,
 ) => Promise<unknown> {
     const fragments: DevFragmentMap<Node, Element, TagOptions, T> = new Map();
     const run = function (
         node: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
         input: T,
         timeout: number | undefined,
-        usage: StaticPosition | undefined,
     ) {
         let target: number | null = null;
-        const event: { position: StaticPosition | undefined } = {
-            position: usage,
-        };
 
         return prompt(modal, node => {
-            const portal = createPortal(node, declaration, usage, name);
+            const portal = createPortal(node, declaration, undefined, name);
 
             target = portal.id;
 
             inspector.eventTrigger({
                 eventName: "open",
                 time: Date.now(),
-                position: usage,
                 target,
             });
 
@@ -129,7 +123,6 @@ export function devPrompt<T extends PromptProps>(
             resolve(data: unknown) {
                 if (inspector && target) {
                     inspector.eventTrigger({
-                        ...event,
                         eventName: "close",
                         time: Date.now(),
                         target,
@@ -142,7 +135,6 @@ export function devPrompt<T extends PromptProps>(
             reject(err: unknown) {
                 if (inspector && target) {
                     inspector.eventTrigger({
-                        ...event,
                         eventName: "close",
                         time: Date.now(),
                         target,
@@ -158,17 +150,16 @@ export function devPrompt<T extends PromptProps>(
         node: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
         input: T,
         timeout: number | undefined,
-        usage: StaticPosition | undefined,
     ) => {
         const frag = new DevFragment<Node, Element, TagOptions>(node.runner, null, null, name, {});
 
         node.child(frag);
-        fragments.set(frag, { props: input, node: frag, usage });
-        return run(frag, input, timeout, usage);
+        fragments.set(frag, { props: input, node: frag, usage: undefined });
+        return run(frag, input, timeout);
     };
 
-    return devDynamicalModule(renderer, fragments, (parent, input, usage) => {
-        void run(parent, input, 0, usage);
+    return devDynamicalModule(renderer, fragments, (parent, input) => {
+        void run(parent, input, 0);
     });
 }
 

@@ -97,7 +97,6 @@ export interface Internal {
 
   // helpers
   ensure(arg: types.MemberExpression | types.OptionalMemberExpression, area: types.Node): types.Expression;
-  match(name: types.Expression, arg: types.Expression, area: types.Node): types.CallExpression;
   set(obj: types.Expression, field: types.Expression, value: types.Expression, area: types.Node): types.CallExpression;
 
   // components

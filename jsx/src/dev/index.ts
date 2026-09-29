@@ -36,7 +36,6 @@ export {
     toDevDeepFieldRef,
     toDevFieldRef,
     devDebounceRef,
-    devEdgeRef,
 } from "./internal.js";
 export { devAwaited } from "./library.js";
 

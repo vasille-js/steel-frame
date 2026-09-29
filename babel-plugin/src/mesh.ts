@@ -986,7 +986,9 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
 
           meshAllUnknown(initPath.get("arguments"), internal);
           checkReactiveName(idPath, internal);
-          initPath.replaceWith(ref(refValue, internal, declaration.node, name, calls(initPath, ["safeRef"], internal)));
+          initPath.replaceWith(
+            ref(refValue, internal, declaration.node, undefined, calls(initPath, ["safeRef"], internal)),
+          );
           initPath.node.loc = pos;
         } else if (t.isIdentifier(id) && initPath.isObjectExpression()) {
           if (_path.node.kind === "const") {
