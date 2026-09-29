@@ -1,9 +1,9 @@
 import { component, Slot } from "vasille-shadow";
-export const SlotTest = component((Vasille, {
-  slot,
-  beforeSlot,
-  ...props
-}) => {
+export const SlotTest = component((Vasille, props) => {
+  const {
+    slot,
+    beforeSlot
+  } = props;
   Vasille.tag("div", {}, Vasille => {
     Vasille.tag("div", {
       a: {

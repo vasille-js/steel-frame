@@ -6,7 +6,8 @@ interface Props {
   afterSlot(): void;
 }
 
-export const SlotTest = component<Props>(({ slot, beforeSlot, ...props }) => {
+export const SlotTest = component<Props>(props => {
+  const { slot, beforeSlot } = props;
   <div>
     <div class="before">
       <Slot model={beforeSlot} />
