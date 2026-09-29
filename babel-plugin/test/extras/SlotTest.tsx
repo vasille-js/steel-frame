@@ -14,7 +14,8 @@ export let control:
 
 export const xes: number[] = [];
 
-const SubComponent = component(({ slot, slot1, slot2 }: SubProps) => {
+const SubComponent = component((props: SubProps) => {
+  const { slot, slot1, slot2 } = props;
   let $x = 0;
 
   beforeMount(() => {
@@ -45,7 +46,8 @@ export const SlotTest = component(() => {
   </div>;
   <div>
     <SubComponent
-      slot1={({ x }) => {
+      slot1={item => {
+        const { x } = item;
         beforeMount(() => xes.push(x));
         <div>child{x}</div>;
       }}
@@ -53,7 +55,8 @@ export const SlotTest = component(() => {
   </div>;
   <div>
     <SubComponent
-      slot2={({ x }) => {
+      slot2={item => {
+        const { x } = item;
         beforeMount(() => xes.push(x));
         <div>child{x}</div>;
       }}
