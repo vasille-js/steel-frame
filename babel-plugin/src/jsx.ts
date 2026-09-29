@@ -233,7 +233,7 @@ function transformJsxExpressionContainer(
     (expression.isFunctionExpression() || expression.isArrowFunctionExpression()) &&
     bodyHasJsx(expression.get("body") as NodePath<types.BlockStatement | types.Expression>)
   ) {
-    compose(expression, internal, isInternalSlot, true, skipParamsCheck);
+    compose(expression, internal, "compose", isInternalSlot, true, skipParamsCheck);
 
     if (!isInternalSlot) {
       if (expression.node.params.length < 1) {

@@ -8,6 +8,7 @@ import {
   composeFunctions,
   dependencyInjections,
   dynamicModulesFunctions,
+  FnNames,
   hintFunctions,
   modelFunctions,
   refFunctions,
@@ -68,6 +69,7 @@ const restrictedNames = [
 export function meshComposeCall(
   name: string | null | undefined,
   path: NodePath<types.Node | null | undefined>,
+  method: FnNames,
   internal: Internal,
   isExported = false,
 ) {
@@ -78,7 +80,7 @@ export function meshComposeCall(
     return err(Errors.IncorrectArguments, path, "Invalid arguments number", internal);
   }
 
-  compose(arg, internal, false, false, false);
+  compose(arg, internal, method, false, false, false);
   arg.node.params.unshift(ctx);
 
   if (internal.devLayer && path.isCallExpression()) {
@@ -189,6 +191,7 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
     case "OptionalCallExpression": {
       const path = nodePath;
       const argPath = path.get("arguments")[0];
+      let called: FnNames | null;
 
       // compose call
       if (!internal.isComposing && calls(nodePath, ["page"], internal)) {
@@ -203,9 +206,9 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
             internal,
           );
         }
-        meshComposeCall(null, nodePath, internal);
-      } else if (!internal.isComposing && calls(nodePath, composeFunctions, internal)) {
-        meshComposeCall(null, nodePath, internal);
+        meshComposeCall(null, nodePath, "page", internal);
+      } else if (!internal.isComposing && (called = calledFn(nodePath, composeFunctions, internal))) {
+        meshComposeCall(null, nodePath, called, internal);
       }
       // raw call
       else if (calls(path, unwrapFunctions, internal)) {
@@ -877,7 +880,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
 
       for (const declaration of _path.get("declarations")) {
         const initPath = declaration.get("init");
-        const composeMethod = calls(initPath, composeFunctions, internal);
+        const composeMethod = calledFn(initPath, composeFunctions, internal);
         const id = declaration.node.id;
         const idPath = declaration.get("id");
         const name = t.isIdentifier(id) ? id.name : undefined;
@@ -893,7 +896,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
             err(Errors.RulesOfVasille, idPath, error, internal);
           }
 
-          if (calls(initPath, ["compose", "component"], internal)) {
+          if (["compose", "component"].includes(composeMethod)) {
             if (isNotUpperCase) {
               report("The component name must start with a uppercase letter");
             }
@@ -901,7 +904,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
               report("Components must be placed in a folder named `components`");
             }
           }
-          if (calls(initPath, ["view"], internal)) {
+          if (composeMethod === "view") {
             if (isNotUpperCase) {
               report("The view name must start with a uppercase letter");
             }
@@ -912,7 +915,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
               report("Views must be placed in a folder named `views`");
             }
           }
-          if (calls(initPath, ["store"], internal)) {
+          if (composeMethod === "store") {
             if (isNotLowerCase) {
               report("The store name must start with a lowercase letter");
             }
@@ -923,7 +926,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
               report("Stores must be placed in a folder named `stores`");
             }
           }
-          if (calls(initPath, ["model"], internal)) {
+          if (composeMethod === "model") {
             if (isNotLowerCase) {
               report("The model constructor function name must start with a lowercase letter");
             }
@@ -934,7 +937,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
               report("Models must be placed in a folder named `models`");
             }
           }
-          if (calls(initPath, ["modal"], internal)) {
+          if (composeMethod === "modal") {
             if (isNotUpperCase) {
               report("The modal component name must start with a uppercase letter");
             }
@@ -945,7 +948,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
               report("Modals must be placed in a folder named `modals`");
             }
           }
-          if (calls(initPath, ["prompt"], internal)) {
+          if (composeMethod === "prompt") {
             if (!name.startsWith("prompt")) {
               report("The prompt function name must start with `prompt`");
             }
@@ -953,7 +956,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
               report("Prompts must be placed in a folder named `prompts`");
             }
           }
-          if (calls(initPath, ["screen"], internal)) {
+          if (composeMethod === "screen") {
             if (!name.endsWith("Screen")) {
               report("The screen name must start with `Screen`");
             }
@@ -961,7 +964,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
               report("Screens must be placed in a folder named `screens`");
             }
           }
-          if (calls(initPath, ["page"], internal)) {
+          if (composeMethod === "page") {
             report("Use export default instead");
           }
           if (isExported) {
@@ -974,7 +977,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
               report(`File name is not correct, expected ${name}.ts, ${name}.tsx, ${name}.js or ${name}.jsx`);
             }
           }
-          meshComposeCall(id.name, initPath, internal, isExported);
+          meshComposeCall(id.name, initPath, composeMethod, internal, isExported);
         }
         // ref call
         else if (calls(initPath, refFunctions, internal)) {
@@ -1462,6 +1465,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
 export function compose(
   path: NodePath<types.ArrowFunctionExpression | types.FunctionExpression>,
   internal: Internal,
+  method: FnNames,
   isInternalSlot: boolean,
   isSlot: boolean,
   skipCheckParams: boolean,
@@ -1482,7 +1486,7 @@ export function compose(
 
   if (!skipCheckParams) {
     for (const param of path.get("params")) {
-      ignoreParams(param, internal, false, true, isInternalSlot);
+      ignoreParams(param, internal, false, method !== "page", isInternalSlot);
     }
   }
 
