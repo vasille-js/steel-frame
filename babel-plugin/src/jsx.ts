@@ -8,6 +8,7 @@ import { nodeToStaticPosition } from "./transformer";
 import { memberIsIValue } from "./expression";
 import { processFieldRefCall, toFieldRef } from "./field-reference";
 import { calls } from "./call";
+import { validateRouterPath } from "./router";
 
 export interface ConditionCollection {
   cases:
@@ -796,8 +797,37 @@ function transformJsxElement(
         }
       }
       // <A space:name=../>
-      else {
-        err(Errors.ParserError, attrPath, "Namespaced attributes names are not supported", internal);
+      else if (t.isJSXAttribute(attr) && t.isJSXNamespacedName(attr.name)) {
+        const fullName = `${attr.name.namespace.name}:${attr.name.name.name}`;
+        const isReactive = fullName.startsWith("$");
+        let value: types.Expression | undefined;
+
+        if (attr.name.name.name === "link") {
+          const valuePath = attrPath.get("value");
+
+          if (valuePath.isStringLiteral() && isReactive) {
+            validateRouterPath(valuePath, internal);
+            value = valuePath.node;
+          } else {
+            if (valuePath.isJSXExpressionContainer()) {
+              const exprPath = valuePath.get("expression");
+
+              if (exprPath.isExpression()) {
+                validateRouterPath(exprPath, internal);
+              }
+
+              value = transformJsxExpressionContainer(valuePath, internal, [
+                isReactive && "acceptsReactive",
+                !isReactive && "acceptsRaw",
+              ]);
+            }
+          }
+        }
+        if (value) {
+          props.push(t.objectProperty(t.stringLiteral(fullName), value));
+        } else {
+          err(Errors.ParserError, attrPath, "Failed to process namespaced property", internal);
+        }
       }
     }
 
