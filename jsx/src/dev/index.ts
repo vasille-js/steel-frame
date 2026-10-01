@@ -20,6 +20,8 @@ export {
     devMount,
     devView,
     devDynamicalModule,
+    createDevModel,
+    DevModel,
     type DevFragmentMap,
 } from "./compose.js";
 export {

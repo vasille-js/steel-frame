@@ -1,6 +1,6 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
-import { calledFn, calls, dependencyInjections, hintFunctions, refFunctions, unwrapFunctions } from "./call.js";
+import { calledFn, calls, dependencyInjections, hintFunctions, unwrapFunctions } from "./call.js";
 import { ctx, Internal, StackedStates, V } from "./internal.js";
 import { checkNonReactiveName, err, Errors } from "./lib";
 import { ignoreParams, meshAllUnknown, meshExpression } from "./mesh";
@@ -36,20 +36,6 @@ function addExpression(path: NodePath<types.Expression>, search: Search) {
     .trim()
     .replace(/\s*\n\s*/g, "");
   const found = search.found.get(name);
-
-  if (path.isMemberExpression()) {
-    let it: types.Expression | null = path.node;
-
-    while (t.isMemberExpression(it) || t.isIdentifier(it)) {
-      const name = stringify(t.isMemberExpression(it) ? it.property : it);
-      const computed = t.isMemberExpression(it) ? it.computed : false;
-
-      if (it !== path.node && name.startsWith("$") && !computed) {
-        err(Errors.RulesOfVasille, path, "The reactive/observable value is nested", search.external, null);
-      }
-      it = t.isMemberExpression(it) ? it.object : null;
-    }
-  }
 
   if (!found) {
     const paramName = insertName(`Vasille_${search.found.size}`, search);
@@ -178,7 +164,7 @@ export function checkNode(
     }
   }
   if (path.isMemberExpression() || path.isOptionalMemberExpression()) {
-    if (memberIsIValue(path.node)) {
+    if (memberIsIValue(path.node) && hasBreakPoint(path, internal, true)) {
       search.self = path.node;
     }
   }
@@ -335,7 +321,8 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
 
       if (memberIsIValueInExpr(path, search)) {
         const code = path.getSource().replace(/[\s\n]+/g, " ");
-        const name = !path.node.computed && t.isIdentifier(path.node.property) ? path.node.property.name : "$value";
+        const name = (path.node.property as types.Identifier).name;
+
         err(
           Errors.RulesOfVasille,
           path,
@@ -347,7 +334,6 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
           search.external,
           null,
         );
-        meshExpression(path, search.external);
       } else {
         checkExpression(path.get("object"), search);
         checkOrIgnoreExpression<types.PrivateName>(path.get("property"), search);
@@ -357,16 +343,6 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
     }
     case "BinaryExpression": {
       const path = nodePath as NodePath<types.BinaryExpression>;
-
-      if (path.node.operator === "in" && t.isStringLiteral(path.node.left) && path.node.left.value.startsWith("$")) {
-        err(
-          Errors.RulesOfVasille,
-          path,
-          "The 'in' operator is not allowed here. It will not work as expected.",
-          search.external,
-          null,
-        );
-      }
 
       checkOrIgnoreExpression<types.PrivateName>(path.get("left"), search);
       checkExpression(path.get("right"), search);
@@ -455,7 +431,7 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
     case "ObjectExpression": {
       const path = nodePath as NodePath<types.ObjectExpression>;
 
-      checkObject(path, search, search.external.isComposing ? "yes" : "no");
+      checkObject(path, search);
       break;
     }
     case "FunctionExpression": {
@@ -477,40 +453,34 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
   }
 }
 
-export function checkObject(
-  path: NodePath<types.ObjectExpression>,
-  search: Search,
-  acceptRefs: "yes" | "no" | "explicit",
-) {
+export function checkObject(path: NodePath<types.ObjectExpression>, search: Search) {
   for (const propPath of path.get("properties")) {
     if (propPath.isObjectProperty()) {
       const keyPath = propPath.get("key");
       const valuePath = propPath.get("value");
 
-      if (propPath.node.computed || !(keyPath.isIdentifier() && keyPath.node.name.startsWith("$"))) {
-        if (propPath.node.computed) {
-          checkOrIgnoreExpression(propPath.get("key"), search);
-        }
+      if (
+        (propPath.node.computed && keyPath.isStringLiteral() && keyPath.node.value.startsWith("$")) ||
+        (!propPath.node.computed && keyPath.isIdentifier() && keyPath.node.name.startsWith("$"))
+      ) {
+        err(
+          Errors.RulesOfVasille,
+          propPath,
+          "Reactive properties are not allowed in computed objects",
+          search.external,
+          null,
+        );
+      }
+
+      if (propPath.node.computed) {
+        checkOrIgnoreExpression(keyPath, search);
+      }
+      if (valuePath.isObjectExpression()) {
+        checkObject(valuePath, search);
+      } else {
         checkOrIgnoreExpression<
           types.ArrayPattern | types.AssignmentPattern | types.ObjectPattern | types.RestElement | types.VoidPattern
         >(valuePath, search);
-      } else {
-        const calledRef = calledFn(valuePath, refFunctions, search.external);
-
-        if (acceptRefs === "no" || (acceptRefs === "explicit" && !calledRef)) {
-          err(Errors.RulesOfVasille, keyPath, "This object cannot contain reactive values", search.external);
-        } else if (valuePath.isObjectExpression()) {
-          checkObject(valuePath, search, "no");
-        } else if (
-          (valuePath.isMemberExpression() || valuePath.isOptionalMemberExpression()) &&
-          memberIsIValue(valuePath.node)
-        ) {
-          hasBreakPoint(valuePath, search.external);
-        } else if (!valuePath.isIdentifier()) {
-          checkOrIgnoreExpression<
-            types.ArrayPattern | types.AssignmentPattern | types.ObjectPattern | types.RestElement | types.VoidPattern
-          >(valuePath, search);
-        }
       }
     } else if (propPath.isObjectMethod()) {
       checkFunction(propPath, search);

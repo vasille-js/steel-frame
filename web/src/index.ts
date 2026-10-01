@@ -101,24 +101,27 @@ export interface PromptProps {
     reject(err: unknown): void;
 }
 
-export function prompt<T extends PromptProps>(
-    modal: (node: Fragment<Node, Element, TagOptions>, input: T) => void,
-    create: (node: Fragment<Node, Element, TagOptions>) => Portal<Node, Element, TagOptions> = createPortal,
-): (
-    node: Fragment<Node, Element, TagOptions>,
-    input: T,
-    timeout?: number,
-    debugProps?: PromptProps,
-) => Promise<unknown> {
-    return function (node, input, timeout, debugProps) {
+export class Prompt<T extends PromptProps, Extra extends [number, ...unknown[]]> {
+    constructor(
+        private readonly modal: (node: Fragment<Node, Element, TagOptions>, input: T) => void,
+        private readonly create: (
+            node: Fragment<Node, Element, TagOptions>,
+            extra: Extra,
+        ) => Portal<Node, Element, TagOptions>,
+        private readonly debugProps?: PromptProps,
+    ) {}
+
+    public show(node: Fragment<Node, Element, TagOptions>, input: T, ...extra: Extra): Promise<unknown> {
+        const { modal, create, debugProps } = this;
+
         return new Promise((resolve, reject) => {
-            const portal = create(node);
+            const portal = create(node, extra);
             const timer =
-                timeout &&
+                extra[0] &&
                 setTimeout(() => {
                     destroy();
                     reject(new Error("Timeout"));
-                }, timeout);
+                }, extra[0]);
 
             function destroy() {
                 timer && clearTimeout(timer);
@@ -137,6 +140,7 @@ export function prompt<T extends PromptProps>(
                         destroy();
                         debugProps?.reject(error);
                         reject(error);
+                        reject(error);
                     },
                 });
             } catch (e) {
@@ -144,7 +148,23 @@ export function prompt<T extends PromptProps>(
                 reject(e);
             }
         });
-    };
+    }
+}
+
+export function prompt<T extends PromptProps, Extra extends [number, ...unknown[]]>(
+    modal: (node: Fragment<Node, Element, TagOptions>, input: T) => void,
+    create: (node: Fragment<Node, Element, TagOptions>) => Portal<Node, Element, TagOptions> = createPortal,
+): Prompt<T, Extra> {
+    return new Prompt<T, Extra>(modal, create);
+}
+
+export function showPrompt<T extends PromptProps, Extra extends [number, ...unknown[]]>(
+    ctx: Fragment<Node, Element, TagOptions>,
+    prompt: Prompt<T, Extra>,
+    input: T,
+    ...args: Extra
+): Promise<unknown> {
+    return prompt.show(ctx, input, ...args);
 }
 
 export function mount<T>(element: Element, component: ($: T) => void, input: T): App<Node, Element, TagOptions> {

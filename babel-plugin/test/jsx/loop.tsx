@@ -13,7 +13,9 @@ const C = compose(() => {
   <For
     of={map}
     slot={(value, key) => {
-      console.log(value, key);
+      beforeMount(() => {
+        console.log(value, key);
+      });
     }}
   />;
 });

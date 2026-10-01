@@ -3,8 +3,11 @@ import * as t from "@babel/types";
 import { ctx, Internal } from "./internal.js";
 import { bodyHasJsx } from "./jsx-detect.js";
 import { checkNonReactiveName, checkReactiveName, err, Errors, exprCall, nodeIsUnsafe, toKebabCase } from "./lib.js";
-import { compose, meshExpression } from "./mesh.js";
+import { compose, meshExpression, processRefCall } from "./mesh.js";
 import { nodeToStaticPosition } from "./transformer";
+import { memberIsIValue } from "./expression";
+import { processFieldRefCall, toFieldRef } from "./field-reference";
+import { calls } from "./call";
 
 export interface ConditionCollection {
   cases:
@@ -90,7 +93,7 @@ export function transformJsxArray(
       if (conditionalJsx.length) {
         result.push(...conditionalJsx);
       } else {
-        const value = transformJsxExpressionContainer(path, internal, ["acceptsReactive", "acceptsRaw", "acceptsSafe"]);
+        const value = transformJsxExpressionContainer(path, internal, ["acceptsReactive", "acceptsRaw"]);
         /* istanbul ignore else */
         if (!t.isJSXEmptyExpression(value)) {
           const unsafe = nodeIsUnsafe(path, internal);
@@ -216,7 +219,14 @@ function transformJsxExpressionContainer(
   path: NodePath<types.JSXExpressionContainer>,
   internal: Internal,
   options: (
-    "acceptSlots" | "isInternalSlot" | "acceptsReactive" | "acceptsRaw" | "skipParamsCheck" | "acceptsSafe" | false
+    | "acceptSlots"
+    | "isInternalSlot"
+    | "acceptsReactive"
+    | "acceptsRaw"
+    | "skipParamsCheck"
+    | "acceptsSafe"
+    | "acceptFieldRef"
+    | false
   )[],
 ): types.Expression {
   const acceptSlots = options.includes("acceptSlots");
@@ -225,13 +235,14 @@ function transformJsxExpressionContainer(
   const acceptsRaw = options.includes("acceptsRaw");
   const skipParamsCheck = options.includes("skipParamsCheck");
   const acceptsSafe = options.includes("acceptsSafe");
+  const acceptFieldRef = options.includes("acceptFieldRef");
   const expression = path.get("expression");
   const loc = expression.node.loc;
 
   if (
     acceptSlots &&
     (expression.isFunctionExpression() || expression.isArrowFunctionExpression()) &&
-    bodyHasJsx(expression.get("body") as NodePath<types.BlockStatement | types.Expression>)
+    (bodyHasJsx(expression.get("body") as NodePath<types.BlockStatement | types.Expression>) || isInternalSlot)
   ) {
     compose(expression, internal, "compose", isInternalSlot, true, skipParamsCheck);
 
@@ -253,7 +264,27 @@ function transformJsxExpressionContainer(
 
   /* istanbul ignore else */
   if (expression.isExpression()) {
-    if (acceptsReactive) {
+    let fieldRefExpression: types.Expression | null | undefined;
+
+    // $x.y
+    if (
+      acceptFieldRef &&
+      (expression.isMemberExpression() || expression.isOptionalMemberExpression()) &&
+      !memberIsIValue(expression.node) &&
+      (fieldRefExpression = toFieldRef(expression, internal, expression))
+    ) {
+      expression.replaceWith(fieldRefExpression);
+    }
+    // ref/safeRef call
+    else if (acceptsReactive && processRefCall(expression, expression.node, internal)) {
+      // processRefCall already replace the expression
+    }
+    // fieldRef($x.y)
+    else if (acceptFieldRef && calls(expression, ["fieldRef"], internal)) {
+      expression.replaceWith(processFieldRefCall(expression, internal, expression));
+    }
+    // any other expression
+    else if (acceptsReactive) {
       // two-side binding
       const isReactive = exprCall(
         expression,
@@ -265,6 +296,7 @@ function transformJsxExpressionContainer(
       );
 
       if (!isReactive && !acceptsRaw) {
+        meshExpression(expression, internal);
         expression.replaceWith(
           internal.ref(expression.node, expression.node, undefined, acceptsSafe && nodeIsUnsafe(expression, internal)),
         );
@@ -374,6 +406,8 @@ function transformJsxElement(
   internal: Internal,
 ): types.Statement[] {
   const name = path.node.openingElement.name;
+  let isNotSafe = false;
+
   if (t.isJSXIdentifier(name) && name.name[0].toLowerCase() === name.name[0]) {
     if ((name.name === "head" && !internal.headTag) || (name.name === "body" && !internal.bodyTag)) {
       return [];
@@ -619,7 +653,7 @@ function transformJsxElement(
               bind.push(idToProp(name.name, t.booleanLiteral(true)));
             }
           } else {
-            err(Errors.ParserError, attrPath, "Only bind namespace is supported", internal);
+            err(Errors.ParserError, attrPath, 'Only "property" namespace is supported', internal);
           }
         }
       } else {
@@ -697,6 +731,13 @@ function transformJsxElement(
         }
         // <A prop={..}/>
         else if (valuePath && valuePath.isJSXExpressionContainer()) {
+          const propertyValueExpr = valuePath.get("expression");
+
+          isNotSafe ||=
+            nodeIsUnsafe(valuePath, internal) &&
+            !propertyValueExpr.isFunctionExpression() &&
+            !propertyValueExpr.isArrowFunctionExpression();
+
           const isSystem = internal.mapping.has(name.name);
           const requiresReactive = attr.name.name.startsWith("$");
           // lixcode: don't alter conditions
@@ -713,6 +754,7 @@ function transformJsxElement(
             requiresReactive && "acceptsReactive",
             acceptPassive && "acceptsRaw",
             prechecked && "skipParamsCheck",
+            requiresReactive && "acceptFieldRef",
           ]);
           const exprPath = valuePath.get("expression");
 
@@ -738,11 +780,17 @@ function transformJsxElement(
         meshExpression(attrPath.get("argument"), internal);
         props.push(t.spreadElement(attrPath.node.argument));
 
-        if (mapped === "If" || mapped === "ElseIf" || mapped === "Else") {
+        if (
+          mapped === "If" ||
+          mapped === "ElseIf" ||
+          mapped === "Else" ||
+          mapped === "Iterate" ||
+          mapped === "ForEach"
+        ) {
           err(
             Errors.RulesOfVasille,
             attrPath,
-            "If, Else and ElseIf are syntax sugar, use Switch if you need more runtime elasticity",
+            "If, Else, ElseIf, Iterate and ForEach are syntax sugar, they don't accept spread attribute",
             internal,
           );
         }
@@ -900,7 +948,7 @@ function transformJsxElement(
 
     call.loc = path.node.loc;
 
-    return [...ret, t.expressionStatement(call)];
+    return [...ret, t.expressionStatement(isNotSafe ? internal.safeInit(call) : call)];
   }
 
   return err(

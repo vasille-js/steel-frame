@@ -1,27 +1,35 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
-import { checkReactiveName, err, Errors, exprCall } from "./lib";
+import { err, Errors, exprCall } from "./lib";
 import { ctx, Internal } from "./internal";
 import { idIsIValue, memberIsIValue } from "./expression";
 import { nodeToStaticPosition } from "./transformer";
 import { meshAllUnknown } from "./mesh";
+
+function unwrapTsConstructions(path: NodePath<types.Expression>): NodePath<types.Expression> {
+  return path.isTSAsExpression() || path.isTSSatisfiesExpression()
+    ? unwrapTsConstructions(path.get("expression") as NodePath<types.Expression>)
+    : path;
+}
 
 export function hasBreakPoint(
   node: NodePath<types.MemberExpression | types.OptionalMemberExpression>,
   internal: Internal,
   has = false,
 ): boolean {
-  const obj = node.get("object");
+  const obj = unwrapTsConstructions(node.get("object"));
 
   if (obj.isMemberExpression() || obj.isOptionalMemberExpression()) {
     if (memberIsIValue(obj.node)) {
       if (has) {
-        err(Errors.RulesOfVasille, node, "Break point", internal);
+        err(Errors.RulesOfVasille, node, "Nested reactivity is not supported", internal);
       }
       has = true;
     }
 
     return hasBreakPoint(obj, internal, has);
+  } else if (obj.isIdentifier() && idIsIValue(obj) && has) {
+    err(Errors.RulesOfVasille, obj, "Nested reactivity is not supported", internal);
   }
 
   return has;
@@ -33,9 +41,25 @@ export interface BreakpointParts {
 }
 
 export function splitByBreakPoint(
+  path: NodePath<types.MemberExpression | types.OptionalMemberExpression>,
+  internal: Internal,
+): BreakpointParts {
+  const data: BreakpointParts = { props: [] };
+  const property = path.get("property");
+
+  if (!path.node.computed && property.isIdentifier()) {
+    data.props.unshift(property.node.name);
+  } else {
+    data.props.unshift(property as NodePath<types.Expression>);
+  }
+
+  return collectBrickPointData(path, internal, data);
+}
+
+export function collectBrickPointData(
   node: NodePath<types.MemberExpression | types.OptionalMemberExpression>,
   internal: Internal,
-  data: BreakpointParts = { props: [] },
+  data: BreakpointParts,
 ): BreakpointParts {
   const obj = node.get("object");
 
@@ -60,7 +84,7 @@ export function splitByBreakPoint(
       }
       data.obj = obj;
     } else {
-      return splitByBreakPoint(obj, internal, data);
+      return collectBrickPointData(obj, internal, data);
     }
   }
   if (obj.isIdentifier() && idIsIValue(obj)) {

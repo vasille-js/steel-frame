@@ -1,6 +1,6 @@
 import { App, Fragment, Reactive, reportError, Runner } from "vasille";
 import { DevReactive, errorToString, inspector, remapObject, StaticPosition, toDevIdOrValue } from "vasille/dev";
-import { CompositionProps } from "../compose.js";
+import { CompositionProps, Model } from "../compose.js";
 import { DevApp, DevFragment, DevRunner, DevTagOptions, Inspector, ModelId } from "vasille/dev";
 
 export type DevComposed<Node, Element, TagOptions extends object, In extends CompositionProps, Out> = (
@@ -120,14 +120,17 @@ export function devStore<Out extends object>(
     return fn(reactive);
 }
 
-export function devModel<In extends object, Out extends object>(
-    fn: (ctx: DevReactive, o: In) => Out,
-    declaration: StaticPosition,
-    name: string,
-): (o: In, parent: Reactive | undefined, usage: StaticPosition) => Out {
-    return (o, parent, usage) => {
+export class DevModel<In extends object, Out extends object> {
+    public constructor(
+        private readonly fn: (ctx: DevReactive, o: In) => Out,
+        public readonly declaration: StaticPosition,
+        public readonly name: string,
+    ) {}
+
+    create(o: In, parent: Reactive | undefined, usage: StaticPosition): Out {
         const ctx = new DevReactive();
         const id = ctx.id;
+        const { fn, name, declaration } = this;
 
         inspector.createCustomModel({
             id,
@@ -140,14 +143,31 @@ export function devModel<In extends object, Out extends object>(
             inspector.customModelProperty({ id, key, value: toDevIdOrValue(value) });
         });
         if (parent) {
-            parent.runOnDestroy(() => ctx.destroy(ctx.sDeep));
+            parent.bind(ctx);
         }
 
         return {
             ...fn(ctx, o),
             [ModelId]: id,
         };
-    };
+    }
+}
+
+export function devModel<In extends object, Out extends object>(
+    fn: (ctx: DevReactive, o: In) => Out,
+    declaration: StaticPosition,
+    name: string,
+): DevModel<In, Out> {
+    return new DevModel<In, Out>(fn, declaration, name);
+}
+
+export function createDevModel<In extends object, Out extends object>(
+    parent: Reactive | undefined,
+    model: DevModel<In, Out>,
+    o: In,
+    usage: StaticPosition,
+): Out {
+    return model.create(o, parent, usage);
 }
 
 export function devMount<T>(

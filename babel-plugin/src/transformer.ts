@@ -31,7 +31,6 @@ const ignoreMembers = new Set([
   "Else",
   "Iterate",
   "ForEach",
-  "ctx",
   "toFieldRef",
 ]);
 const filePathId = t.identifier("VasilleFilePath");
@@ -355,6 +354,9 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
       }
 
       return call("set", [getCtx(), obj, field, value]);
+    },
+    safeInit(arg: types.Expression): types.Expression {
+      return call("safeInit", [t.arrowFunctionExpression([], arg)]);
     },
     Switch(arg) {
       return call("Switch", [arg, ctx]);

@@ -52,6 +52,7 @@ export {
     type Router,
     safe,
     abortSignal,
+    safeInit,
 } from "vasille-web";
 export {
     devSetLaptopMaxWidth as setLaptopMaxWidth,

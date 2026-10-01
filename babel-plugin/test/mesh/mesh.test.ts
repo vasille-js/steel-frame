@@ -137,7 +137,7 @@ it("class expression name starts with $", function () {
 });
 
 it("prompt called outside of context", function () {
-  throwTest(__dirname, "prompt", "ctx() can be called only from components");
+  throwTest(__dirname, "prompt", 'Usage of hint "showPrompt" is restricted here');
 });
 
 it("double mesh bug", function () {

@@ -48,8 +48,10 @@ export type FnNames =
   | "safeRef"
   | "safeBind"
   | "safeComputed"
+  | "safeInit"
   | "abortSignal"
-  | "ctx";
+  | "showPrompt"
+  | "createModel";
 
 export const dynamicModulesFunctions = [
   "compose",
@@ -86,6 +88,8 @@ export const composeOnly = [
   "afterMount",
   "beforeDestroy",
   "abortSignal",
+  "showPrompt",
+  "createModel",
 ] as const satisfies FnNames[];
 export const styleOnly = [
   "theme",
@@ -118,6 +122,8 @@ export const hintFunctions: FnNames[] = [
   "debounceRef",
   "fieldRef",
 ];
+
+export const safeFunctions: FnNames[] = ["safeBind", "safeComputed", "safeRef", "safeInit"];
 
 function checkCall<T extends string>(name: T, internal: Internal): T {
   if (name === "store" || name === "model") {

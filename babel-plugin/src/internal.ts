@@ -2,7 +2,7 @@ import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { TSTypeElement } from "@babel/types";
 
-export type VariableState = Record<string, 1>;
+export type VariableState = Record<string, 1 | object>;
 
 export class StackedStates {
   private maps: Map<string, VariableState>[] = [];
@@ -34,6 +34,14 @@ export class StackedStates {
   }
 
   public set(name: string, state: VariableState) {
+    const map = this.maps[this.maps.length - 1];
+
+    if (!map.has(name)) {
+      map.set(name, state);
+    }
+  }
+
+  public replace(name: string, state: VariableState) {
     this.maps[this.maps.length - 1].set(name, state);
   }
 }
@@ -98,6 +106,7 @@ export interface Internal {
   // helpers
   ensure(arg: types.MemberExpression | types.OptionalMemberExpression, area: types.Node): types.Expression;
   set(obj: types.Expression, field: types.Expression, value: types.Expression, area: types.Node): types.CallExpression;
+  safeInit(arg: types.Expression): types.Expression;
 
   // components
   Switch(arg: types.ObjectExpression): types.CallExpression;

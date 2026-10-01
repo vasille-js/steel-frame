@@ -81,7 +81,7 @@ it("method in style object error", function () {
 });
 
 it("wrong namespace error", function () {
-  throwTest(__dirname, "wrong-namespace", "Only bind namespace is supported", true);
+  throwTest(__dirname, "wrong-namespace", 'Only "property" namespace is supported', true);
 });
 
 it("tag spread attribute error", function () {
@@ -105,7 +105,7 @@ it("condition spread attribute error", function () {
   throwTest(
     __dirname,
     "conditions-spread",
-    "If, Else and ElseIf are syntax sugar, use Switch if you need more runtime elasticity",
+    "If, Else, ElseIf, Iterate and ForEach are syntax sugar, they don't accept spread attribute",
     true,
   );
 });

@@ -3,8 +3,8 @@ import { Identifier } from "@babel/types";
 import * as t from "@babel/types";
 import { checkNode, Dependency, exprIsSure } from "./expression.js";
 import { Internal, ctx } from "./internal.js";
-import { bindFunctions, calledFn, calls } from "./call.js";
-import { meshAllUnknown } from "./mesh";
+import { bindFunctions, calledFn, calls, hintFunctions, safeFunctions } from "./call.js";
+import { meshAllUnknown, meshExpression } from "./mesh";
 import { nodeToStaticPosition } from "./transformer";
 
 export enum Errors {
@@ -33,12 +33,24 @@ export function err<T>(e: Errors, node: NodePath<unknown>, content: string, inte
 }
 
 export function nodeIsUnsafe(
-  path: NodePath<types.Expression | types.JSXExpressionContainer | null | undefined>,
+  path: NodePath<types.Expression | types.JSXExpressionContainer | types.JSXAttribute | null | undefined>,
   internal: Internal,
 ) {
   const isTs = internal.filename.endsWith(".ts") || internal.filename.endsWith(".tsx");
+  let safe = path.type !== "CallExpression" && (path.type !== "MemberExpression" || isTs);
 
-  return path.find(path => (!isTs && path.isMemberExpression()) || path.isCallExpression()) === null;
+  path.traverse({
+    CallExpression(path) {
+      safe &&=
+        calls(path, hintFunctions, internal) ||
+        path.find(path => path.isCallExpression() && calls(path, safeFunctions, internal));
+    },
+    MemberExpression() {
+      safe &&= isTs;
+    },
+  });
+
+  return !safe;
 }
 
 export function processCalculateCall(
@@ -126,6 +138,10 @@ export function bindCall(
     return true;
   }
 
+  if (safe && path.node) {
+    meshExpression(path, internal);
+    path.replaceWith(internal.safeInit(path.node));
+  }
   return false;
 }
 
@@ -158,12 +174,9 @@ export function exprCall(
     return true;
   }
 
-  if (
-    t.isCallExpression(expr) &&
-    calls(path, ["bind", "safeBind"], internal) &&
-    expr.arguments.length === 1 &&
-    t.isExpression(expr.arguments[0])
-  ) {
+  const called = calledFn(path, ["bind", "safeBind"], internal);
+
+  if (t.isCallExpression(expr) && called && expr.arguments.length === 1 && t.isExpression(expr.arguments[0])) {
     const argPath = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
     const exprData = checkNode(argPath, internal, area, opts.name);
 
@@ -191,7 +204,14 @@ export function exprCall(
         }
       }
     } else {
-      path.replaceWith(internal.ref(argPath.node, area, opts.name, acceptsSafe && nodeIsUnsafe(argPath, internal)));
+      path.replaceWith(
+        internal.ref(
+          argPath.node,
+          area,
+          opts.name,
+          (acceptsSafe && nodeIsUnsafe(argPath, internal)) || called === "safeBind",
+        ),
+      );
     }
 
     return true;

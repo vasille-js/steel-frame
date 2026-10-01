@@ -10,7 +10,7 @@ export {
     MapModelView,
     Zombie,
 } from "./components.js";
-export { view, mount, model, store, type Composed, type CompositionProps } from "./compose.js";
+export { view, mount, model, store, Model, createModel, type Composed, type CompositionProps } from "./compose.js";
 export { awaited, abortSignal } from "./library.js";
 export {
     ref,
@@ -27,7 +27,6 @@ export {
     toDeepFieldRef,
     toFieldRef,
     debounceRef,
-    edgeRef,
 } from "./internal.js";
 export { type QueuedRenderProps, type QueueItem, QueuedRender } from "./queue.js";
 export { setErrorHandler } from "vasille";

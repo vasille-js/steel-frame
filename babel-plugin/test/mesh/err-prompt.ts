@@ -1,5 +1,5 @@
-import { ctx, prompt } from "steel-frame";
+import { prompt, showPrompt } from "steel-frame";
 
 const promptName = prompt(() => {});
 
-promptName(ctx(), {});
+showPrompt(promptName, {});

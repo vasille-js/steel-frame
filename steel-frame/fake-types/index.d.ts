@@ -5,15 +5,12 @@ import type { ScreenProps } from "vasille-router";
 import type { Router } from "vasille-router/web-router";
 import type { VasilleSlot } from "vasille-web/jsx-runtime";
 import type { CssStyleInjector } from "vasille-css";
-import { Context } from "node:vm";
 
 export type { StyleProps } from "vasille-web";
 export type ClassItem = string | CssStyleInjector | Record<string, boolean> | false;
 export type { FallbackScreenProps, ErrorScreenProps } from "vasille-router";
 export { safe } from "vasille";
 export type { AppSide, IdeSide } from "../types/communication.d.ts";
-
-declare class ComponentContext {}
 
 /** Set a handler for component errors */
 export declare function setErrorHandler(handler: (e: unknown) => void): void;
@@ -80,6 +77,7 @@ export declare function unwrap<T>(v: T): T;
 
 /** Pack value into a reactive reference */
 export declare function ref<T>(v: T): T;
+export declare function ref<T>(): T | undefined;
 
 /** Pack value into a reactive reference, returns undefined when initialization fails */
 export declare function safeRef<T>(v: T): T | undefined;
@@ -132,7 +130,10 @@ export declare function awaited<T>(target: Promise<T>): [unknown, T | undefined,
 export declare function awaited<T>(target: () => Promise<T>): [unknown, T | undefined, () => void];
 
 /** Returns an abort signal to cancel requests/timers when context is destroyed */
-export declare function abortSignal(): AbortSignal;
+export declare function abortSignal(): AbortSignal | undefined;
+
+/** Initialize a value, return undefined when fails */
+export function safeInit<T>(value: T): T | undefined;
 
 /** Mounts a slot parameter of the component */
 export declare function Slot(options: { model?: () => void; slot?: () => void }): void;
@@ -246,13 +247,19 @@ type ReadonlyState<T> =
 /** Stores a singleton state to memory */
 export declare function store<Return extends object>(fn: () => Return): ReadonlyState<Return>;
 
+/** Represent an data model constructor */
+export declare class Model<In, Out> {}
+
 /** Creates a model (state) constructor */
-export declare function model<Return extends object>(
-    fn: () => Return,
-): (context: ComponentContext) => ReadonlyState<Return>;
 export declare function model<Input extends object, Return extends object>(
     fn: (input: Input) => Return,
-): (context: ComponentContext, input: Input) => ReadonlyState<Return>;
+): Model<Input, Return>;
+
+/** Creates a model (state) instance */
+export declare function createModel<Input extends object, Return extends object>(
+    model: Model<Input, Return>,
+    data: Input,
+): Return;
 
 export { QueryParams, ScreenProps, RouteParameters } from "vasille-router";
 export { type Router, NavigationMode } from "vasille-router/web-router";
@@ -331,9 +338,6 @@ export declare function beforeDestroy(fn: () => void): void;
 /** Returns the current used router */
 export declare function router(): Router<string> | undefined;
 
-/** Returns the current component context */
-export declare function ctx(): ComponentContext;
-
 /** Composes a modal window (v4+) */
 export declare function modal<T extends object>(modal: (input: T) => void): (input: T) => void;
 
@@ -343,10 +347,19 @@ export interface PromptProps<T> {
     reject(err: unknown): void;
 }
 
-/** Composes a function which will show a prompt on call */
+/** Represent an prompt constructor */
+export declare class Prompt<T, Input> {}
+
+/** Creates a prompt constructor */
 export declare function prompt<T, Input extends PromptProps<T> = PromptProps<T>>(
     modal: (input: Input) => void,
-): (ctx: ComponentContext, input: Omit<Input, keyof PromptProps<unknown>>, timeout?: number) => Promise<T>;
+): Prompt<T, Input>;
+
+/** Shows a prompt on screen */
+export declare function showPrompt<T, Input extends PromptProps<T>>(
+    prompt: Prompt<T, Input>,
+    data: Omit<Input, keyof PromptProps<unknown>>,
+): Promise<T>;
 
 /** Describes an injectable context value */
 export declare class SteelContext<Args extends unknown[], Value> {

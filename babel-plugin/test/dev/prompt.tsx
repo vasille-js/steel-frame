@@ -1,7 +1,7 @@
-import { component, ctx, prompt } from "steel-frame";
+import { component, prompt, showPrompt } from "steel-frame";
 
 const promptName = prompt(() => {});
 
 const C = component(() => {
-  <button onclick={() => promptName(ctx(), {})}>Prompt Name</button>;
+  <button onclick={() => showPrompt(promptName, {})}>Prompt Name</button>;
 });

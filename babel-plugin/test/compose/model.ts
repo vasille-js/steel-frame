@@ -1,4 +1,4 @@
-import { beforeMount, compose, ctx, model } from "steel-frame";
+import { beforeMount, compose, createModel, model } from "steel-frame";
 
 const testModel = model(() => {
   let $a = 1;
@@ -11,8 +11,8 @@ const test2Model = model((props: { a: number }) => {
 });
 
 const C = compose(() => {
-  const test1 = testModel(ctx());
-  const test2 = test2Model(ctx(), { a: 1 });
+  const test1 = createModel(testModel, {});
+  const test2 = createModel(test2Model, { a: 1 });
 
   beforeMount(() => {
     test1.$a satisfies number;

@@ -53,6 +53,10 @@ export function awaited<T>(
 }
 
 export function abortSignal(ctx: Reactive): AbortSignal {
+    if (ctx.abortSignal) {
+        return ctx.abortSignal;
+    }
+
     const manager = new AbortController();
 
     ctx.runOnDestroy(() => {

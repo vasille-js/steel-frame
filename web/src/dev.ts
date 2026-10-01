@@ -13,7 +13,7 @@ import {
     StaticPosition,
     toDevValue,
 } from "vasille/dev";
-import { modal, prompt, PromptProps } from "./index.js";
+import { modal, Prompt, prompt, PromptProps } from "./index.js";
 import { WebRouterInitialization } from "vasille-router/web-router";
 import { CompositionProps } from "vasille-jsx";
 
@@ -94,22 +94,13 @@ export function devPrompt<T extends PromptProps>(
     modal: (node: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>, input: T) => void,
     declaration: StaticPosition,
     name: string,
-): (
-    node: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
-    input: T,
-    timeout: number | undefined,
-) => Promise<unknown> {
-    const fragments: DevFragmentMap<Node, Element, TagOptions, T> = new Map();
-    const run = function (
-        node: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
-        input: T,
-        timeout: number | undefined,
-    ) {
-        let target: number | null = null;
+): Prompt<T, [number, StaticPosition]> {
+    let target: number | undefined;
 
-        return prompt(modal, node => {
-            const portal = createPortal(node, declaration, undefined, name);
-
+    return new Prompt<T, [number, StaticPosition]>(
+        modal,
+        (node, extra) => {
+            const portal = createPortal(node, declaration, extra[1], name);
             target = portal.id;
 
             inspector.eventTrigger({
@@ -119,7 +110,8 @@ export function devPrompt<T extends PromptProps>(
             });
 
             return portal;
-        })(node, input, timeout, {
+        },
+        {
             resolve(data: unknown) {
                 if (inspector && target) {
                     inspector.eventTrigger({
@@ -144,23 +136,8 @@ export function devPrompt<T extends PromptProps>(
                     });
                 }
             },
-        });
-    };
-    const renderer = (
-        node: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
-        input: T,
-        timeout: number | undefined,
-    ) => {
-        const frag = new DevFragment<Node, Element, TagOptions>(node.runner, null, null, name, {});
-
-        node.child(frag);
-        fragments.set(frag, { props: input, node: frag, usage: undefined });
-        return run(frag, input, timeout);
-    };
-
-    return devDynamicalModule(renderer, fragments, (parent, input) => {
-        void run(parent, input, 0);
-    });
+        },
+    );
 }
 
 export function devMount<T>(element: Element, component: ($: T) => void, input: T, inspector: Inspector) {

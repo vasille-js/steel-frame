@@ -1,4 +1,4 @@
-import { compose, model, ref as VasilleRef, safe as VasilleSafe } from "vasille-web";
+import { compose, createModel, model, ref as VasilleRef, safe as VasilleSafe } from "vasille-web";
 const testModel = model(Vasille => {
   const $a = VasilleRef(1, Vasille);
   return {
@@ -11,8 +11,8 @@ const test2Model = model((Vasille, props) => {
   };
 });
 const C = compose(Vasille => {
-  const test1 = testModel(Vasille);
-  const test2 = test2Model(Vasille, {
+  const test1 = createModel(Vasille, testModel, {});
+  const test2 = createModel(Vasille, test2Model, {
     a: 1
   });
   VasilleSafe(() => {

@@ -25,7 +25,7 @@ it("nested observable error", function () {
 });
 
 it("local observable error", function () {
-  throwTest(__dirname, "local-observable", 'Usage of hint "ref" is restricted here');
+  throwTest(__dirname, "local-observable", "Reactive properties are not allowed in computed objects");
 });
 
 it("mesh lvalue", function () {
@@ -50,4 +50,12 @@ it("restricted hints error", function () {
 
 it("function name starts with $", function () {
   throwTest(__dirname, "function-name", "Non-reactive variable name must not start with $");
+});
+
+it("has nested observable in object", function () {
+  throwTest(__dirname, "nested-observable-in-object", "Nested reactivity is not supported");
+});
+
+it("has nested reactivity", function () {
+  throwTest(__dirname, "nested-reactivity", "Reactive properties are not allowed in computed objects");
 });

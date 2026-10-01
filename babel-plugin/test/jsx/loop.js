@@ -1,4 +1,4 @@
-import { For, compose, arrayModel, mapModel } from "vasille-web";
+import { For, compose, arrayModel, mapModel, safe as VasilleSafe } from "vasille-web";
 const C = compose(Vasille => {
   const a = arrayModel(Vasille, [1, 2, 3]);
   const map = mapModel(Vasille, [["x", 1]]);
@@ -11,7 +11,9 @@ const C = compose(Vasille => {
   For({
     of: map,
     slot: (Vasille, value, key) => {
-      console.log(value, key);
+      VasilleSafe(() => {
+        console.log(value, key);
+      })();
     }
   }, Vasille);
 });

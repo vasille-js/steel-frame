@@ -53,14 +53,26 @@ export function store<Out extends object>(fn: (ctx: Reactive) => Out): Out {
     return fn(new Reactive(0));
 }
 
-export function model<In extends object, Out extends object>(
-    fn: (ctx: Reactive, o: In) => Out,
-): (o: In, parent?: Reactive) => Out {
-    return (o, parent) => {
+export class Model<In extends object, Out extends object> {
+    public constructor(private readonly fn: (ctx: Reactive, o: In) => Out) {}
+
+    public create(o: In, parent?: Reactive): Out {
         const ctx = new Reactive(parent ? parent.sDeep + 1 : 0);
         parent?.bind(ctx);
-        return fn(ctx, o);
-    };
+        return this.fn(ctx, o);
+    }
+}
+
+export function model<In extends object, Out extends object>(fn: (ctx: Reactive, o: In) => Out): Model<In, Out> {
+    return new Model(fn);
+}
+
+export function createModel<In extends object, Out extends object>(
+    parent: Reactive | undefined,
+    model: Model<In, Out>,
+    o: In,
+): Out {
+    return model.create(o, parent);
 }
 
 export function mount<Node, Element, TagOptions extends object, T>(
