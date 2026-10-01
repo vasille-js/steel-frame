@@ -269,7 +269,7 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
       // router call
       else if (internal.isComposing && calls(path, ["router"], internal)) {
         if (!internal.stateOnly) {
-          routerReplace(path);
+          routerReplace(path, internal);
         } else {
           err(Errors.IncompatibleContext, path, "The router is not available in stores", internal);
         }

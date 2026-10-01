@@ -186,6 +186,7 @@ export interface TransformerOptions {
   throwAtFirstError: boolean;
   hmr: boolean;
   asyncComposing: boolean;
+  routes: string[] | undefined;
 }
 
 export function nodeToStaticPosition(node: types.Node) {
@@ -272,6 +273,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     shadow: opts.shadow,
     hmr: opts.hmr ? [] : undefined,
     asyncComposing: opts.asyncComposing,
+    routes: opts.routes,
     ref(arg, area, name, safe) {
       const fnName = safe ? "safeRef" : "ref";
       const fixedArg = arg ? (safe ? t.arrowFunctionExpression([], arg) : arg) : t.buildUndefinedNode();

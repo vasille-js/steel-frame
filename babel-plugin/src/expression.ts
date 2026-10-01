@@ -269,7 +269,7 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
 
       if (calls(path, ["router"], search.external)) {
         if (!search.external.stateOnly) {
-          routerReplace(path);
+          routerReplace(path, search.external);
         } else {
           err(Errors.IncompatibleContext, path, "The router is not available in stores", search.external, null);
         }

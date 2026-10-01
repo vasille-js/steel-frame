@@ -2,6 +2,10 @@ import * as Babel from "@babel/core";
 import { transformProgram } from "./transformer.js";
 import { CompilationErrorReporter } from "./communication";
 
+function isRoutes(routes: unknown): routes is string[] {
+  return routes instanceof Array && routes.every(item => typeof item === "string");
+}
+
 export default function (): Babel.PluginObj<{
   file: { opts: { filename: string } };
   opts: {
@@ -15,6 +19,7 @@ export default function (): Babel.PluginObj<{
     reporter: unknown;
     hmr: unknown;
     asyncComposing: unknown;
+    routes: unknown;
   };
 }> {
   return {
@@ -33,6 +38,7 @@ export default function (): Babel.PluginObj<{
             typeof params.opts.reporter === "function" ? (params.opts.reporter as CompilationErrorReporter) : undefined,
           hmr: params.opts.hmr === true,
           asyncComposing: params.opts.asyncComposing === true,
+          routes: isRoutes(params.opts.routes) ? params.opts.routes : undefined,
         });
       },
     },

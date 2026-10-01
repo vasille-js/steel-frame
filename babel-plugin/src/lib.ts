@@ -43,7 +43,7 @@ export function nodeIsUnsafe(
     CallExpression(path) {
       safe &&=
         calls(path, hintFunctions, internal) ||
-        path.find(path => path.isCallExpression() && calls(path, safeFunctions, internal));
+        path.find(path => path.isCallExpression() && calls(path, safeFunctions, internal)) !== null;
     },
     MemberExpression() {
       safe &&= isTs;
