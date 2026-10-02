@@ -1,6 +1,6 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
-import { calledFn, calls, dependencyInjections, hintFunctions, unwrapFunctions } from "./call.js";
+import { calledFn, calls, dependencyInjections, hintFunctions, isDiCall, unwrapFunctions } from "./call.js";
 import { ctx, Internal, StackedStates, V } from "./internal.js";
 import { checkNonReactiveName, err, Errors } from "./lib";
 import { ignoreParams, meshAllUnknown, meshExpression } from "./mesh";
@@ -53,7 +53,7 @@ export function nodeIsMeshed(path: NodePath<types.Node | null | undefined>) {
   return (t.isMemberExpression(parent) || t.isOptionalMemberExpression(parent)) && parent.property === V;
 }
 
-function meshIdentifier(path: NodePath<types.Identifier>) {
+function meshIdentifier(path: NodePath<types.Identifier>, internal: Internal) {
   if (idIsIValue(path) && !nodeIsMeshed(path)) {
     path.replaceWith(t.memberExpression(path.node, V));
   }
@@ -108,7 +108,7 @@ export function exprIsSure(path: NodePath<types.Expression | null | undefined>, 
   );
 }
 
-function meshMember(path: NodePath<types.MemberExpression | types.OptionalMemberExpression>) {
+function meshMember(path: NodePath<types.MemberExpression | types.OptionalMemberExpression>, internal: Internal) {
   if (memberIsIValue(path.node) && !nodeIsMeshed(path)) {
     path.replaceWith(t.memberExpression(path.node, V, false, true));
   }
@@ -119,11 +119,11 @@ function meshLValue(
   internal: Internal,
 ) {
   if (path.isIdentifier()) {
-    meshIdentifier(path);
+    meshIdentifier(path, internal);
   } else if (path.isMemberExpression() || path.isOptionalMemberExpression()) {
     const object = path.get("object") as NodePath<unknown>;
 
-    meshMember(path);
+    meshMember(path, internal);
 
     /* istanbul ignore else */
     if (object.isLVal()) {
@@ -280,7 +280,7 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
       ) {
         meshExpression(path.get("arguments")[0] as NodePath<types.Expression>, search.external);
         path.replaceWith(path.node.arguments[0]);
-      } else if (!search.external.stateOnly && calls(path, dependencyInjections, search.external)) {
+      } else if (!search.external.stateOnly && isDiCall(path, search.external)) {
         meshAllUnknown(path.get("arguments"), search.external);
         path.node.arguments.unshift(ctx);
       } else {

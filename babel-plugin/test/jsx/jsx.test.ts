@@ -89,7 +89,7 @@ it("tag spread attribute error", function () {
 });
 
 it("namespaced props error", function () {
-  throwTest(__dirname, "namespace-props", "Namespaced attributes names are not supported", true);
+  throwTest(__dirname, "namespace-props", "Failed to process namespaced property", true);
 });
 
 it("namespaced tag name error", function () {

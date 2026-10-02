@@ -1,4 +1,4 @@
-import { beforeMount, component, Slot } from "steel-frame";
+import { beforeMount, component, Slot, unwrap } from "steel-frame";
 
 interface SubProps {
   slot?: () => void;
@@ -29,7 +29,7 @@ const SubComponent = component((props: SubProps) => {
   });
 
   <Slot model={slot} />;
-  <Slot model={slot1} x={$x}>
+  <Slot model={slot1} x={unwrap($x)}>
     <div>slot 1 default</div>
   </Slot>;
   <Slot model={slot2} x={3} />;

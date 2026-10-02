@@ -1,29 +1,13 @@
 import { types } from "@babel/core";
-import {
-  isIdentifier,
-  isTSBooleanKeyword,
-  isTSNullKeyword,
-  isTSNumberKeyword,
-  isTSPropertySignature,
-  isTSStringKeyword,
-  isTSUndefinedKeyword,
-  isTSUnionType,
-  numericLiteral,
-  objectExpression,
-  objectProperty,
-  TSTypeElement,
-} from "@babel/types";
-import { Internal } from "./internal";
+import * as t from "@babel/types";
+import { InterfaceData, Internal } from "./internal";
+import { stringify } from "./utils";
 
 const any = 0;
 const string = 1;
 const number = 2;
 const boolean = 3;
-type PropType = typeof string | typeof number | typeof boolean | typeof any;
-
-export function registerInterface(name: string, members: TSTypeElement[], internal: Internal) {
-  internal.interfaces.set(name, members);
-}
+export type PropType = typeof string | typeof number | typeof boolean | typeof any;
 
 export function processUnion(type: types.TSUnionType): PropType {
   let isString = false;
@@ -32,13 +16,13 @@ export function processUnion(type: types.TSUnionType): PropType {
   let isAny = false;
 
   for (const keyword of type.types) {
-    if (isTSStringKeyword(keyword)) {
+    if (t.isTSStringKeyword(keyword)) {
       isString = true;
-    } else if (isTSNumberKeyword(keyword)) {
+    } else if (t.isTSNumberKeyword(keyword)) {
       isNumber = true;
-    } else if (isTSBooleanKeyword(keyword)) {
+    } else if (t.isTSBooleanKeyword(keyword)) {
       isBoolean = true;
-    } else if (!isTSNullKeyword(keyword) && !isTSUndefinedKeyword(keyword)) {
+    } else if (!t.isTSNullKeyword(keyword) && !t.isTSUndefinedKeyword(keyword)) {
       isAny = true;
     }
   }
@@ -60,48 +44,89 @@ export function processUnion(type: types.TSUnionType): PropType {
 }
 
 export function processType(type: types.TSType): PropType {
-  if (isTSUnionType(type)) {
+  if (t.isTSUnionType(type)) {
     return processUnion(type);
   }
-  if (isTSStringKeyword(type)) {
+  if (t.isTSStringKeyword(type)) {
     return string;
   }
-  if (isTSNumberKeyword(type)) {
+  if (t.isTSNumberKeyword(type)) {
     return number;
   }
-  if (isTSBooleanKeyword(type)) {
+  if (t.isTSBooleanKeyword(type)) {
     return boolean;
   }
 
   return any;
 }
 
-export function processSignatures(members: TSTypeElement[]) {
-  const props: types.ObjectProperty[] = [];
+export function processSignatures(members: t.TSTypeElement[]): Record<string, number> {
+  const props: Record<string, number> = {};
 
   for (const member of members) {
-    if (isTSPropertySignature(member)) {
-      props.push(
-        objectProperty(
-          member.key,
-          numericLiteral(member.typeAnnotation ? processType(member.typeAnnotation.typeAnnotation) : any),
-        ),
-      );
+    if (t.isTSPropertySignature(member)) {
+      const key = stringify(member.key);
+      if (!member.computed && key) {
+        props[key] = member.typeAnnotation ? processType(member.typeAnnotation.typeAnnotation) : any;
+      }
     }
   }
 
-  return objectExpression(props);
+  return props;
+}
+
+export function fieldDataToObjectExpression(data: Record<string, number>): t.ObjectExpression {
+  const props: t.ObjectProperty[] = [];
+
+  for (const [key, type] of Object.entries(data)) {
+    props.push(t.objectProperty(t.stringLiteral(key), t.numericLiteral(type)));
+  }
+
+  return t.objectExpression(props);
 }
 
 export function processTypeLiteral(literal: types.TSTypeLiteral) {
   return processSignatures(literal.members);
 }
 
-export function processReference(id: types.TSTypeReference, internal: Internal) {
+export function processReference(id: types.TSTypeReference, internal: Internal): InterfaceData | undefined {
   /* istanbul ignore else */
-  if (isIdentifier(id.typeName)) {
-    const members = internal.interfaces.get(id.typeName.name);
+  if (t.isIdentifier(id.typeName)) {
+    const typeId = internal.typeIdentifiersMapping.get(id.typeName.name);
 
-    return members ? processSignatures(members) : undefined;
+    if (typeId) {
+      return internal.appData?.getInterface(typeId);
+    }
+  }
+}
+
+/**
+ * Extract optional property names from a list of TSTypeElement members.
+ * @return an array of optional property names.
+ */
+export function processInterface(members: t.TSTypeElement[], internal: Internal): InterfaceData {
+  const optionals: string[] = [];
+
+  for (const member of members) {
+    if ((t.isTSPropertySignature(member) || t.isTSMethodSignature(member)) && member.optional) {
+      const name = stringify(member.key);
+      if (name) {
+        optionals.push(name);
+      }
+    }
+  }
+
+  return {
+    optionalProperties: optionals,
+    fields: internal.shadow ? processSignatures(members) : undefined,
+  };
+}
+
+export function obtainInterfaceData(type: types.TSType, internal: Internal): InterfaceData | undefined {
+  if (t.isTSTypeLiteral(type)) {
+    return processInterface(type.members, internal);
+  }
+  if (t.isTSTypeReference(type)) {
+    return processReference(type, internal);
   }
 }

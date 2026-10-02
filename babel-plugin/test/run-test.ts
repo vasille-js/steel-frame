@@ -1,12 +1,15 @@
 import * as fs from "fs";
 import path from "path";
 import * as babel from "@babel/core";
-import vasillePlugin from "../src/index.js";
+import vasillePlugin, { AppData } from "../src/index.js";
 
 export function runTest(dir: string, name: string, devMode = false, strictFolders = false, extra: object = {}) {
   const input = fs.readFileSync(path.join(dir, `${name}.ts`), { encoding: "utf8" });
   const result = babel.transformSync(input, {
-    plugins: [[vasillePlugin, { devLayer: devMode, strictFolders, ...extra }], "@babel/plugin-transform-typescript"],
+    plugins: [
+      [vasillePlugin, { devLayer: devMode, strictFolders, appData: new AppData(), ...extra }],
+      "@babel/plugin-transform-typescript",
+    ],
     filename: path.join(dir, `${name}.ts`),
     sourceFileName: `${name}.js`,
   });
@@ -42,7 +45,7 @@ export function runJsxTest(dir: string, name: string, devMode = false, extra: ob
   const input = fs.readFileSync(path.join(dir, `${name}.tsx`), { encoding: "utf8" });
   const result = babel.transformSync(input, {
     plugins: [
-      [vasillePlugin, { devLayer: devMode, strictFolders: false, ...extra }],
+      [vasillePlugin, { devLayer: devMode, strictFolders: false, appData: new AppData(), ...extra }],
       ["@babel/plugin-transform-typescript", { isTSX: true }],
     ],
     filename: path.join(dir, `${name}.tsx`),

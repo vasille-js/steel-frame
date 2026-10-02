@@ -1,6 +1,7 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { Internal } from "./internal.js";
+import { err, Errors } from "./lib";
 
 export type FnNames =
   | "compose"
@@ -43,6 +44,7 @@ export type FnNames =
   | "share"
   | "receive"
   | "impute"
+  | "receiveOptional"
   | "fieldRef"
   | "debounceRef"
   | "safeRef"
@@ -51,7 +53,8 @@ export type FnNames =
   | "safeInit"
   | "abortSignal"
   | "showPrompt"
-  | "createModel";
+  | "createModel"
+  | "context";
 
 export const dynamicModulesFunctions = [
   "compose",
@@ -105,7 +108,7 @@ export const styleOnly = [
   "styleSheet",
 ] as const satisfies FnNames[];
 
-export const dependencyInjections = ["share", "receive", "impute"] as const satisfies FnNames[];
+export const dependencyInjections = ["share", "receive", "impute", "receiveOptional"] as const satisfies FnNames[];
 
 export const unwrapFunctions = ["unwrap", "raw"] as const satisfies FnNames[];
 
@@ -194,4 +197,43 @@ export function calledFn<T extends FnNames>(
   }
 
   return null;
+}
+
+export function isDiCall(
+  path: NodePath<types.Node | null | undefined>,
+  internal: Internal,
+): path is NodePath<types.CallExpression> {
+  const fn = calledFn(path, dependencyInjections, internal);
+  const result = !!fn;
+
+  if (!internal.componentTracking || !fn) return result;
+
+  const firstArg = (path.node as types.CallExpression).arguments[0];
+  const dependency = t.isStringLiteral(firstArg)
+    ? `"${firstArg.value}"`
+    : t.isIdentifier(firstArg)
+      ? internal.typeIdentifiersMapping.get(firstArg.name)
+      : null;
+
+  if (!dependency) {
+    err(Errors.ParserError, path, "First argument must be string literal or identifier", internal);
+    return result;
+  }
+
+  switch (fn) {
+    case "receive":
+      internal.componentTracking.requires(dependency);
+
+      if (internal.isWrapper) {
+        err(Errors.ParserError, path, "receive() is not allowed in wrapper components", internal);
+      }
+      break;
+
+    case "impute":
+    case "share":
+      internal.componentTracking.provide(dependency);
+      break;
+  }
+
+  return result;
 }

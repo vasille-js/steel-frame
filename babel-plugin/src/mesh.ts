@@ -6,16 +6,16 @@ import {
   calledFn,
   calls,
   composeFunctions,
-  dependencyInjections,
   dynamicModulesFunctions,
   FnNames,
   hintFunctions,
+  isDiCall,
   modelFunctions,
   refFunctions,
   unwrapFunctions,
 } from "./call.js";
 import { exprIsSure, idIsIValue, memberIsIValue, nodeIsMeshed } from "./expression.js";
-import { ctx, Internal, V, VariablesStatus, VariableState } from "./internal.js";
+import { ctx, InterfaceData, Internal, V, VariablesStatus, VariableState } from "./internal.js";
 import { ConditionCollection, processConditions, transformJsx } from "./jsx.js";
 import {
   checkNonReactiveName,
@@ -32,9 +32,43 @@ import { checkOrder } from "./order-check";
 import { routerReplace } from "./router";
 import { stringify } from "./utils";
 import { nodeToStaticPosition } from "./transformer";
-import { processReference, processTypeLiteral, registerInterface } from "./process-types";
+import { fieldDataToObjectExpression, obtainInterfaceData, processInterface } from "./process-types";
 import { meshAssigment } from "./operators";
 import { hasBreakPoint, processDebounceRefCall, processFieldRefCall, toFieldRef } from "./field-reference";
+import path from "path";
+import fs from "fs";
+
+/**
+ * Resolve a re-export source path to a steel-file-path-like identifier.
+ * Converts relative paths and @/ aliases into a form compatible with steelFilePath.
+ */
+function resolveSourceFilePath(sourcePath: string, internal: Internal): string | undefined {
+  let resolved: string | undefined;
+
+  // @/alias -> package name + rest of path (replace @/ with package name, then normalize)
+  if (sourcePath.startsWith("@/")) {
+    resolved = internal.packageName + "/src" + sourcePath.substring(1);
+  }
+  // Relative path: resolve relative to the importing file
+  else if (sourcePath.startsWith(".")) {
+    resolved = path.resolve(path.dirname(internal.steelFilePath), sourcePath);
+  }
+  // Bare module specifier, detect export for browsers
+  else {
+    try {
+      const packageJson = path.resolve(process.cwd(), "node_modules", sourcePath, "package.json");
+      const packageJsonContent = JSON.parse(fs.readFileSync(packageJson, "utf8"));
+
+      if (packageJsonContent.exports.browser) {
+        resolved = path.resolve(path.dirname(packageJson), packageJsonContent.exports.browser);
+      }
+    } catch (e) {
+      console.error(`Failed to resolve index path for package ${sourcePath}`, e);
+    }
+  }
+
+  return resolved;
+}
 
 export function meshOrIgnoreAllExpressions<T extends types.Node>(
   nodePaths: NodePath<types.Expression | null | T>[],
@@ -105,41 +139,58 @@ export function meshComposeCall(
     return err(Errors.IncorrectArguments, path, "Invalid arguments number", internal);
   }
 
+  if (name) {
+    const tracking = (internal.componentTracking = internal.appData?.registerComponent(internal, name));
+
+    if (tracking || internal.shadow) {
+      const firstParam = (arg.node as types.FunctionExpression).params[0];
+      let interfaceData: InterfaceData | undefined;
+
+      if (path.isCallExpression() && path.node.typeParameters?.params?.[0]) {
+        interfaceData = obtainInterfaceData(path.node.typeParameters.params[0], internal);
+      }
+      if (
+        t.isFunctionParameter(firstParam) &&
+        !t.isVoidPattern(firstParam) &&
+        t.isTSTypeAnnotation(firstParam.typeAnnotation)
+      ) {
+        interfaceData = obtainInterfaceData(firstParam.typeAnnotation.typeAnnotation, internal);
+      }
+
+      if (tracking && interfaceData) {
+        tracking.setOptionalProps(interfaceData.optionalProperties);
+      }
+
+      if (internal.shadow && isExported) {
+        const kebabName = toKebabCase(name);
+
+        if (kebabName.indexOf("-") === -1 || restrictedNames.indexOf(kebabName) !== -1) {
+          err(Errors.ParserError, path, `The name '${kebabName}' is not allowed by WHATWG`, internal);
+        }
+
+        if (interfaceData?.fields) {
+          path.node.arguments.push(t.stringLiteral(kebabName), fieldDataToObjectExpression(interfaceData.fields));
+        } else {
+          err(Errors.RulesOfVasille, path, "Missing type for web component composition", internal);
+        }
+      }
+    }
+  }
+
   compose(arg, internal, method, false, false, false);
   arg.node.params.unshift(ctx);
 
   if (internal.devLayer && path.isCallExpression()) {
     path.node.arguments.push(nodeToStaticPosition(path.node), t.stringLiteral(name ? name : "#"));
   }
-  if (internal.shadow && isExported && name && path.isCallExpression()) {
-    const call = path.node;
-    const generics = call.typeParameters?.params;
-    const args = call.arguments;
-    const params = (t.isFunctionExpression(args[0]) || t.isArrowFunctionExpression(args[0])) && args[0].params;
-    const annotation =
-      (generics && generics[0]) ||
-      (params && params[1] && !t.isVoidPattern(params[1]) && params[1].typeAnnotation) ||
-      null;
-    const type =
-      (t.isTSTypeAnnotation(annotation) && annotation.typeAnnotation) || (t.isTSType(annotation) && annotation) || null;
-    const kebabName = toKebabCase(name);
-    let fields: types.ObjectExpression | undefined;
 
-    if (t.isTSTypeLiteral(type)) {
-      fields = processTypeLiteral(type);
-    }
-    if (t.isTSTypeReference(type)) {
-      fields = processReference(type, internal);
-    }
+  const isWrapper = internal.isWrapper;
 
-    if (kebabName.indexOf("-") === -1 || restrictedNames.indexOf(kebabName) !== -1) {
-      err(Errors.ParserError, path, `The name '${kebabName}' is not allowed by WHATWG`, internal);
-    }
+  if ((method === "page" || isWrapper) && internal.componentTracking) {
+    const missingDependencies = internal.componentTracking.missingDependencies();
 
-    if (fields) {
-      path.node.arguments.push(t.stringLiteral(kebabName), fields);
-    } else {
-      err(Errors.RulesOfVasille, path, "Missing type for web component composition", internal);
+    if (missingDependencies.length) {
+      err(Errors.ParserError, path, `Missing dependencies: ${missingDependencies.join(", ")}`, internal);
     }
   }
 }
@@ -180,6 +231,20 @@ export function meshOrIgnoreExpression<T extends types.Node>(
   }
 }
 
+function throwOnAutoUnwrap(path: NodePath<types.Node | null | undefined>, internal: Internal) {
+  if (internal.autoUnwrapThrows) {
+    err(
+      Errors.RulesOfVasille,
+      path,
+      [
+        'The reactivity breaks here, use unwrap "hint" if is special,',
+        "or use a variable name which start with $",
+      ].join(" "),
+      internal,
+    );
+  }
+}
+
 export function meshExpression(nodePath: NodePath<types.Expression | null | undefined>, internal: Internal) {
   const expr = nodePath.node;
 
@@ -202,6 +267,7 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
     }
     case "Identifier": {
       if (idIsIValue(nodePath as NodePath<types.Identifier>) && !nodeIsMeshed(nodePath)) {
+        throwOnAutoUnwrap(nodePath, internal);
         nodePath.replaceWith(t.memberExpression(expr, V));
       }
       break;
@@ -218,7 +284,7 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
       const argPath = path.get("arguments")[0];
       let called: FnNames | null;
 
-      // compose call
+      // calls page function
       if (!internal.isComposing && calls(nodePath, ["page"], internal)) {
         const firstArg = nodePath.node.typeParameters?.params[0];
         const string = t.isTSLiteralType(firstArg) && t.isStringLiteral(firstArg.literal) && firstArg.literal.value;
@@ -232,14 +298,20 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
           );
         }
         meshComposeCall(null, nodePath, "page", internal);
-      } else if (!internal.isComposing && (called = calledFn(nodePath, composeFunctions, internal))) {
+      }
+      // calls any of compose functions
+      else if (!internal.isComposing && (called = calledFn(nodePath, composeFunctions, internal))) {
         meshComposeCall(null, nodePath, called, internal);
       }
       // raw/unwrap call
       else if (calls(path, unwrapFunctions, internal)) {
         if (argPath && argPath.isExpression()) {
+          const throws = internal.autoUnwrapThrows;
+
+          internal.autoUnwrapThrows = false;
           meshExpression(argPath, internal);
           path.replaceWith(argPath);
+          internal.autoUnwrapThrows = throws;
         } else {
           err(Errors.IncorrectArguments, argPath ?? path, "Failed to unwrap value", internal);
         }
@@ -278,7 +350,7 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
       else if (
         internal.isComposing &&
         !internal.stateOnly &&
-        calls(path, dependencyInjections, internal) &&
+        isDiCall(path, internal) &&
         path.node.arguments[0] === ctx
       ) {
         meshAllUnknown(path.get("arguments"), internal);
@@ -392,6 +464,7 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
 
       if (memberIsIValue(node)) {
         if (!nodeIsMeshed(path)) {
+          throwOnAutoUnwrap(path, internal);
           if (exprIsSure(path, internal)) {
             path.replaceWith(t.memberExpression(path.node, V));
           } else {
@@ -943,8 +1016,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
         const idPath = declaration.get("id");
         const name = t.isIdentifier(id) ? id.name : undefined;
 
-        if (t.isIdentifier(id) && composeMethod) {
-          const name = id.name;
+        if (name && composeMethod) {
           const idPath = declaration.get("id");
           const isNotUpperCase = name[0].toUpperCase() !== name[0];
           const isNotLowerCase = name[0].toLowerCase() !== name[0];
@@ -1035,7 +1107,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
               report(`File name is not correct, expected ${name}.ts, ${name}.tsx, ${name}.js or ${name}.jsx`);
             }
           }
-          meshComposeCall(id.name, initPath, composeMethod, internal, isExported);
+          meshComposeCall(name, initPath, composeMethod, internal, isExported);
         }
         // ref call
         else if (calls(initPath, refFunctions, internal)) {
@@ -1054,6 +1126,13 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
           } else {
             processObjectExpression(initPath, internal, true);
             internal.stack.set(id.name, {});
+          }
+        }
+        // calls context
+        else if (calls(initPath, ["context"], internal)) {
+          meshAllUnknown(initPath.get("arguments"), internal);
+          if (name && internal.appData) {
+            internal.typeIdentifiersMapping.set(name, internal.appData.composeId(internal, name));
           }
         }
         // variable declaration
@@ -1079,7 +1158,28 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
       break;
     }
     case "ExportNamedDeclaration": {
+      const exportDecl = path.node as types.ExportNamedDeclaration;
       const declarationPath = (path as NodePath<types.ExportNamedDeclaration>).get("declaration");
+
+      // Handle re-exports: export { Foo as Bar } from './module' or export * from './module'
+      if (exportDecl.source && t.isStringLiteral(exportDecl.source)) {
+        const sourcePath = exportDecl.source.value;
+        const resolvedPath = resolveSourceFilePath(sourcePath, internal);
+
+        // Handle named re-exports: export { A, B as C } from './module'
+        if (exportDecl.specifiers && exportDecl.specifiers.length > 0) {
+          for (const specifier of exportDecl.specifiers) {
+            if (t.isExportSpecifier(specifier)) {
+              const exportedId = specifier.exported;
+              const localId = specifier.local;
+
+              if (t.isIdentifier(exportedId) && t.isIdentifier(localId)) {
+                internal.typeIdentifiersMapping.set(localId.name, `${resolvedPath}:${exportedId.name}`);
+              }
+            }
+          }
+        }
+      }
 
       if (internal.hmr) {
         /* istanbul ignore else */
@@ -1113,6 +1213,9 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
       /* istanbul ignore else */
       if (idPath.isIdentifier()) {
         checkNonReactiveName(idPath, internal);
+        if (internal.appData) {
+          internal.typeIdentifiersMapping.set(idPath.node.name, internal.appData.composeId(internal, idPath.node.name));
+        }
       }
       meshClassBody(classPath.get("body"), internal);
 
@@ -1142,14 +1245,22 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
     case "TSInterfaceDeclaration": {
       const declaration = path.node as types.TSInterfaceDeclaration;
 
-      registerInterface(declaration.id.name, declaration.body.body, internal);
+      internal.appData?.registerInterface(
+        internal,
+        declaration.id.name,
+        processInterface(declaration.body.body, internal),
+      );
       break;
     }
     case "TSTypeAliasDeclaration": {
       const alias = path.node as types.TSTypeAliasDeclaration;
 
       if (t.isTSTypeLiteral(alias.typeAnnotation)) {
-        registerInterface(alias.id.name, alias.typeAnnotation.members, internal);
+        internal.appData?.registerInterface(
+          internal,
+          alias.id.name,
+          processInterface(alias.typeAnnotation.members, internal),
+        );
       }
       break;
     }
@@ -1167,6 +1278,8 @@ export function meshFunction(
   >,
   internal: Internal,
 ) {
+  const throws = internal.autoUnwrapThrows;
+
   if (path.isFunctionDeclaration() && path.node.id) {
     const idPath = path.get("id");
 
@@ -1181,6 +1294,7 @@ export function meshFunction(
   }
 
   internal.stack.push();
+  internal.autoUnwrapThrows = false;
 
   if (path.isFunctionExpression() && path.node.id) {
     internal.stack.set(path.node.id.name, {});
@@ -1210,6 +1324,7 @@ export function meshFunction(
   }
 
   internal.stack.pop();
+  internal.autoUnwrapThrows = throws;
 }
 
 export function composeExpression(path: NodePath<types.Expression | null | undefined>, internal: Internal) {
@@ -1359,7 +1474,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
           }
         }
         // const x = share(y, z)
-        else if (calls(initPath, dependencyInjections, internal)) {
+        else if (isDiCall(initPath, internal)) {
           const callPath = declaration.get("init") as NodePath<types.CallExpression>;
 
           callPath.node.arguments.unshift(ctx);
@@ -1518,6 +1633,11 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                 );
               }
               meshInit = false;
+            } else {
+              internal.autoUnwrapThrows = true;
+              meshExpression(initPath, internal);
+              internal.autoUnwrapThrows = false;
+              meshInit = false;
             }
           }
         }
@@ -1598,7 +1718,9 @@ export function compose(
   isSlot: boolean,
   skipCheckParams: boolean,
 ) {
+  const throws = internal.autoUnwrapThrows;
   internal.stack.push();
+  internal.autoUnwrapThrows = false;
 
   const node = path.node;
   const params = node.params;
@@ -1640,4 +1762,5 @@ export function compose(
   }
 
   internal.stack.pop();
+  internal.autoUnwrapThrows = throws;
 }

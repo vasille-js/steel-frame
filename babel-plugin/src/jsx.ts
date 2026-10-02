@@ -228,6 +228,7 @@ function transformJsxExpressionContainer(
     | "acceptsSafe"
     | "acceptFieldRef"
     | false
+    | undefined
   )[],
 ): types.Expression {
   const acceptSlots = options.includes("acceptSlots");
@@ -303,7 +304,9 @@ function transformJsxExpressionContainer(
         );
       }
     } else {
+      internal.autoUnwrapThrows = true;
       meshExpression(expression, internal);
+      internal.autoUnwrapThrows = false;
     }
   }
 
@@ -715,6 +718,11 @@ function transformJsxElement(
     const attrs = new Map<string, NodePath<types.Expression>>();
     let run: types.FunctionExpression | types.ArrowFunctionExpression | undefined;
     const mapped = internal.mapping.get(name.name);
+    const optionals = internal.appData?.getComponentOptionalProps(name.name, internal);
+
+    if (!mapped) {
+      internal.componentTracking?.push(name.name);
+    }
 
     for (const attrPath of opening.get("attributes")) {
       const attr = attrPath.node;
@@ -756,6 +764,7 @@ function transformJsxElement(
             acceptPassive && "acceptsRaw",
             prechecked && "skipParamsCheck",
             requiresReactive && "acceptFieldRef",
+            optionals?.has(attr.name.name) && "acceptsSafe",
           ]);
           const exprPath = valuePath.get("expression");
 
@@ -843,6 +852,10 @@ function transformJsxElement(
       }
 
       run = t.arrowFunctionExpression(params, t.blockStatement(statements));
+    }
+
+    if (!mapped) {
+      internal.componentTracking?.pop();
     }
 
     const ret: types.Statement[] = [];

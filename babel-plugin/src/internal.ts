@@ -50,10 +50,113 @@ export class StackedStates {
   }
 }
 
+export interface ComponentData {
+  requiredDependencies: Set<string>;
+  providedDependencies: Set<string>;
+  optionalProperties?: Set<string>;
+}
+
+export interface InterfaceData {
+  optionalProperties: string[];
+  fields?: Record<string, number>;
+}
+
+export interface ComponentTracking {
+  push(id: string): void;
+  pop(): void;
+  provide(dependency: string): void;
+  requires(dependency: string): void;
+  missingDependencies(): string[];
+  setOptionalProps(optionals: string[] | undefined): void;
+}
+
+export class AppData {
+  protected readonly components = new Map<string, ComponentData>();
+  protected readonly redirects = new Map<string, string>();
+  protected readonly globalProvidedDependencies = new Set<string>();
+  // map `${path}:${exportedTypeName}` to a datasheet
+  protected readonly interfaces = new Map<string, InterfaceData>();
+
+  public registerComponent(internal: Internal, name: string): ComponentTracking {
+    const data: ComponentData = {
+      providedDependencies: new Set<string>(),
+      requiredDependencies: new Set<string>(),
+    };
+    const id = this.composeId(internal, name);
+    const stack: (ComponentData | undefined)[] = [data];
+
+    this.components.set(id, data);
+
+    return {
+      push: (id: string) => {
+        const fullId = internal.typeIdentifiersMapping.get(id) ?? id;
+        const data = this.getComponent(fullId, internal);
+
+        if (data) {
+          for (const dependency of data.requiredDependencies) {
+            if (!stack.some(item => item?.providedDependencies.has(dependency))) {
+              data.requiredDependencies.add(dependency);
+            }
+          }
+        }
+        stack.push(data);
+      },
+      pop: () => {
+        stack.pop();
+      },
+      provide: (dependency: string) => {
+        data.providedDependencies.add(dependency);
+      },
+      requires: (dependency: string) => {
+        data.requiredDependencies.add(dependency);
+      },
+      missingDependencies: () => {
+        return [...data.requiredDependencies].filter(item => !this.globalProvidedDependencies.has(item));
+      },
+      setOptionalProps(optionals: string[] | undefined) {
+        data.optionalProperties = new Set(optionals);
+      },
+    };
+  }
+
+  public getComponent(name: string, internal: Internal): ComponentData | undefined {
+    let id = internal.typeIdentifiersMapping.get(name) ?? name;
+
+    while (this.redirects.has(id)) {
+      id = this.redirects.get(id)!;
+    }
+
+    return this.components.get(id);
+  }
+
+  public registerInterface(internal: Internal, name: string, data: InterfaceData) {
+    const id = this.composeId(internal, name);
+
+    this.interfaces.set(id, data);
+    internal.typeIdentifiersMapping.set(name, id);
+  }
+
+  public getInterface(id: string): InterfaceData | undefined {
+    return this.interfaces.get(id);
+  }
+
+  public getComponentOptionalProps(id: string, internal: Internal): ReadonlySet<string> | undefined {
+    return this.getComponent(id, internal)?.optionalProperties;
+  }
+
+  public registerRedirect(from: string, to: string) {
+    this.redirects.set(from, to);
+  }
+
+  public composeId(internal: Internal, name: string): string {
+    return `${internal.steelFilePath}:${name}`;
+  }
+}
+
 export interface Internal {
   // settings
+  appData: AppData | undefined;
   mapping: Map<string, string>;
-  interfaces: Map<string, TSTypeElement[]>;
   componentsImports: Map<string, string>;
   stack: StackedStates;
   global: string;
@@ -64,6 +167,7 @@ export interface Internal {
   isFunctionParsing?: boolean;
   filename: string;
   steelFilePath: string;
+  packageName: string;
   devLayer: boolean;
   strictFolders: boolean;
   stylesConnected: boolean;
@@ -74,8 +178,15 @@ export interface Internal {
   shadow?: boolean;
   hmr?: { local: types.Identifier; exported: types.Identifier | types.StringLiteral; isDynamic?: boolean }[];
   asyncComposing?: boolean;
+  autoUnwrapThrows?: boolean;
+  // maps a local identifier to `${filePath}:${exportedIdentifier}`
+  typeIdentifiersMapping: Map<string, string>;
+  isWrapper: boolean;
   usedStylesProps: Set<string>;
   reportError(message: string, node: types.Node, e?: Error): void;
+
+  // component tracking
+  componentTracking?: ComponentTracking;
 
   // reactivity
   ref(arg: types.Expression | null, area: types.Node, name: string | undefined, safe: boolean): types.Expression;

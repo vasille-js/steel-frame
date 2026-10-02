@@ -1,6 +1,6 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
-import { ctx, Internal, StackedStates, VariablesStatus } from "./internal.js";
+import { AppData, ctx, Internal, StackedStates, VariablesStatus } from "./internal.js";
 import { meshStatement } from "./mesh.js";
 import { findStyleInNode } from "./css-transformer.js";
 import * as fs from "node:fs";
@@ -188,6 +188,7 @@ export interface TransformerOptions {
   hmr: boolean;
   asyncComposing: boolean;
   routes: string[] | undefined;
+  appData: AppData | undefined;
 }
 
 export function nodeToStaticPosition(node: types.Node) {
@@ -254,17 +255,18 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
   }
 
   const reports: CompilationErrorReport[] = [];
+  const relativePath = filename.substring(process.cwd().length);
   const internal: Internal = {
+    appData: opts.appData,
     stack: new StackedStates(),
     mapping: new Map<string, string>(),
-    interfaces: new Map(),
     componentsImports: new Map(),
     global: "",
     prefix: "Vasille_",
     importStatement: null,
     stateOnly: false,
     filename: filename,
-    steelFilePath: packageJson.name + filename.substring(process.cwd().length),
+    steelFilePath: packageJson.name + relativePath,
     stylesConnected: false,
     devLayer: opts.devLayer,
     strictFolders: opts.strictFolders,
@@ -272,10 +274,13 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     headTag: opts.headTag,
     bodyTag: opts.bodyTag,
     shadow: opts.shadow,
+    typeIdentifiersMapping: new Map(),
     hmr: opts.hmr ? [] : undefined,
     asyncComposing: opts.asyncComposing,
     routes: opts.routes,
     usedStylesProps: new Set(),
+    packageName: packageJson.name,
+    isWrapper: relativePath === "/src/router/Wrapper.tsx",
     ref(arg, area, name, safe) {
       const fnName = safe ? "safeRef" : "ref";
       const fixedArg = arg ? (safe ? t.arrowFunctionExpression([], arg) : arg) : t.buildUndefinedNode();
