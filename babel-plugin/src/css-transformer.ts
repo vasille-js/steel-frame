@@ -3,6 +3,7 @@ import * as t from "@babel/types";
 import { calledFn, calls, FnNames, styleOnly } from "./call.js";
 import { Internal } from "./internal.js";
 import { err, Errors } from "./lib";
+import { stringify } from "./utils";
 
 const pureNumbersProperties = new Set([
   "opacity",
@@ -280,6 +281,11 @@ export function findStyleInNode(path: NodePath<types.Node | null | undefined>, i
       }
       if (!((t.isIdentifier(path.node.key) && !path.node.computed) || t.isStringLiteral(path.node.key))) {
         return err(Errors.TokenNotSupported, path.get("key"), "Expected identifier of string literal", internal, true);
+      }
+
+      if (!internal.usedStylesProps.has("*") && !internal.usedStylesProps.has(stringify(path.node.key))) {
+        path.remove();
+        continue;
       }
 
       const unsorted: Rule[] = [];

@@ -15,7 +15,7 @@ import {
   unwrapFunctions,
 } from "./call.js";
 import { exprIsSure, idIsIValue, memberIsIValue, nodeIsMeshed } from "./expression.js";
-import { ctx, Internal, V, VariableState } from "./internal.js";
+import { ctx, Internal, V, VariablesStatus, VariableState } from "./internal.js";
 import { ConditionCollection, processConditions, transformJsx } from "./jsx.js";
 import {
   checkNonReactiveName,
@@ -380,8 +380,12 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
       const node = path.node;
       const property = path.node.property;
       const propertyPath = path.get("property");
+      const object = path.get("object");
 
-      meshExpression(path.get("object"), internal);
+      if (object.isIdentifier() && internal.stack.get(object.node.name) === VariablesStatus.StyleSheet) {
+        internal.usedStylesProps.add(!node.computed && t.isIdentifier(property) ? property.name : "*");
+      }
+      meshExpression(object, internal);
       if (t.isExpression(property) && (!propertyPath.isIdentifier() || (node.computed && idIsIValue(propertyPath)))) {
         meshOrIgnoreExpression<types.PrivateName>(propertyPath, internal);
       }
@@ -739,7 +743,7 @@ function meshClassBody(path: NodePath<types.ClassBody>, internal: Internal) {
 function procedureProcessObjectExpression(
   path: NodePath<types.ObjectExpression>,
   internal: Internal,
-  state: VariableState,
+  state: Exclude<VariableState, VariablesStatus>,
   canHasRef: boolean,
 ): VariableState {
   for (const prop of path.get("properties")) {

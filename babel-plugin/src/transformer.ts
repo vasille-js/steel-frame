@@ -1,11 +1,12 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
-import { ctx, Internal, StackedStates } from "./internal.js";
+import { ctx, Internal, StackedStates, VariablesStatus } from "./internal.js";
 import { meshStatement } from "./mesh.js";
 import { findStyleInNode } from "./css-transformer.js";
 import * as fs from "node:fs";
 import path from "path";
 import { CompilationErrorReport, CompilationErrorReporter } from "./communication";
+import { calls } from "./call";
 
 const imports = new Map([["steel-frame", "VasilleWeb"]]);
 const ignoreMembers = new Set([
@@ -274,6 +275,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     hmr: opts.hmr ? [] : undefined,
     asyncComposing: opts.asyncComposing,
     routes: opts.routes,
+    usedStylesProps: new Set(),
     ref(arg, area, name, safe) {
       const fnName = safe ? "safeRef" : "ref";
       const fixedArg = arg ? (safe ? t.arrowFunctionExpression([], arg) : arg) : t.buildUndefinedNode();
@@ -441,11 +443,36 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     return call("executionPosition", [nodeToStaticPosition(area)]);
   }
 
+  function findStyleInVariableDeclaration(path: NodePath<types.VariableDeclaration>, isExported: boolean) {
+    const declaration = path.get("declarations")[0];
+    const id = declaration.get("id");
+    const init = declaration.get("init");
+
+    if (calls(init, ["styleSheet"], internal) && id.isIdentifier()) {
+      internal.stack.set(id.node.name, VariablesStatus.StyleSheet);
+      if (isExported) {
+        internal.usedStylesProps.add("*");
+      }
+    }
+  }
+
   for (const statementPath of path.get("body")) {
-    const statement = statementPath.node;
-    if (t.isImportDeclaration(statement)) {
-      handleImportDeclaration(statementPath as NodePath<types.ImportDeclaration>, internal, ids);
-    } else {
+    if (statementPath.isImportDeclaration()) {
+      handleImportDeclaration(statementPath, internal, ids);
+    }
+    if (statementPath.isVariableDeclaration()) {
+      findStyleInVariableDeclaration(statementPath, false);
+    }
+    if (statementPath.isExportNamedDeclaration()) {
+      const variableDeclaration = statementPath.get("declaration");
+      if (variableDeclaration.isVariableDeclaration()) {
+        findStyleInVariableDeclaration(variableDeclaration, true);
+      }
+    }
+  }
+
+  for (const statementPath of path.get("body")) {
+    if (!statementPath.isImportDeclaration()) {
       handleStatement(statementPath, internal);
     }
   }

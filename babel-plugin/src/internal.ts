@@ -2,7 +2,11 @@ import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { TSTypeElement } from "@babel/types";
 
-export type VariableState = Record<string, 1 | object>;
+export enum VariablesStatus {
+  StyleSheet = 2,
+}
+
+export type VariableState = Record<string, 1 | object> | VariablesStatus;
 
 export class StackedStates {
   private maps: Map<string, VariableState>[] = [];
@@ -70,6 +74,7 @@ export interface Internal {
   shadow?: boolean;
   hmr?: { local: types.Identifier; exported: types.Identifier | types.StringLiteral; isDynamic?: boolean }[];
   asyncComposing?: boolean;
+  usedStylesProps: Set<string>;
   reportError(message: string, node: types.Node, e?: Error): void;
 
   // reactivity

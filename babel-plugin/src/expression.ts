@@ -94,7 +94,7 @@ export function memberIsSure(path: NodePath<types.Expression | null | undefined>
   const reactivityData = t.isIdentifier(it) && internal.stack.get(it.name);
   const propPath = names.reverse().join(".");
 
-  return reactivityData && reactivityData[propPath];
+  return typeof reactivityData === "object" && reactivityData[propPath];
 }
 
 export function exprIsSure(path: NodePath<types.Expression | null | undefined>, internal: Internal) {
