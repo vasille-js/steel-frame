@@ -9,22 +9,25 @@ function isRoutes(routes: unknown): routes is string[] {
   return routes instanceof Array && routes.every(item => typeof item === "string");
 }
 
+export interface Options {
+  devLayer: unknown;
+  strictFolders: unknown;
+  replaceWeb: unknown;
+  headTag: unknown;
+  bodyTag: unknown;
+  shadow: unknown;
+  throwAtFirstError: unknown;
+  reporter: unknown;
+  hmr: unknown;
+  asyncComposing: unknown;
+  routes: unknown;
+  appData: unknown;
+  typeIdentifiersMapping: unknown;
+}
+
 export default function (): Babel.PluginObj<{
   file: { opts: { filename: string } };
-  opts: {
-    devLayer: unknown;
-    strictFolders: unknown;
-    replaceWeb: unknown;
-    headTag: unknown;
-    bodyTag: unknown;
-    shadow: unknown;
-    throwAtFirstError: unknown;
-    reporter: unknown;
-    hmr: unknown;
-    asyncComposing: unknown;
-    routes: unknown;
-    appData: unknown;
-  };
+  opts: Options;
 }> {
   return {
     name: "Vasille",
@@ -44,6 +47,8 @@ export default function (): Babel.PluginObj<{
           asyncComposing: params.opts.asyncComposing === true,
           routes: isRoutes(params.opts.routes) ? params.opts.routes : undefined,
           appData: params.opts.appData instanceof AppData ? params.opts.appData : undefined,
+          typeIdentifiersMapping:
+            params.opts.typeIdentifiersMapping instanceof Map ? params.opts.typeIdentifiersMapping : undefined,
         });
       },
     },

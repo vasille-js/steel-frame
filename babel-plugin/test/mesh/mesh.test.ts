@@ -5,39 +5,39 @@ it("compose function", function () {
 });
 
 it("mesh statement function", function () {
-  runTest(__dirname, "mesh-statement", false);
+  runTest(__dirname, "mesh-statement");
 });
 
 it("mesh expression function", function () {
-  runTest(__dirname, "mesh-expression", false);
+  runTest(__dirname, "mesh-expression");
 });
 
 it("class", function () {
-  runTest(__dirname, "class", false);
+  runTest(__dirname, "class");
 });
 
 it("export default class", function () {
-  runTest(__dirname, "default-class", false);
+  runTest(__dirname, "default-class");
 });
 
 it("export default function", function () {
-  runTest(__dirname, "default-fn", false);
+  runTest(__dirname, "default-fn");
 });
 
 it("export default expression", function () {
-  runTest(__dirname, "default-expr", false);
+  runTest(__dirname, "default-expr");
 });
 
 it("run on destroy", function () {
-  runTest(__dirname, "run-on-destroy", false);
+  runTest(__dirname, "run-on-destroy");
 });
 
 it("reactive field set", function () {
-  runTest(__dirname, "reactive-field-set", false);
+  runTest(__dirname, "reactive-field-set");
 });
 
 it("reactive field copy", function () {
-  runTest(__dirname, "reactive-field-copy", false);
+  runTest(__dirname, "reactive-field-copy");
 });
 
 it("store function", function () {

@@ -158,10 +158,11 @@ export function calledFn<T extends FnNames>(
   internal: Internal,
 ): T | null {
   const node = path.node;
-  const set = new Set<string>(names);
   const callee = t.isCallExpression(node) ? node.callee : null;
 
   if (callee) {
+    const set = new Set<string>(names);
+
     if (t.isIdentifier(callee)) {
       const mapped = internal.mapping.get(callee.name);
 
@@ -211,28 +212,32 @@ export function isDiCall(
   const firstArg = (path.node as types.CallExpression).arguments[0];
   const dependency = t.isStringLiteral(firstArg)
     ? `"${firstArg.value}"`
-    : t.isIdentifier(firstArg)
-      ? internal.typeIdentifiersMapping.get(firstArg.name)
-      : null;
+    : t.isIdentifier(firstArg) && internal.typeIdentifiersMapping.get(firstArg.name);
 
   if (!dependency) {
-    err(Errors.ParserError, path, "First argument must be string literal or identifier", internal);
-    return result;
-  }
+    err(
+      Errors.ParserError,
+      path,
+      "First argument must be string literal, class name, Context instance or imported/exported symbol",
+      internal,
+    );
+  } else {
+    switch (fn) {
+      case "receive":
+        internal.componentTracking.requires(dependency);
 
-  switch (fn) {
-    case "receive":
-      internal.componentTracking.requires(dependency);
+        if (internal.isWrapper) {
+          err(Errors.ParserError, path, "receive() is not allowed in wrapper components", internal);
+        }
+        break;
 
-      if (internal.isWrapper) {
-        err(Errors.ParserError, path, "receive() is not allowed in wrapper components", internal);
-      }
-      break;
+      case "impute":
+      case "share":
+        internal.componentTracking.provide(dependency);
 
-    case "impute":
-    case "share":
-      internal.componentTracking.provide(dependency);
-      break;
+        internal.appData;
+        break;
+    }
   }
 
   return result;

@@ -1,6 +1,6 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
-import { TSTypeElement } from "@babel/types";
+import { err, Errors } from "./lib";
 
 export enum VariablesStatus {
   StyleSheet = 2,
@@ -107,6 +107,9 @@ export class AppData {
       },
       provide: (dependency: string) => {
         data.providedDependencies.add(dependency);
+        if (internal.isWrapper && name === "default") {
+          this.globalProvidedDependencies.add(dependency);
+        }
       },
       requires: (dependency: string) => {
         data.requiredDependencies.add(dependency);
@@ -151,6 +154,17 @@ export class AppData {
 
   public composeId(internal: Internal, name: string): string {
     return `${internal.steelFilePath}:${name}`;
+  }
+
+  public testComponent(fullId: string, callback: (data: ComponentData) => void) {
+    const id = this.redirects.get(fullId) ?? fullId;
+    const data = this.components.get(id);
+
+    if (!data) {
+      throw new Error(`Component ${id} not found`);
+    }
+
+    callback(data);
   }
 }
 

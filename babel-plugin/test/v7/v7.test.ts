@@ -1,27 +1,27 @@
 import { runJsxTest, runTest } from "../run-test";
 
 it("abort signal", function () {
-  runJsxTest(__dirname, "abort-signal", false);
+  runJsxTest(__dirname, "abort-signal");
 });
 
 it("async composes", function () {
-  runJsxTest(__dirname, "async-composing", false, { asyncComposing: true });
+  runJsxTest(__dirname, "async-composing", { asyncComposing: true });
 });
 
 it("callback", function () {
-  runJsxTest(__dirname, "callback", false);
+  runJsxTest(__dirname, "callback");
 });
 
 it("field ref", function () {
-  runJsxTest(__dirname, "field-ref", false);
+  runJsxTest(__dirname, "field-ref");
 });
 
 it("object destruction", function () {
-  runJsxTest(__dirname, "object-destruction", false);
+  runJsxTest(__dirname, "object-destruction");
 });
 
 it("HMR", function () {
-  runTest(__dirname, "Hmr", true, false, { hmr: true });
+  runTest(__dirname, "Hmr", { hmr: true, devLayer: true });
 });
 
 it("safe", function () {

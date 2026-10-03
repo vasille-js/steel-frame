@@ -7,10 +7,10 @@ import vasillePlugin from "../../src";
 const extra = { shadow: true, replaceWeb: "vasille-shadow" };
 
 function ts(name: string) {
-  runTest(__dirname, name, false, false, extra);
+  runTest(__dirname, name, extra);
 }
 function tsx(name: string) {
-  runJsxTest(__dirname, name, false, extra);
+  runJsxTest(__dirname, name, extra);
 }
 export function throwTest(name: string, err: string) {
   const fileName = path.join(__dirname, `${name}.tsx`);

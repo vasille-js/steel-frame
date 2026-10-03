@@ -17,7 +17,7 @@ it("check statements", function () {
 });
 
 it("reactive field set", function () {
-  runTest(__dirname, "reactive-field-set", false);
+  runTest(__dirname, "reactive-field-set");
 });
 
 it("nested observable error", function () {

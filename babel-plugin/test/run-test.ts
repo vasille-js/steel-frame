@@ -1,13 +1,13 @@
 import * as fs from "fs";
 import path from "path";
 import * as babel from "@babel/core";
-import vasillePlugin, { AppData } from "../src/index.js";
+import vasillePlugin, { AppData, Options } from "../src/index.js";
 
-export function runTest(dir: string, name: string, devMode = false, strictFolders = false, extra: object = {}) {
+export function runTest(dir: string, name: string, opts: Partial<Options> = {}) {
   const input = fs.readFileSync(path.join(dir, `${name}.ts`), { encoding: "utf8" });
   const result = babel.transformSync(input, {
     plugins: [
-      [vasillePlugin, { devLayer: devMode, strictFolders, appData: new AppData(), ...extra }],
+      [vasillePlugin, { devLayer: false, strictFolders: false, appData: new AppData(), ...opts }],
       "@babel/plugin-transform-typescript",
     ],
     filename: path.join(dir, `${name}.ts`),
@@ -23,29 +23,29 @@ export function throwTest(
   name: string,
   err: string,
   isTsx?: boolean,
-  strictFolders?: boolean,
-  extra: object = {},
+  opts: Partial<Options> & { filename?: string } = {},
 ) {
+  const appData = new AppData();
   const fileName = path.join(dir, `err-${name}.${isTsx ? "tsx" : "ts"}`);
   const input = fs.readFileSync(fileName, { encoding: "utf8" });
 
   expect(() => {
     babel.transformSync(input, {
       plugins: [
-        [vasillePlugin, { strictFolders: strictFolders ?? false, throwAtFirstError: true, ...extra }],
+        [vasillePlugin, { strictFolders: false, throwAtFirstError: true, appData, ...opts }],
         ["@babel/plugin-transform-typescript", { isTSX: isTsx }],
       ],
-      filename: fileName,
+      filename: opts.filename ?? fileName,
     });
     // @ts-ignore
   }).toThrow(new RegExp(`Vasille\\\[\\d+]\{\\w+}: ${RegExp.escape(err)}`));
 }
 
-export function runJsxTest(dir: string, name: string, devMode = false, extra: object = {}) {
+export function runJsxTest(dir: string, name: string, opts: Partial<Options> = {}) {
   const input = fs.readFileSync(path.join(dir, `${name}.tsx`), { encoding: "utf8" });
   const result = babel.transformSync(input, {
     plugins: [
-      [vasillePlugin, { devLayer: devMode, strictFolders: false, appData: new AppData(), ...extra }],
+      [vasillePlugin, { devLayer: false, strictFolders: false, appData: new AppData(), ...opts }],
       ["@babel/plugin-transform-typescript", { isTSX: true }],
     ],
     filename: path.join(dir, `${name}.tsx`),

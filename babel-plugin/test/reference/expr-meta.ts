@@ -9,7 +9,6 @@ const C = compose(() => {
   });
   let $e = bind($a + b);
   let f = raw((() => $a + b)());
-  // @ts-expect-error
   let $g = ref();
   let $h = bind(3);
   const $j = bind(4);

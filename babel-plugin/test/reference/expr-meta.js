@@ -8,7 +8,6 @@ const C = compose(Vasille => {
   }, [$a, $c]);
   const $e = bind(Vasille, Vasille_0 => Vasille_0 + b, [$a]);
   let f = (() => $a.V + b)();
-  // @ts-expect-error
   const $g = ref(void 0, Vasille);
   const $h = ref(3, Vasille);
   const $j = ref(4, Vasille);

@@ -36,13 +36,14 @@ import { fieldDataToObjectExpression, obtainInterfaceData, processInterface } fr
 import { meshAssigment } from "./operators";
 import { hasBreakPoint, processDebounceRefCall, processFieldRefCall, toFieldRef } from "./field-reference";
 import path from "path";
+import module from "node:module";
 import fs from "fs";
 
 /**
  * Resolve a re-export source path to a steel-file-path-like identifier.
  * Converts relative paths and @/ aliases into a form compatible with steelFilePath.
  */
-function resolveSourceFilePath(sourcePath: string, internal: Internal): string | undefined {
+export function resolveSourceFilePath(sourcePath: string, internal: Internal): string | undefined {
   let resolved: string | undefined;
 
   // @/alias -> package name + rest of path (replace @/ with package name, then normalize)
@@ -55,15 +56,11 @@ function resolveSourceFilePath(sourcePath: string, internal: Internal): string |
   }
   // Bare module specifier, detect export for browsers
   else {
-    try {
-      const packageJson = path.resolve(process.cwd(), "node_modules", sourcePath, "package.json");
-      const packageJsonContent = JSON.parse(fs.readFileSync(packageJson, "utf8"));
+    const packageJson = module.findPackageJSON(sourcePath, __filename);
+    const packageJsonContent = packageJson && JSON.parse(fs.readFileSync(packageJson, "utf8"));
 
-      if (packageJsonContent.exports.browser) {
-        resolved = path.resolve(path.dirname(packageJson), packageJsonContent.exports.browser);
-      }
-    } catch (e) {
-      console.error(`Failed to resolve index path for package ${sourcePath}`, e);
+    if (packageJsonContent?.exports?.browser) {
+      resolved = path.resolve(packageJsonContent.name, packageJsonContent.exports.browser);
     }
   }
 
@@ -139,8 +136,8 @@ export function meshComposeCall(
     return err(Errors.IncorrectArguments, path, "Invalid arguments number", internal);
   }
 
-  if (name) {
-    const tracking = (internal.componentTracking = internal.appData?.registerComponent(internal, name));
+  if (name || t.isExportDeclaration(path.parent)) {
+    const tracking = (internal.componentTracking = internal.appData?.registerComponent(internal, name ?? "default"));
 
     if (tracking || internal.shadow) {
       const firstParam = (arg.node as types.FunctionExpression).params[0];
@@ -161,7 +158,7 @@ export function meshComposeCall(
         tracking.setOptionalProps(interfaceData.optionalProperties);
       }
 
-      if (internal.shadow && isExported) {
+      if (internal.shadow && isExported && name) {
         const kebabName = toKebabCase(name);
 
         if (kebabName.indexOf("-") === -1 || restrictedNames.indexOf(kebabName) !== -1) {
@@ -1157,17 +1154,17 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
       internal.stack.pop();
       break;
     }
+    // Handle re-exports: export { Foo as Bar } from './module' or export * from './module'
     case "ExportNamedDeclaration": {
       const exportDecl = path.node as types.ExportNamedDeclaration;
       const declarationPath = (path as NodePath<types.ExportNamedDeclaration>).get("declaration");
 
-      // Handle re-exports: export { Foo as Bar } from './module' or export * from './module'
-      if (exportDecl.source && t.isStringLiteral(exportDecl.source)) {
+      if (exportDecl.source && internal.appData) {
         const sourcePath = exportDecl.source.value;
         const resolvedPath = resolveSourceFilePath(sourcePath, internal);
 
         // Handle named re-exports: export { A, B as C } from './module'
-        if (exportDecl.specifiers && exportDecl.specifiers.length > 0) {
+        if (exportDecl.specifiers.length > 0) {
           for (const specifier of exportDecl.specifiers) {
             if (t.isExportSpecifier(specifier)) {
               const exportedId = specifier.exported;
@@ -1176,8 +1173,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
               if (t.isIdentifier(exportedId) && t.isIdentifier(localId)) {
                 const externalId = `${resolvedPath}:${exportedId.name}`;
 
-                internal.typeIdentifiersMapping.set(localId.name, externalId);
-                internal.appData?.registerRedirect(localId.name, externalId, internal);
+                internal.appData.registerRedirect(localId.name, externalId, internal);
               }
             }
           }

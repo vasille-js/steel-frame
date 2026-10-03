@@ -1,13 +1,13 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { AppData, ctx, Internal, StackedStates, VariablesStatus } from "./internal.js";
-import { meshStatement } from "./mesh.js";
+import { meshStatement, resolveSourceFilePath } from "./mesh.js";
 import { findStyleInNode } from "./css-transformer.js";
 import * as fs from "node:fs";
 import path from "path";
 import { CompilationErrorReport, CompilationErrorReporter } from "./communication";
 import { calls } from "./call";
-import { CallExpression } from "@babel/types";
+import { stringify } from "./utils";
 
 const imports = new Map([["steel-frame", "VasilleWeb"]]);
 const ignoreMembers = new Set([
@@ -86,6 +86,20 @@ function handleImportDeclaration(
   const name = imports.get(statement.source.value);
 
   if (!name) {
+    // Handle imports: import { A, B as C } from './module'
+    if (internal.appData && statement.specifiers.length > 0) {
+      const resolvedPath = resolveSourceFilePath(statement.source.value, internal);
+
+      for (const specifier of statement.specifiers) {
+        if (t.isImportSpecifier(specifier)) {
+          const importedId = specifier.imported;
+          const localId = specifier.local;
+          const externalId = `${resolvedPath}:${stringify(importedId)}`;
+
+          internal.typeIdentifiersMapping.set(localId.name, externalId);
+        }
+      }
+    }
     if (internal.shadow) {
       extractComponentImport(statement, internal);
     }
@@ -190,6 +204,7 @@ export interface TransformerOptions {
   asyncComposing: boolean;
   routes: string[] | undefined;
   appData: AppData | undefined;
+  typeIdentifiersMapping: Map<string, string> | undefined;
 }
 
 export function nodeToStaticPosition(node: types.Node) {
@@ -276,7 +291,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     headTag: opts.headTag,
     bodyTag: opts.bodyTag,
     shadow: opts.shadow,
-    typeIdentifiersMapping: new Map(),
+    typeIdentifiersMapping: opts.typeIdentifiersMapping ?? new Map(),
     hmr: opts.hmr ? [] : undefined,
     asyncComposing: opts.asyncComposing,
     routes: opts.routes,

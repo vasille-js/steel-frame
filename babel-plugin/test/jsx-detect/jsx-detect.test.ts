@@ -5,5 +5,5 @@ it("has JSX", function () {
 });
 
 it("release mode", function () {
-  runJsxTest(__dirname, "release-mode", false);
+  runJsxTest(__dirname, "release-mode");
 });
