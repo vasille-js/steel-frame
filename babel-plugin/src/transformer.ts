@@ -7,6 +7,7 @@ import * as fs from "node:fs";
 import path from "path";
 import { CompilationErrorReport, CompilationErrorReporter } from "./communication";
 import { calls } from "./call";
+import { CallExpression } from "@babel/types";
 
 const imports = new Map([["steel-frame", "VasilleWeb"]]);
 const ignoreMembers = new Set([
@@ -232,6 +233,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     safeInit: "VasilleSafeInit",
     toDeepFieldRef: "VasilleToDeepFieldRef",
     toFieldRef: "VasilleToFieldRef",
+    ArrayModelView: "VasilleArrayModelView",
   };
 
   function call(
@@ -369,6 +371,12 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     },
     Switch(arg) {
       return call("Switch", [arg, ctx]);
+    },
+    ArrayModelView(array: types.Expression, slot: types.Expression): types.CallExpression {
+      return call("ArrayModelView", [
+        t.objectExpression([t.objectProperty(t.identifier("of"), array), t.objectProperty(t.identifier("slot"), slot)]),
+        ctx,
+      ]);
     },
     safe: (arg: types.FunctionExpression | types.ArrowFunctionExpression) => call("safe", [arg]),
     updateIValue(

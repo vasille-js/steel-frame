@@ -1174,7 +1174,10 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
               const localId = specifier.local;
 
               if (t.isIdentifier(exportedId) && t.isIdentifier(localId)) {
-                internal.typeIdentifiersMapping.set(localId.name, `${resolvedPath}:${exportedId.name}`);
+                const externalId = `${resolvedPath}:${exportedId.name}`;
+
+                internal.typeIdentifiersMapping.set(localId.name, externalId);
+                internal.appData?.registerRedirect(localId.name, externalId, internal);
               }
             }
           }
@@ -1526,7 +1529,9 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
           }
           // const arr = arrayModel()
           else if ("arrayModel" === called) {
-            processModelCall(callPath, declaration.node, "Array", kind === "const", internal, idName());
+            const name = idName();
+            processModelCall(callPath, declaration.node, "Array", kind === "const", internal, name);
+            internal.stack.replace(name, VariablesStatus.ArrayModel);
             meshInit = false;
             checkNonReactiveName(idPath, internal);
           }

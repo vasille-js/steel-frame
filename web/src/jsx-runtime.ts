@@ -20,7 +20,7 @@ export interface VasilleElement {
 }
 
 export type VasilleChild = VasilleElement | string | number | boolean | null | undefined;
-export type VasilleSlot = VasilleChild | VasilleChild[];
+export type VasilleSlot = VasilleChild | VasilleChild[] | void[];
 
 type HtmlInput<K extends keyof HTMLElementTagNameMap & keyof HtmlTagMap> = {
     callback?: (node: HTMLElementTagNameMap[K]) => void | HTMLElementTagNameMap[K] | (() => void);

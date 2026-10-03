@@ -4,6 +4,7 @@ import { TSTypeElement } from "@babel/types";
 
 export enum VariablesStatus {
   StyleSheet = 2,
+  ArrayModel = 3,
 }
 
 export type VariableState = Record<string, 1 | object> | VariablesStatus;
@@ -144,8 +145,8 @@ export class AppData {
     return this.getComponent(id, internal)?.optionalProperties;
   }
 
-  public registerRedirect(from: string, to: string) {
-    this.redirects.set(from, to);
+  public registerRedirect(from: string, to: string, internal: Internal) {
+    this.redirects.set(this.composeId(internal, from), to);
   }
 
   public composeId(internal: Internal, name: string): string {
@@ -227,6 +228,7 @@ export interface Internal {
 
   // components
   Switch(arg: types.ObjectExpression): types.CallExpression;
+  ArrayModelView(array: types.Expression, arg: types.Expression): types.CallExpression;
 
   // safety
   safe(arg: types.FunctionExpression | types.ArrowFunctionExpression): types.CallExpression;
