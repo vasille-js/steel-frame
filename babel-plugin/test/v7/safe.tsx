@@ -1,4 +1,4 @@
-import { compose, ref, safeBind, safeComputed, safeInit, safeRef } from "steel-frame";
+import { compose, safeLive, safeInit, safeState } from "steel-frame";
 
 function throwNow(): number {
   throw new Error("test");
@@ -12,18 +12,17 @@ const A = compose<Props>(() => {});
 
 const C = compose(() => {
   const a = safeInit(throwNow());
-  const $b = safeRef(throwNow());
-  const $c = safeBind(2 + throwNow());
-  const $d = safeBind(($b ?? 2) + throwNow());
-  const $e = safeComputed(() => {
+  const $b = safeState(throwNow());
+  const $c = safeLive(2 + throwNow());
+  const $d = safeLive(($b ?? 2) + throwNow());
+  const $e = safeLive(() => {
     return throwNow();
   });
 
   <A $a={safeInit(throwNow())} />;
-  <A $a={safeRef(throwNow())} />;
-  <A $a={safeBind(2 + throwNow())} />;
-  <A $a={safeBind(($b ?? 2) + throwNow())} />;
-  <A $a={safeComputed(() => throwNow())} />;
+  <A $a={safeState(throwNow())} />;
+  <A $a={safeLive(2 + throwNow())} />;
+  <A $a={safeLive(($b ?? 2) + throwNow())} />;
   <canvas width={throwNow()} />;
   <div>{throwNow()}</div>;
 });

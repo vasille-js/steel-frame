@@ -97,7 +97,7 @@ export function processRefCall(
       if (argument) {
         meshExpression(argument, internal);
       }
-      path.replaceWith(ref(argument?.node, internal, area, name, called === "safeRef"));
+      path.replaceWith(ref(argument?.node, internal, area, name, called === "safeState"));
 
       return true;
     }
@@ -1106,7 +1106,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
           meshAllUnknown(initPath.get("arguments"), internal);
           checkReactiveName(idPath, internal);
           initPath.replaceWith(
-            ref(refValue, internal, declaration.node, undefined, calls(initPath, ["safeRef"], internal)),
+            ref(refValue, internal, declaration.node, undefined, calls(initPath, ["safeState"], internal)),
           );
           initPath.node.loc = pos;
         } else if (t.isIdentifier(id) && initPath.isObjectExpression()) {
@@ -1535,14 +1535,14 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
             meshInit = false;
             checkNonReactiveName(idPath, internal);
           }
-          // const $x = debounceRef(y, 1000);
-          else if ("debounceRef" === called) {
+          // const $x = debounced(y, 1000);
+          else if ("debounced" === called) {
             processDebounceRefCall(callPath, declaration.node, idName(), internal);
             checkReactiveName(idPath, internal);
             meshInit = false;
           }
-          // const $x = fieldRef($y.z);
-          else if ("fieldRef" === called) {
+          // const $x = field($y.z);
+          else if ("field" === called) {
             initPath.replaceWith(processFieldRefCall(callPath, internal, declaration, idName()));
             checkReactiveName(idPath, internal);
           }

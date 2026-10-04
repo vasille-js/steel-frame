@@ -1,4 +1,4 @@
-import { bind, compose, fieldRef, ref as VasilleRef, toFieldRef as VasilleToFieldRef, toDeepFieldRef as VasilleToDeepFieldRef } from "vasille-web";
+import { bind, compose, ref as VasilleRef, toFieldRef as VasilleToFieldRef, toDeepFieldRef as VasilleToDeepFieldRef } from "vasille-web";
 const A = compose(Vasille => {});
 const C = compose(Vasille => {
   const $obj = VasilleRef({

@@ -317,7 +317,7 @@ function transformJsxExpressionContainer(
       // processRefCall already replace the expression
     }
     // fieldRef($x.y)
-    else if (acceptFieldRef && calls(expression, ["fieldRef"], internal)) {
+    else if (acceptFieldRef && calls(expression, ["field"], internal)) {
       expression.replaceWith(processFieldRefCall(expression, internal, expression));
     }
     // any other expression

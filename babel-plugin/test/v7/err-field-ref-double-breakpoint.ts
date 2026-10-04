@@ -1,7 +1,7 @@
-import { compose, fieldRef } from "steel-frame";
+import { compose, field } from "steel-frame";
 
 const C = compose(() => {
   const a = { $b: 1 };
   let $c = { a };
-  const $ = fieldRef($c.a.$b);
+  const $ = field($c.a.$b);
 });

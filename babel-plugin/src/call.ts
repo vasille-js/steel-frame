@@ -1,6 +1,6 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
-import { ctx, Internal } from "./internal.js";
+import { Internal } from "./internal.js";
 import { err, Errors } from "./lib";
 
 export type FnNames =
@@ -45,11 +45,13 @@ export type FnNames =
   | "receive"
   | "impute"
   | "receiveOptional"
-  | "fieldRef"
-  | "debounceRef"
-  | "safeRef"
-  | "safeBind"
-  | "safeComputed"
+  | "state"
+  | "safeState"
+  | "live"
+  | "safeLive"
+  | "effect"
+  | "field"
+  | "debounced"
   | "safeInit"
   | "abortSignal"
   | "showPrompt"
@@ -68,19 +70,18 @@ export const dynamicModulesFunctions = [
 
 export const composeFunctions = [...dynamicModulesFunctions, "store", "model"] as const satisfies FnNames[];
 
-export const refFunctions = ["ref", "safeRef"] as const satisfies FnNames[];
+export const refFunctions = ["ref", "state", "safeState"] as const satisfies FnNames[];
 
 export const asyncFunctions = ["awaited"] as const satisfies FnNames[];
 
-export const inlineBindFunctions = ["bind", "safeBind"] as const satisfies FnNames[];
+export const inlineBindFunctions = ["bind", "live", "safeLive"] as const satisfies FnNames[];
 
 export const bindFunctions = [
   ...inlineBindFunctions,
   "watch",
   "calculate",
   "expr",
-  "computed",
-  "safeComputed",
+  "effect",
 ] as const satisfies FnNames[];
 
 export const modelFunctions = ["arrayModel", "mapModel", "setModel"] as const satisfies FnNames[];
@@ -122,11 +123,11 @@ export const hintFunctions: FnNames[] = [
   ...styleOnly,
   ...dependencyInjections,
   ...unwrapFunctions,
-  "debounceRef",
-  "fieldRef",
+  "debounced",
+  "field",
 ];
 
-export const safeFunctions: FnNames[] = ["safeBind", "safeComputed", "safeRef", "safeInit"];
+export const safeFunctions: FnNames[] = ["safeLive", "safeState", "safeInit"];
 
 function checkCall<T extends string>(name: T, internal: Internal): T {
   if (name === "store" || name === "model") {

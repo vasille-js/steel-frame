@@ -34,6 +34,7 @@ const ignoreMembers = new Set([
   "Iterate",
   "ForEach",
   "toFieldRef",
+  "field",
 ]);
 const filePathId = t.identifier("VasilleFilePath");
 
@@ -230,9 +231,9 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
   const used = new Set<string>();
   const ids = {
     ref: "VasilleRef",
-    safeRef: "VasilleSafeRef",
+    safeState: "VasilleSafeRef",
     expr: "VasilleExpr",
-    safeExpr: "VasilleSafeExpr",
+    safeLive: "VasilleSafeExpr",
     setModel: "VasilleSetModel",
     mapModel: "VasilleMapModel",
     arrayModel: "VasilleArrayModel",
@@ -299,7 +300,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     packageName: packageJson.name,
     isWrapper: relativePath === "/src/router/Wrapper.tsx",
     ref(arg, area, name, safe) {
-      const fnName = safe ? "safeRef" : "ref";
+      const fnName = safe ? "safeState" : "ref";
       const fixedArg = arg ? (safe ? t.arrowFunctionExpression([], arg) : arg) : t.buildUndefinedNode();
 
       if (opts.devLayer) {
@@ -313,7 +314,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     expr(func, values, codes, area, name, safe) {
       if (opts.devLayer) {
         return named(
-          call(safe ? "safeExpr" : "expr", [
+          call(safe ? "safeLive" : "expr", [
             ctx,
             func,
             t.arrayExpression(values),
@@ -324,7 +325,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
         );
       }
 
-      return call(safe ? "safeExpr" : "expr", [getCtx(), func, t.arrayExpression(values)]);
+      return call(safe ? "safeLive" : "expr", [getCtx(), func, t.arrayExpression(values)]);
     },
     fieldRef(obj: types.Expression, field: types.Expression, area: types.Node, name?: string): types.Expression {
       if (internal.devLayer) {

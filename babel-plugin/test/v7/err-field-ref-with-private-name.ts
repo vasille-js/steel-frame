@@ -1,11 +1,11 @@
-import { compose, fieldRef } from "steel-frame";
+import { compose, field } from "steel-frame";
 
 class A {
   #x = 3;
 
   public C() {
     return compose(() => {
-      let $ = fieldRef(this.#x);
+      let $ = field(this.#x);
     });
   }
 }

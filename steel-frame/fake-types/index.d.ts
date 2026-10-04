@@ -75,46 +75,52 @@ export declare function raw<T>(v: T): T;
 /** Unwrap the expression */
 export declare function unwrap<T>(v: T): T;
 
-/** Pack value into a reactive reference */
+/**
+ * Pack value into a reactive reference
+ * @deprecated use `state` instead
+ * */
 export declare function ref<T>(v: T): T;
 export declare function ref<T>(): T | undefined;
 
-/** Pack value into a reactive reference, returns undefined when initialization fails */
-export declare function safeRef<T>(v: T): T | undefined;
+/** Reactive value constructor */
+export declare function state<T>(v: T): T;
+export declare function state<T>(): T | undefined;
 
-/** Edge reference converts an external reactive value to an internal one */
-export declare function edgeRef<T>(
-    getter: () => T,
-    setter: (v: T) => void,
-    subscriber: ((setter: (v: T) => void) => void | (() => void)) | undefined,
-): T;
+/** Pack value into a reactive reference, returns undefined when initialization fails */
+export declare function safeState<T>(v: T): T | undefined;
 
 /** Debounce updates signals of a reactive reference/expression */
-export declare function debounceRef<T>(v: T, delay: number): T;
+export declare function debounced<T>(v: T, delay: number): T;
 
 /** Returns a reactive reference to the object field */
-export declare function fieldRef<T>(v: T): T;
+export declare function field<T>(v: T): T;
 
-/** Returns a reactive-computed form of expression value */
+/**
+ * Returns a reactive-computed form of expression value
+ * @deprecated use `live` instead
+ * */
 export declare function bind<T>(v: T): T;
 
+/** Returns a reactive-computed form of expression value */
+export declare function live<T>(v: T): T;
+
 /** Returns a reactive-computed form of expression value, returns undefined when initialization fails */
-export declare function safeBind<T>(v: T): T | undefined;
+export declare function safeLive<T>(v: T): T | undefined;
 
 /**
  * Returns a reactive-computed form of returned value
- * @deprecated use `computed` instead
+ * @deprecated use `live` instead
  * */
 export declare function calculate<T>(fn: () => T): T;
 
-/** Returns a reactive-computed form of returned value */
-export declare function computed<T>(fn: () => T): T;
-
-/** Returns a reactive-computed form of returned value, returns undefined when initialization fails */
-export declare function safeComputed<T>(fn: () => T): T | undefined;
+/**
+ * Runs the function each time when a dependency is changed
+ * @deprecated use `effect` instead
+ * */
+export declare function watch(f: () => void): void;
 
 /** Runs the function each time when a dependency is changed */
-export declare function watch(f: () => void): void;
+export declare function effect(f: () => void): void;
 
 /** Returns an array model of the array */
 export declare function arrayModel<T>(v?: T[]): ArrayModel<T>;

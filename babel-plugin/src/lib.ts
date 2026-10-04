@@ -112,7 +112,7 @@ export function parseCalculateCall(
   area: types.Node,
   name: string | undefined,
 ): boolean {
-  const called = calledFn(path, ["calculate", "watch", "computed", "safeComputed"], internal);
+  const called = calledFn(path, ["calculate", "watch", "computed", "effect"], internal);
 
   if (path.isCallExpression() && called) {
     return processCalculateCall(path, internal, area, name);
@@ -174,7 +174,7 @@ export function exprCall(
     return true;
   }
 
-  const called = calledFn(path, ["bind", "safeBind"], internal);
+  const called = calledFn(path, ["bind", "live", "safeLive"], internal);
 
   if (t.isCallExpression(expr) && called && expr.arguments.length === 1 && t.isExpression(expr.arguments[0])) {
     const argPath = (path as NodePath<types.CallExpression>).get("arguments")[0] as NodePath<types.Expression>;
@@ -209,7 +209,7 @@ export function exprCall(
           argPath.node,
           area,
           opts.name,
-          (acceptsSafe && nodeIsUnsafe(argPath, internal)) || called === "safeBind",
+          (acceptsSafe && nodeIsUnsafe(argPath, internal)) || called === "safeLive",
         ),
       );
     }
