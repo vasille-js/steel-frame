@@ -4,6 +4,10 @@ it("style test", function () {
   runTest(__dirname, "style");
 });
 
+it("autoremove unused key", function () {
+  runTest(__dirname, "autoremove-key");
+});
+
 it("object method", function () {
   throwTest(__dirname, "object-method", "Object methods not supported here");
 });
