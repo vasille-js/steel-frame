@@ -1,6 +1,6 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
-import { Internal } from "./internal.js";
+import { ctx, Internal } from "./internal.js";
 import { err, Errors } from "./lib";
 
 export type FnNames =

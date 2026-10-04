@@ -44,6 +44,10 @@ it("dependency", function () {
   runTest(__dirname, "dependency");
 });
 
+it("deep reactive object", function () {
+  runTest(__dirname, "deep-reactive-object");
+});
+
 it("restricted hints error", function () {
   throwTest(__dirname, "restricted-hint", 'Usage of hint "arrayModel" is restricted here');
 });
@@ -58,4 +62,8 @@ it("has nested observable in object", function () {
 
 it("has nested reactivity", function () {
   throwTest(__dirname, "nested-reactivity", "Reactive properties are not allowed in computed objects");
+});
+
+it("has nested reactivity 2", function () {
+  throwTest(__dirname, "nested-reactivity-2", "Reactive properties are not allowed in computed objects");
 });

@@ -1,7 +1,7 @@
 import { NodePath, types } from "@babel/core";
 import { Identifier } from "@babel/types";
 import * as t from "@babel/types";
-import { checkNode, Dependency, exprIsSure } from "./expression.js";
+import { checkNode, Dependency, exprIsSure, idIsIValue, memberIsIValue } from "./expression.js";
 import { Internal, ctx } from "./internal.js";
 import { bindFunctions, calledFn, calls, hintFunctions, safeFunctions } from "./call.js";
 import { meshAllUnknown, meshExpression } from "./mesh";
@@ -37,7 +37,7 @@ export function nodeIsUnsafe(
   internal: Internal,
 ) {
   const isTs = internal.filename.endsWith(".ts") || internal.filename.endsWith(".tsx");
-  let safe = path.type !== "CallExpression" && (path.type !== "MemberExpression" || isTs);
+  let safe = (!path.isCallExpression() || calls(path, hintFunctions, internal)) && (!path.isMemberExpression() || isTs);
 
   path.traverse({
     CallExpression(path) {
@@ -323,4 +323,13 @@ export function toKebabCase(name: string) {
   }
 
   return fixed;
+}
+
+export function pathIsReactiveValue(
+  path: NodePath<unknown>,
+): path is NodePath<types.MemberExpression | types.OptionalMemberExpression | types.Identifier> {
+  return (
+    (path.isIdentifier() && idIsIValue(path)) ||
+    ((path.isMemberExpression() || path.isOptionalMemberExpression()) && memberIsIValue(path.node))
+  );
 }

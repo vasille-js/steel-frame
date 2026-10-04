@@ -1,6 +1,6 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
-import { err, Errors, exprCall } from "./lib";
+import { err, Errors, exprCall, pathIsReactiveValue } from "./lib";
 import { ctx, Internal } from "./internal";
 import { idIsIValue, memberIsIValue } from "./expression";
 import { nodeToStaticPosition } from "./transformer";
@@ -107,11 +107,7 @@ export function toFieldRef(
     meshAllUnknown(
       split.props
         .filter(item => typeof item !== "string")
-        .filter(
-          item =>
-            !(item.isIdentifier() && idIsIValue(item)) &&
-            !((item.isMemberExpression() || item.isOptionalMemberExpression()) && memberIsIValue(item.node)),
-        )
+        .filter(item => !pathIsReactiveValue(item))
         .filter(item => !exprCall(item, item.node, internal, {}, item.node, false)),
       internal,
     );
@@ -161,11 +157,7 @@ export function processDebounceRefCall(
   internal: Internal,
 ) {
   const args = path.get("arguments");
-  if (
-    args.length === 2 &&
-    (((args[0].isMemberExpression() || args[0].isOptionalMemberExpression()) && memberIsIValue(args[0].node)) ||
-      (args[0].isIdentifier() && idIsIValue(args[0])))
-  ) {
+  if (args.length === 2 && pathIsReactiveValue(args[0])) {
     meshAllUnknown([args[1]], internal);
     path.node.arguments.unshift(ctx);
 

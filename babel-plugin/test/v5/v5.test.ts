@@ -37,3 +37,7 @@ it("restricted receive in Wrapper.tsx", function () {
     filename: `${process.cwd()}/src/router/Wrapper.tsx`,
   });
 });
+
+it("dependency injection", function () {
+  runJsxTest(__dirname, "di");
+});

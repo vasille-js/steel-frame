@@ -24,6 +24,7 @@ import {
   Errors,
   exprCall,
   parseCalculateCall,
+  pathIsReactiveValue,
   processModelCall,
   ref,
   toKebabCase,
@@ -431,10 +432,7 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
         )) {
           meshAssigment(path, left, right, property, internal);
         }
-      } else if (
-        internal.devLayer &&
-        ((left.isIdentifier() && idIsIValue(left)) || (left.isMemberExpression() && memberIsIValue(left.node)))
-      ) {
+      } else if (internal.devLayer && pathIsReactiveValue(left)) {
         meshExpression(right, internal);
         path.replaceWith(internal.updateIValue(path.node, left.node, right.node));
       } else {
@@ -841,10 +839,7 @@ function procedureProcessObjectExpression(
             err(Errors.RulesOfVasille, keyPath, "This object can not contain reactive fields", internal);
           }
           state[name] = 1;
-        } else if (
-          (valuePath.isIdentifier() && idIsIValue(valuePath)) ||
-          (valuePath.isMemberExpression() && memberIsIValue(valuePath.node))
-        ) {
+        } else if (pathIsReactiveValue(valuePath)) {
           state[name] = 1;
         } else if (internal.isComposing && !internal.isFunctionParsing && name.startsWith("$")) {
           meshValue(name);
