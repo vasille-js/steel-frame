@@ -1,4 +1,4 @@
-import { compose, raw, ref, unwrap, watch } from "steel-frame";
+import { beforeMount, compose, raw, ref, unwrap, watch } from "steel-frame";
 
 let o1 = {
   $x: ref(1),
@@ -16,7 +16,7 @@ const C = compose(() => {
     $x: 1,
   };
 
-  watch(() => {
+  beforeMount(() => {
     o1.$x = 2;
     o2.$x = 2;
     o3.$x = 3;

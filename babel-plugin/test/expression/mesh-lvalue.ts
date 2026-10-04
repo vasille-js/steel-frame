@@ -17,7 +17,6 @@ const C = compose(() => {
     let rest;
 
     $a = 3;
-    $nested.level2 = 3;
     [$a, $nested.level2, ...rest] = [$nested.level2, $a];
   });
 });

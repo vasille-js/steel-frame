@@ -21,7 +21,7 @@ it("reactive field set", function () {
 });
 
 it("nested observable error", function () {
-  throwTest(__dirname, "nested-observable", "Reactive member access are not allowed in bind/computed expressions");
+  throwTest(__dirname, "nested-observable", "Nested reactivity is not supported");
 });
 
 it("local observable error", function () {

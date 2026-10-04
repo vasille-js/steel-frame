@@ -407,9 +407,6 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
       const left = path.get("left");
       const right = path.get("right");
 
-      if (left.isMemberExpression() && hasBreakPoint(left, internal)) {
-        err(Errors.RulesOfVasille, left, "Expression contains a breakpoint and will break the reactivity", internal);
-      }
       if (left.isMemberExpression() && !exprIsSure(left, internal)) {
         const property = left.node.property;
         let iterator: NodePath<unknown> = path;
@@ -1542,6 +1539,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
           else if ("debounceRef" === called) {
             processDebounceRefCall(callPath, declaration.node, idName(), internal);
             checkReactiveName(idPath, internal);
+            meshInit = false;
           }
           // const $x = fieldRef($y.z);
           else if ("fieldRef" === called) {

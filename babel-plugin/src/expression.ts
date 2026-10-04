@@ -2,7 +2,7 @@ import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { calledFn, calls, dependencyInjections, hintFunctions, isDiCall, unwrapFunctions } from "./call.js";
 import { ctx, Internal, StackedStates, V } from "./internal.js";
-import { checkNonReactiveName, err, Errors } from "./lib";
+import { checkNonReactiveName, err, Errors, pathIsReactiveValue } from "./lib";
 import { ignoreParams, meshAllUnknown, meshExpression } from "./mesh";
 import { routerReplace } from "./router";
 import { stringify } from "./utils";
@@ -164,7 +164,7 @@ export function checkNode(
     }
   }
   if (path.isMemberExpression() || path.isOptionalMemberExpression()) {
-    if (memberIsIValue(path.node) && hasBreakPoint(path, internal, true)) {
+    if (memberIsIValue(path.node) && hasBreakPoint(path, internal)) {
       search.self = path.node;
     }
   }
@@ -307,6 +307,14 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
       const left = path.get("left");
       const right = path.get("right");
 
+      if (left.isMemberExpression() && hasBreakPoint(left, search.external) && !pathIsReactiveValue(left)) {
+        err(
+          Errors.RulesOfVasille,
+          left,
+          "Expression contains a breakpoint and will break the reactivity",
+          search.external,
+        );
+      }
       if (left.isMemberExpression() && !exprIsSure(left, search.external)) {
         meshAssigment(path, left, right, left.node.property, search.external);
       } else {

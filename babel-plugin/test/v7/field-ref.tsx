@@ -12,7 +12,7 @@ const C = compose(() => {
   let $ref1 = $obj.a;
   let $ref2 = $obj.b.a;
   let $ref3 = fieldRef($obj.a);
-  let $ref4 = fieldRef($obj.b.a);
+  let $ref4 = fieldRef($obj?.b.a);
 
   const a = "a";
   let $ref5 = $obj[a];
