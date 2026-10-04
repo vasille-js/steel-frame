@@ -40,6 +40,18 @@ it("string event", function () {
   runJsxTest(__dirname, "string-event");
 });
 
+it("router", function () {
+  runTest(__dirname, "router", {
+    routes: [
+      ["correct"],
+      ["correct", "*", "item"],
+      ["correct", "item", "*"],
+      ["correct", "*", "item", "edit"],
+      ["correct", "*", "item", "edit", "*"],
+    ],
+  });
+});
+
 it("field ref no argument", function () {
   throwTest(__dirname, "field-ref-no-arg", "fieldRef function must have one argument");
 });
@@ -69,5 +81,23 @@ it("debounce wrong args", function () {
     __dirname,
     "debounce-wrong-args",
     "debounceRef() expects 2 arguments: a reactive value and a delay duration",
+  );
+});
+
+it("router goTo", function () {
+  throwTest(__dirname, "router-go-to", 'Invalid router path "/wrong".', false, {
+    routes: [["correct"]],
+  });
+});
+
+it("router load", function () {
+  throwTest(
+    __dirname,
+    "router-load",
+    'Invalid router path "/wrong". Expected a path matching one of the defined routes.',
+    false,
+    {
+      routes: [["correct"]],
+    },
   );
 });

@@ -202,7 +202,7 @@ export interface TransformerOptions {
   throwAtFirstError: boolean;
   hmr: boolean;
   asyncComposing: boolean;
-  routes: string[] | undefined;
+  routes: string[][] | undefined;
   appData: AppData | undefined;
   typeIdentifiersMapping: Map<string, string> | undefined;
 }

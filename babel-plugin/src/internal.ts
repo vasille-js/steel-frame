@@ -1,6 +1,5 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
-import { err, Errors } from "./lib";
 
 export enum VariablesStatus {
   StyleSheet = 2,
@@ -187,7 +186,7 @@ export interface Internal {
   strictFolders: boolean;
   stylesConnected: boolean;
   replaceWeb: string;
-  routes?: string[];
+  routes?: string[][];
   headTag?: boolean;
   bodyTag?: boolean;
   shadow?: boolean;

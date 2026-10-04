@@ -5,8 +5,11 @@ import { AppData } from "./internal.js";
 
 export { AppData } from "./internal.js";
 
-function isRoutes(routes: unknown): routes is string[] {
-  return routes instanceof Array && routes.every(item => typeof item === "string");
+function isRoutes(routes: unknown): routes is string[][] {
+  return (
+    routes instanceof Array &&
+    routes.every(item => item instanceof Array && item.map(subitem => typeof subitem === "string"))
+  );
 }
 
 export interface Options {
