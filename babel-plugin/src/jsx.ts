@@ -847,36 +847,41 @@ function transformJsxElement(
         }
       }
       // <A space:name=../>
-      else if (t.isJSXAttribute(attr) && t.isJSXNamespacedName(attr.name)) {
-        const fullName = `${attr.name.namespace.name}:${attr.name.name.name}`;
-        const isReactive = fullName.startsWith("$");
-        let value: types.Expression | undefined;
+      else {
+        /* istanbul ignore else */
+        if (t.isJSXAttribute(attr) && t.isJSXNamespacedName(attr.name)) {
+          const fullName = `${attr.name.namespace.name}:${attr.name.name.name}`;
+          const isReactive = fullName.startsWith("$");
+          let value: types.Expression | undefined;
 
-        if (attr.name.name.name === "link") {
-          const valuePath = attrPath.get("value");
+          if (attr.name.name.name === "path") {
+            const valuePath = attrPath.get("value");
 
-          if (valuePath.isStringLiteral() && isReactive) {
-            validateRouterPath(valuePath, internal);
-            value = valuePath.node;
-          } else {
-            if (valuePath.isJSXExpressionContainer()) {
-              const exprPath = valuePath.get("expression");
+            if (valuePath.isStringLiteral() && !isReactive) {
+              validateRouterPath(valuePath, internal);
+              value = valuePath.node;
+            } else {
+              /* istanbul ignore else */
+              if (valuePath.isJSXExpressionContainer()) {
+                const exprPath = valuePath.get("expression");
 
-              if (exprPath.isExpression()) {
-                validateRouterPath(exprPath, internal);
+                /* istanbul ignore else */
+                if (exprPath.isExpression()) {
+                  validateRouterPath(exprPath, internal);
+                }
+
+                value = transformJsxExpressionContainer(valuePath, internal, [
+                  isReactive && "acceptsReactive",
+                  !isReactive && "acceptsRaw",
+                ]);
               }
-
-              value = transformJsxExpressionContainer(valuePath, internal, [
-                isReactive && "acceptsReactive",
-                !isReactive && "acceptsRaw",
-              ]);
             }
           }
-        }
-        if (value) {
-          props.push(t.objectProperty(t.stringLiteral(fullName), value));
-        } else {
-          err(Errors.ParserError, attrPath, "Failed to process namespaced property", internal);
+          if (value) {
+            props.push(t.objectProperty(t.stringLiteral(fullName), value));
+          } else {
+            err(Errors.ParserError, attrPath, "Failed to process namespaced property", internal);
+          }
         }
       }
     }
@@ -978,7 +983,7 @@ function transformJsxElement(
         slot &&
         (t.isFunctionExpression(slot) || t.isArrowFunctionExpression(slot)) &&
         slot.params.length === 2 &&
-        (t.isIdentifier(slot.params[1]) || t.isArrayPattern(slot.params[1]) || t.isObjectPattern(slot.params[1]))
+        (t.isIdentifier(slot.params[1]) || t.isObjectPattern(slot.params[1]) || t.isArrayPattern(slot.params[1]))
       ) {
         return [
           ...ret,

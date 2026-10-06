@@ -56,6 +56,14 @@ it("auto safe", function () {
   runJsxTest(__dirname, "auto-safe");
 });
 
+it("array model map", function () {
+  runJsxTest(__dirname, "array-model-map");
+});
+
+it("router path in jsx", function () {
+  runJsxTest(__dirname, "router-path-in-jsx");
+});
+
 it("field ref no argument", function () {
   throwTest(__dirname, "field-ref-no-arg", "fieldRef function must have one argument");
 });
@@ -104,4 +112,14 @@ it("router load", function () {
       routes: [["correct"]],
     },
   );
+});
+
+it("wrong path in jsx", function () {
+  throwTest(__dirname, "wrong-path-in-jsx", 'Invalid router path "/wrong".', true, {
+    routes: [["correct"], ["correct", "*"]],
+  });
+});
+
+it("array model map gives Array", function () {
+  throwTest(__dirname, "array-model-map", "Mapped value must be and identifier initialized with array model", true);
 });
