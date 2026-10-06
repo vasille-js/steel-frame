@@ -25,7 +25,7 @@ const C = compose(Vasille => {
   }, Vasille);
   Vasille.tag("canvas", {
     a: {
-      width: safeInit(() => throwNow())
+      width: safeInit(throwNow)
     }
   });
   Vasille.tag("div", {}, Vasille => {

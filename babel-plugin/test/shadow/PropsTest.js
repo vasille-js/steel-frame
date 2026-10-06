@@ -6,5 +6,6 @@ export const PropsTest = component(Vasille => {}, "props-test", {
   "d": 1,
   "e": 0,
   "f": 2,
-  "g": 2
+  "g": 2,
+  "any": 0
 });

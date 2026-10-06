@@ -383,7 +383,11 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
       return call("set", [getCtx(), obj, field, value]);
     },
     safeInit(arg: types.Expression): types.Expression {
-      return call("safeInit", [t.arrowFunctionExpression([], arg)]);
+      return call("safeInit", [
+        t.isCallExpression(arg) && arg.arguments.length === 0 && t.isExpression(arg.callee)
+          ? arg.callee
+          : t.arrowFunctionExpression([], arg),
+      ]);
     },
     Switch(arg) {
       return call("Switch", [arg, ctx]);

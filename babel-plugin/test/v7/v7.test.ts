@@ -52,6 +52,10 @@ it("router", function () {
   });
 });
 
+it("auto safe", function () {
+  runJsxTest(__dirname, "auto-safe");
+});
+
 it("field ref no argument", function () {
   throwTest(__dirname, "field-ref-no-arg", "fieldRef function must have one argument");
 });

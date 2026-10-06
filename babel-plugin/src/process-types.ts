@@ -85,15 +85,12 @@ export function fieldDataToObjectExpression(data: Record<string, number>): t.Obj
   return t.objectExpression(props);
 }
 
-export function processTypeLiteral(literal: types.TSTypeLiteral) {
-  return processSignatures(literal.members);
-}
-
 export function processReference(id: types.TSTypeReference, internal: Internal): InterfaceData | undefined {
   /* istanbul ignore else */
   if (t.isIdentifier(id.typeName)) {
     const typeId = internal.typeIdentifiersMapping.get(id.typeName.name);
 
+    /* istanbul ignore else */
     if (typeId) {
       return internal.appData?.getInterface(typeId);
     }
@@ -110,6 +107,7 @@ export function processInterface(members: t.TSTypeElement[], internal: Internal)
   for (const member of members) {
     if ((t.isTSPropertySignature(member) || t.isTSMethodSignature(member)) && member.optional) {
       const name = stringify(member.key);
+      /* istanbul ignore else */
       if (name) {
         optionals.push(name);
       }

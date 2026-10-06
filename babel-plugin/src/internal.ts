@@ -86,6 +86,7 @@ export class AppData {
     const stack: (ComponentData | undefined)[] = [data];
 
     this.components.set(id, data);
+    internal.typeIdentifiersMapping.set(name, id);
 
     return {
       push: (id: string) => {

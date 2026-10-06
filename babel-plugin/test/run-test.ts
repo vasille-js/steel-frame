@@ -23,10 +23,10 @@ export function throwTest(
   name: string,
   err: string,
   isTsx?: boolean,
-  opts: Partial<Options> & { filename?: string } = {},
+  opts: Partial<Options> & { filename?: string; noPrefix?: boolean } = {},
 ) {
   const appData = new AppData();
-  const fileName = path.join(dir, `err-${name}.${isTsx ? "tsx" : "ts"}`);
+  const fileName = path.join(dir, `${opts.noPrefix ? "" : "err-"}${name}.${isTsx ? "tsx" : "ts"}`);
   const input = fs.readFileSync(fileName, { encoding: "utf8" });
 
   expect(() => {

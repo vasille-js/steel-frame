@@ -8,4 +8,6 @@ export const PropsTest = component<{
   e: number[];
   f: number | null;
   g?: number | null | undefined;
+  any;
+  ["x"];
 }>(() => {});

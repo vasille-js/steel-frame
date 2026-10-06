@@ -1,31 +1,12 @@
-import { runJsxTest, runTest } from "../run-test";
-import path from "path";
-import fs from "fs";
-import * as babel from "@babel/core";
-import vasillePlugin from "../../src";
+import { runJsxTest, runTest, throwTest } from "../run-test";
 
-const extra = { shadow: true, replaceWeb: "vasille-shadow" };
+const extra = { shadow: true, replaceWeb: "vasille-shadow", noPrefix: true };
 
 function ts(name: string) {
   runTest(__dirname, name, extra);
 }
 function tsx(name: string) {
   runJsxTest(__dirname, name, extra);
-}
-export function throwTest(name: string, err: string) {
-  const fileName = path.join(__dirname, `${name}.tsx`);
-  const input = fs.readFileSync(fileName, { encoding: "utf8" });
-
-  expect(() => {
-    babel.transformSync(input, {
-      plugins: [
-        [vasillePlugin, { strictFolders: false, throwAtFirstError: true, ...extra }],
-        ["@babel/plugin-transform-typescript", { isTSX: true }],
-      ],
-      filename: fileName,
-    });
-    // @ts-ignore
-  }).toThrow(new RegExp(`Vasille\\\[\\d+]\{\\w+}: ${RegExp.escape(err)}`));
 }
 
 it("shadow props parsing", function () {
@@ -57,17 +38,17 @@ it("local components", function () {
 });
 
 it("no - error", function () {
-  throwTest("Error", "The name 'error' is not allowed by WHATWG");
+  throwTest(__dirname, "Error", "The name 'error' is not allowed by WHATWG", true, extra);
 });
 
 it("restricted tag name error", function () {
-  throwTest("MissingGlyph", "The name 'missing-glyph' is not allowed by WHATWG");
+  throwTest(__dirname, "MissingGlyph", "The name 'missing-glyph' is not allowed by WHATWG", true, extra);
 });
 
 it("no type error", function () {
-  throwTest("NoType", "Missing type for web component composition");
+  throwTest(__dirname, "NoType", "Missing type for web component composition", true, extra);
 });
 
 it("missing type error", function () {
-  throwTest("MissingType", "Missing type for web component composition");
+  throwTest(__dirname, "MissingType", "Missing type for web component composition", true, extra);
 });

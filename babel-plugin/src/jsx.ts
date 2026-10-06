@@ -295,8 +295,6 @@ function transformJsxExpressionContainer(
     expression.node.loc = loc;
 
     return expression.node;
-  } else if (isInternalSlot && (expression.isFunctionExpression() || expression.isArrowFunctionExpression())) {
-    expression.node.params.unshift(ctx);
   }
 
   /* istanbul ignore else */
@@ -340,10 +338,15 @@ function transformJsxExpressionContainer(
       }
     } else {
       const throws = internal.autoUnwrapThrows;
+      const isUnsafe = nodeIsUnsafe(expression, internal);
 
       internal.autoUnwrapThrows = true;
       meshExpression(expression, internal);
       internal.autoUnwrapThrows = throws;
+
+      if (acceptsSafe && isUnsafe) {
+        expression.replaceWith(internal.safeInit(expression.node));
+      }
     }
   }
 
@@ -782,7 +785,8 @@ function transformJsxElement(
           isNotSafe ||=
             nodeIsUnsafe(valuePath, internal) &&
             !propertyValueExpr.isFunctionExpression() &&
-            !propertyValueExpr.isArrowFunctionExpression();
+            !propertyValueExpr.isArrowFunctionExpression() &&
+            !optionals?.has(attr.name.name);
 
           const isSystem = internal.mapping.has(name.name);
           const requiresReactive = attr.name.name.startsWith("$");
