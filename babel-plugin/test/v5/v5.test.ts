@@ -18,10 +18,11 @@ it("context", function () {
 
   runTest(__dirname, "context", { appData });
 
-  appData.testComponent("babel-plugin-vasille/test/v5/context.ts:C", data => {
-    expect([...data.requiredDependencies]).toEqual(["babel-plugin-vasille/test/v5/context.ts:Context"]);
-    expect([...data.providedDependencies]).toEqual(["babel-plugin-vasille/test/v5/context.ts:Context"]);
+  appData.testComponent("babel-plugin-vasille/test/v5/context:C", data => {
+    expect([...data.requiredDependencies]).toEqual(["babel-plugin-vasille/test/v5/context:Context"]);
+    expect([...data.providedDependencies]).toEqual(["babel-plugin-vasille/test/v5/context:Context"]);
   });
+  expect(() => appData.testComponent("C", () => {})).toThrow("Component C not found");
 });
 
 it("DI discover fails", function () {

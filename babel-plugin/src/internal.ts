@@ -1,5 +1,6 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
+import { removeExtension } from "./lib";
 
 export enum VariablesStatus {
   StyleSheet = 2,
@@ -27,8 +28,8 @@ export class StackedStates {
     this.maps.pop();
   }
 
-  public get(name: string, checkingContextOnly?: boolean): VariableState | undefined {
-    for (let i = this.maps.length - 1; i >= (checkingContextOnly ? this.checkingIndex : 0); i--) {
+  public get(name: string): VariableState | undefined {
+    for (let i = this.maps.length - 1; i >= 0; i--) {
       if (this.maps[i].has(name)) {
         return this.maps[i].get(name);
       }
@@ -90,17 +91,16 @@ export class AppData {
 
     return {
       push: (id: string) => {
-        const fullId = internal.typeIdentifiersMapping.get(id) ?? id;
-        const data = this.getComponent(fullId, internal);
+        const child = this.getComponent(id, internal);
 
-        if (data) {
-          for (const dependency of data.requiredDependencies) {
+        if (child) {
+          for (const dependency of child.requiredDependencies) {
             if (!stack.some(item => item?.providedDependencies.has(dependency))) {
               data.requiredDependencies.add(dependency);
             }
           }
         }
-        stack.push(data);
+        stack.push(child);
       },
       pop: () => {
         stack.pop();
@@ -153,7 +153,7 @@ export class AppData {
   }
 
   public composeId(internal: Internal, name: string): string {
-    return `${internal.steelFilePath}:${name}`;
+    return `${removeExtension(internal.steelFilePath)}:${name}`;
   }
 
   public testComponent(fullId: string, callback: (data: ComponentData) => void) {

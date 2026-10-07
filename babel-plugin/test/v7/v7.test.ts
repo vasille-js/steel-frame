@@ -1,4 +1,5 @@
 import { runJsxTest, runTest, throwTest } from "../run-test";
+import { AppData } from "../../src";
 
 it("abort signal", function () {
   runJsxTest(__dirname, "abort-signal");
@@ -122,4 +123,23 @@ it("wrong path in jsx", function () {
 
 it("array model map gives Array", function () {
   throwTest(__dirname, "array-model-map", "Mapped value must be and identifier initialized with array model", true);
+});
+
+it("provide and receive global dependency", function () {
+  const appData = new AppData();
+
+  runJsxTest(__dirname, "provide-global-dependency", { appData, filename: `${process.cwd()}/src/router/Wrapper.tsx` });
+  throwTest(__dirname, "page-with-global-dependency", 'Missing dependencies: "unexisting"\n', true, { appData });
+});
+
+it("has local dependency flow", function () {
+  throwTest(__dirname, "local-dependency-flow", 'Missing dependencies: "unexisting"\n', true);
+});
+
+it("dependency reexport check", function () {
+  const appData = new AppData();
+
+  runJsxTest(__dirname, "DependencyStart", { appData });
+  runJsxTest(__dirname, "DependencyReexport", { appData });
+  throwTest(__dirname, "dependency-reexport-check", 'Missing dependencies: "unexisting"\n', true, { appData });
 });

@@ -91,3 +91,7 @@ it("module level reactivity", function () {
 it("prompt", function () {
   runJsxTest(__dirname, "prompt", { devLayer: true });
 });
+
+it("safe", function () {
+  runJsxTest(__dirname, "safe", { devLayer: true });
+});

@@ -41,14 +41,14 @@ export function throwTest(
   }).toThrow(new RegExp(`Vasille\\\[\\d+]\{\\w+}: ${RegExp.escape(err)}`));
 }
 
-export function runJsxTest(dir: string, name: string, opts: Partial<Options> = {}) {
+export function runJsxTest(dir: string, name: string, opts: Partial<Options> & { filename?: string } = {}) {
   const input = fs.readFileSync(path.join(dir, `${name}.tsx`), { encoding: "utf8" });
   const result = babel.transformSync(input, {
     plugins: [
       [vasillePlugin, { devLayer: false, strictFolders: false, appData: new AppData(), ...opts }],
       ["@babel/plugin-transform-typescript", { isTSX: true }],
     ],
-    filename: path.join(dir, `${name}.tsx`),
+    filename: opts.filename ?? path.join(dir, `${name}.tsx`),
   });
   const expected = fs.readFileSync(path.join(dir, `${name}.js`), { encoding: "utf8" });
 

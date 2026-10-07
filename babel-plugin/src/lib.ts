@@ -138,10 +138,6 @@ export function bindCall(
     return true;
   }
 
-  if (safe && path.node) {
-    meshExpression(path, internal);
-    path.replaceWith(internal.safeInit(path.node));
-  }
   return false;
 }
 
@@ -332,4 +328,14 @@ export function pathIsReactiveValue(
     (path.isIdentifier() && idIsIValue(path)) ||
     ((path.isMemberExpression() || path.isOptionalMemberExpression()) && memberIsIValue(path.node))
   );
+}
+
+export function removeExtension(name: string) {
+  if (name.endsWith(".ts") || name.endsWith(".js")) {
+    return name.slice(0, -3);
+  }
+  if (name.endsWith(".tsx") || name.endsWith(".jsx")) {
+    return name.slice(0, -4);
+  }
+  return name;
 }

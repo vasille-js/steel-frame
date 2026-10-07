@@ -27,6 +27,7 @@ import {
   pathIsReactiveValue,
   processModelCall,
   ref,
+  removeExtension,
   toKebabCase,
 } from "./lib.js";
 import { checkOrder } from "./order-check";
@@ -49,11 +50,11 @@ export function resolveSourceFilePath(sourcePath: string, internal: Internal): s
 
   // @/alias -> package name + rest of path (replace @/ with package name, then normalize)
   if (sourcePath.startsWith("@/")) {
-    resolved = internal.packageName + "/src" + sourcePath.substring(1);
+    resolved = internal.packageName + "/src" + removeExtension(sourcePath.substring(1));
   }
   // Relative path: resolve relative to the importing file
   else if (sourcePath.startsWith(".")) {
-    resolved = path.resolve(path.dirname(internal.steelFilePath), sourcePath);
+    resolved = removeExtension(path.join(path.dirname(internal.steelFilePath), sourcePath));
   }
   // Bare module specifier, detect export for browsers
   else {
@@ -61,7 +62,7 @@ export function resolveSourceFilePath(sourcePath: string, internal: Internal): s
     const packageJsonContent = packageJson && JSON.parse(fs.readFileSync(packageJson, "utf8"));
 
     if (packageJsonContent?.exports?.browser) {
-      resolved = path.resolve(packageJsonContent.name, packageJsonContent.exports.browser);
+      resolved = removeExtension(path.join(packageJsonContent.name, packageJsonContent.exports.browser));
     }
   }
 
@@ -1352,7 +1353,7 @@ export function composeExpression(path: NodePath<types.Expression | null | undef
         path.get("callee").replaceWith(t.memberExpression(ctx, t.identifier("runOnDestroy")));
       } else {
         /* istanbul ignore else */
-        if (calls(path, ["share"], internal)) {
+        if (calls(path, ["share"], internal) && isDiCall(path, internal)) {
           if (internal.stateOnly) {
             err(Errors.IncompatibleContext, path, "Stores/Models in Vasille.JS cannot share dependencies", internal);
           }

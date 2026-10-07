@@ -88,6 +88,7 @@ function handleImportDeclaration(
 
   if (!name) {
     // Handle imports: import { A, B as C } from './module'
+    /* istanbul ignore else */
     if (internal.appData && statement.specifiers.length > 0) {
       const resolvedPath = resolveSourceFilePath(statement.source.value, internal);
 

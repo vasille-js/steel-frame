@@ -666,7 +666,12 @@ function transformJsxElement(
             callback = expressionPath.node;
           } else {
             if (expressionPath && expressionPath.isExpression()) {
-              exprCall(expressionPath, expressionPath.node, internal, {}, expressionPath.node, true);
+              if (
+                !exprCall(expressionPath, expressionPath.node, internal, {}, expressionPath.node, true) &&
+                nodeIsUnsafe(expressionPath, internal)
+              ) {
+                expressionPath.replaceWith(internal.safeInit(expressionPath.node));
+              }
               attrs.push(idToProp(name, expressionPath.node));
             } else if (t.isStringLiteral(attr.value)) {
               attrs.push(idToProp(name, attr.value));
