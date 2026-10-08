@@ -331,7 +331,7 @@ function transformJsxExpressionContainer(
       );
 
       if (!isReactive && !acceptsRaw) {
-        meshExpression(expression, internal);
+        meshExpression(expression, internal, false);
         expression.replaceWith(
           internal.ref(expression.node, expression.node, undefined, acceptsSafe && nodeIsUnsafe(expression, internal)),
         );
@@ -341,7 +341,7 @@ function transformJsxExpressionContainer(
       const isUnsafe = nodeIsUnsafe(expression, internal);
 
       internal.autoUnwrapThrows = true;
-      meshExpression(expression, internal);
+      meshExpression(expression, internal, true);
       internal.autoUnwrapThrows = throws;
 
       if (acceptsSafe && isUnsafe) {
@@ -482,7 +482,7 @@ function transformJsxElement(
             if (expressionPath) {
               /* istanbul ignore else */
               if (expressionPath.isExpression()) {
-                meshExpression(expressionPath, internal);
+                meshExpression(expressionPath, internal, false);
                 events.push(idToProp(name, expressionPath.node, 2));
               }
             } else if (valuePath.isStringLiteral()) {
@@ -521,7 +521,7 @@ function transformJsxElement(
                         }
 
                         if (keyPath.isExpression() && !keyPath.isIdentifier()) {
-                          meshExpression(keyPath, internal);
+                          meshExpression(keyPath, internal, false);
                         }
 
                         classObject.push(t.objectProperty(keyPath.node, valuePath.node));
@@ -597,7 +597,7 @@ function transformJsxElement(
                   const keyPath = propPath.get("key");
 
                   if (keyPath.isExpression() && !keyPath.isIdentifier()) {
-                    meshExpression(keyPath, internal);
+                    meshExpression(keyPath, internal, false);
                   }
 
                   // style={{a: "b"}} -> static in compile time
@@ -662,7 +662,7 @@ function transformJsxElement(
               }
             }
           } else if (name.name === "callback" && expressionPath && expressionPath.isExpression()) {
-            meshExpression(expressionPath, internal);
+            meshExpression(expressionPath, internal, false);
             callback = expressionPath.node;
           } else {
             if (expressionPath && expressionPath.isExpression()) {
@@ -833,7 +833,7 @@ function transformJsxElement(
       }
       // <A {...arg}/>
       else if (attrPath.isJSXSpreadAttribute()) {
-        meshExpression(attrPath.get("argument"), internal);
+        meshExpression(attrPath.get("argument"), internal, true);
         props.push(t.spreadElement(attrPath.node.argument));
 
         if (

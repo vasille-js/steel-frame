@@ -36,7 +36,7 @@ import { stringify } from "./utils";
 import { nodeToStaticPosition } from "./transformer";
 import { fieldDataToObjectExpression, obtainInterfaceData, processInterface } from "./process-types";
 import { meshAssigment } from "./operators";
-import { hasBreakPoint, processDebounceRefCall, processFieldRefCall, toFieldRef } from "./field-reference";
+import { processDebounceRefCall, processFieldRefCall, toFieldRef } from "./field-reference";
 import path from "path";
 import module from "node:module";
 import fs from "fs";
@@ -72,11 +72,12 @@ export function resolveSourceFilePath(sourcePath: string, internal: Internal): s
 export function meshOrIgnoreAllExpressions<T extends types.Node>(
   nodePaths: NodePath<types.Expression | null | T>[],
   internal: Internal,
+  canHasRef: boolean,
 ) {
   for (const path of nodePaths) {
     /* istanbul ignore else */
     if (path.isExpression()) {
-      meshExpression(path, internal);
+      meshExpression(path, internal, canHasRef);
     }
   }
 }
@@ -96,7 +97,7 @@ export function processRefCall(
       err(Errors.IncorrectArguments, path, "Invalid arguments: expected expression", internal);
     } else {
       if (argument) {
-        meshExpression(argument, internal);
+        meshExpression(argument, internal, false);
       }
       path.replaceWith(ref(argument?.node, internal, area, name, called === "safeState"));
 
@@ -107,9 +108,13 @@ export function processRefCall(
   return false;
 }
 
-export function meshAllExpressions(nodePaths: NodePath<types.Expression | null>[], internal: Internal) {
+export function meshAllExpressions(
+  nodePaths: NodePath<types.Expression | null>[],
+  internal: Internal,
+  canHasRef: boolean,
+) {
   for (const path of nodePaths) {
-    meshExpression(path, internal);
+    meshExpression(path, internal, canHasRef);
   }
 }
 
@@ -197,14 +202,15 @@ export function meshComposeCall(
 export function meshAllUnknown(
   paths: NodePath<types.SpreadElement | types.ArgumentPlaceholder | types.Expression | null>[],
   internal: Internal,
+  canHasRef: boolean,
 ) {
   for (const path of paths) {
     if (path.isSpreadElement()) {
-      meshExpression(path.get("argument"), internal);
+      meshExpression(path.get("argument"), internal, canHasRef);
     } else {
       /* istanbul ignore else */
       if (path.isExpression()) {
-        meshExpression(path, internal);
+        meshExpression(path, internal, canHasRef);
       }
     }
   }
@@ -216,17 +222,18 @@ export function meshLValue(
 ) {
   /* istanbul ignore else */
   if (path.isExpression() || path.isIdentifier()) {
-    meshExpression(path, internal);
+    meshExpression(path, internal, false);
   }
 }
 
 export function meshOrIgnoreExpression<T extends types.Node>(
   path: NodePath<types.Expression | types.VoidPattern | null | undefined | T>,
   internal: Internal,
+  canHasRef: boolean,
 ) {
   /* istanbul ignore else */
   if (path.isExpression()) {
-    meshExpression(path, internal);
+    meshExpression(path, internal, canHasRef);
   }
 }
 
@@ -244,7 +251,11 @@ function throwOnAutoUnwrap(path: NodePath<types.Node | null | undefined>, intern
   }
 }
 
-export function meshExpression(nodePath: NodePath<types.Expression | null | undefined>, internal: Internal) {
+export function meshExpression(
+  nodePath: NodePath<types.Expression | null | undefined>,
+  internal: Internal,
+  canHasRef: boolean,
+) {
   const expr = nodePath.node;
 
   if (!expr) {
@@ -255,13 +266,13 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
     case "TemplateLiteral": {
       const path = nodePath as NodePath<types.TemplateLiteral>;
 
-      meshOrIgnoreAllExpressions<types.TSType>(path.get("expressions"), internal);
+      meshOrIgnoreAllExpressions<types.TSType>(path.get("expressions"), internal, false);
       break;
     }
     case "TaggedTemplateExpression": {
       const path = nodePath as NodePath<types.TaggedTemplateExpression>;
 
-      meshExpression(path.get("quasi"), internal);
+      meshExpression(path.get("quasi"), internal, canHasRef);
       break;
     }
     case "Identifier": {
@@ -274,7 +285,7 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
     case "ArrayExpression": {
       const path = nodePath as NodePath<types.ArrayExpression>;
 
-      meshAllUnknown(path.get("elements"), internal);
+      meshAllUnknown(path.get("elements"), internal, true);
       break;
     }
     case "CallExpression":
@@ -308,7 +319,7 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
           const throws = internal.autoUnwrapThrows;
 
           internal.autoUnwrapThrows = false;
-          meshExpression(argPath, internal);
+          meshExpression(argPath, internal, canHasRef);
           path.replaceWith(argPath);
           internal.autoUnwrapThrows = throws;
         } else {
@@ -319,7 +330,7 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
       else if (!internal.isComposing && calls(path, modelFunctions, internal)) {
         /* istanbul ignore else */
         if (argPath) {
-          meshAllUnknown([argPath], internal);
+          meshAllUnknown([argPath], internal, true);
         }
 
         const loc = path.node.loc;
@@ -352,16 +363,16 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
         isDiCall(path, internal) &&
         path.node.arguments[0] === ctx
       ) {
-        meshAllUnknown(path.get("arguments"), internal);
+        meshAllUnknown(path.get("arguments"), internal, true);
       }
       // abortSignal
       else if (internal.isComposing && calls(path, ["abortSignal"], internal)) {
-        meshAllUnknown(path.get("arguments"), internal);
+        meshAllUnknown(path.get("arguments"), internal, false);
         path.node.arguments.unshift(ctx);
       }
       // creteModel
       else if (calls(path, ["createModel"], internal)) {
-        meshAllUnknown(path.get("arguments"), internal);
+        meshAllUnknown(path.get("arguments"), internal, true);
         path.node.arguments.unshift(ctx);
         if (internal.devLayer) {
           path.node.arguments.push(nodeToStaticPosition(path.node));
@@ -369,7 +380,7 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
       }
       // showPrompt
       else if (internal.isComposing && !internal.stateOnly && calls(path, ["showPrompt"], internal)) {
-        meshAllUnknown(path.get("arguments"), internal);
+        meshAllUnknown(path.get("arguments"), internal, true);
         path.node.arguments.unshift(ctx);
         if (internal.devLayer) {
           if (path.node.arguments.length < 4) {
@@ -385,7 +396,7 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
         if (path.node.arguments.length !== 1 || !arg.isExpression()) {
           err(Errors.IncorrectArguments, path, "safeInit takes only one argument", internal);
         } else {
-          meshExpression(arg, internal);
+          meshExpression(arg, internal, canHasRef);
           arg.replaceWith(t.arrowFunctionExpression([], arg.node));
         }
       }
@@ -397,8 +408,8 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
           err(Errors.IncompatibleContext, path, `Usage of hint "${hint}" is restricted here`, internal);
         }
 
-        meshOrIgnoreExpression<types.V8IntrinsicIdentifier>(path.get("callee"), internal);
-        meshAllUnknown(path.get("arguments"), internal);
+        meshOrIgnoreExpression<types.V8IntrinsicIdentifier>(path.get("callee"), internal, true);
+        meshAllUnknown(path.get("arguments"), internal, true);
       }
 
       break;
@@ -431,11 +442,11 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
           meshAssigment(path, left, right, property, internal);
         }
       } else if (internal.devLayer && pathIsReactiveValue(left)) {
-        meshExpression(right, internal);
+        meshExpression(right, internal, canHasRef);
         path.replaceWith(internal.updateIValue(path.node, left.node, right.node));
       } else {
         meshLValue(left, internal);
-        meshExpression(right, internal);
+        meshExpression(right, internal, canHasRef);
       }
       break;
     }
@@ -450,9 +461,9 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
       if (object.isIdentifier() && internal.stack.get(object.node.name) === VariablesStatus.StyleSheet) {
         internal.usedStylesProps.add(!node.computed && t.isIdentifier(property) ? property.name : "*");
       }
-      meshExpression(object, internal);
+      meshExpression(object, internal, canHasRef);
       if (t.isExpression(property) && (!propertyPath.isIdentifier() || (node.computed && idIsIValue(propertyPath)))) {
-        meshOrIgnoreExpression<types.PrivateName>(propertyPath, internal);
+        meshOrIgnoreExpression<types.PrivateName>(propertyPath, internal, true);
       }
 
       if (memberIsIValue(node)) {
@@ -471,89 +482,89 @@ export function meshExpression(nodePath: NodePath<types.Expression | null | unde
     case "BinaryExpression": {
       const path = nodePath as NodePath<types.BinaryExpression>;
 
-      meshOrIgnoreExpression<types.PrivateName>(path.get("left"), internal);
-      meshExpression(path.get("right"), internal);
+      meshOrIgnoreExpression<types.PrivateName>(path.get("left"), internal, true);
+      meshExpression(path.get("right"), internal, canHasRef);
       break;
     }
     case "ConditionalExpression": {
       const path = nodePath as NodePath<types.ConditionalExpression>;
 
-      meshExpression(path.get("test"), internal);
-      meshExpression(path.get("consequent"), internal);
-      meshExpression(path.get("alternate"), internal);
+      meshExpression(path.get("test"), internal, canHasRef);
+      meshExpression(path.get("consequent"), internal, canHasRef);
+      meshExpression(path.get("alternate"), internal, canHasRef);
       break;
     }
     case "LogicalExpression": {
       const path = nodePath as NodePath<types.LogicalExpression>;
 
-      meshExpression(path.get("left"), internal);
-      meshExpression(path.get("right"), internal);
+      meshExpression(path.get("left"), internal, canHasRef);
+      meshExpression(path.get("right"), internal, canHasRef);
       break;
     }
     case "NewExpression": {
       const path = nodePath as NodePath<types.NewExpression>;
 
-      meshOrIgnoreExpression<types.V8IntrinsicIdentifier>(path.get("callee"), internal);
-      meshAllUnknown(path.get("arguments"), internal);
+      meshOrIgnoreExpression<types.V8IntrinsicIdentifier>(path.get("callee"), internal, true);
+      meshAllUnknown(path.get("arguments"), internal, true);
       break;
     }
     case "SequenceExpression": {
       const path = nodePath as NodePath<types.SequenceExpression>;
 
-      meshAllExpressions(path.get("expressions"), internal);
+      meshAllExpressions(path.get("expressions"), internal, true);
       break;
     }
     case "UnaryExpression": {
       const path = nodePath as NodePath<types.UnaryExpression>;
 
-      meshExpression(path.get("argument"), internal);
+      meshExpression(path.get("argument"), internal, canHasRef);
       break;
     }
     case "UpdateExpression": {
       const path = nodePath as NodePath<types.UpdateExpression>;
 
-      meshExpression(path.get("argument"), internal);
+      meshExpression(path.get("argument"), internal, canHasRef);
       break;
     }
     case "YieldExpression": {
       const path = nodePath as NodePath<types.YieldExpression>;
 
-      meshExpression(path.get("argument"), internal);
+      meshExpression(path.get("argument"), internal, canHasRef);
       break;
     }
     case "AwaitExpression": {
       const path = nodePath as NodePath<types.AwaitExpression>;
 
-      meshExpression(path.get("argument"), internal);
+      meshExpression(path.get("argument"), internal, canHasRef);
       break;
     }
     case "TSInstantiationExpression": {
       const path = nodePath as NodePath<types.TSInstantiationExpression>;
 
-      meshExpression(path.get("expression"), internal);
+      meshExpression(path.get("expression"), internal, canHasRef);
       break;
     }
     case "TSAsExpression": {
       const path = nodePath as NodePath<types.TSAsExpression>;
 
       path.replaceWith(path.get("expression"));
-      meshExpression(path, internal);
+      meshExpression(path, internal, canHasRef);
       break;
     }
     case "TSSatisfiesExpression": {
       const path = nodePath as NodePath<types.TSSatisfiesExpression>;
 
-      meshExpression(path.get("expression"), internal);
+      meshExpression(path.get("expression"), internal, canHasRef);
       break;
     }
     case "TSTypeAssertion": {
       const path = nodePath as NodePath<types.TSTypeAssertion>;
 
-      meshExpression(path.get("expression"), internal);
+      meshExpression(path.get("expression"), internal, canHasRef);
       break;
     }
     case "ObjectExpression": {
-      processObjectExpression(nodePath as NodePath<types.ObjectExpression>, internal, true);
+      processObjectExpression(nodePath as NodePath<types.ObjectExpression>, internal, canHasRef);
       break;
     }
     case "FunctionExpression": {
@@ -602,7 +613,7 @@ export function ignoreParams(
   if (path.isAssignmentPattern()) {
     const left = path.get("left");
 
-    meshExpression(path.get("right"), internal);
+    meshExpression(path.get("right"), internal, true);
     ignoreParams(left, internal, false);
 
     /* istanbul ignore else */
@@ -683,7 +694,7 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
         const right = valuePath.get("right");
 
         ignoreParams(valuePath.get("left"), internal, ["id"]);
-        meshExpression(right, internal);
+        meshExpression(right, internal, false);
 
         if (
           (t.isIdentifier(property.key) && property.key.name.startsWith("$")) ||
@@ -739,7 +750,7 @@ export function reactiveArrayPattern(
 function meshForEachHeader(path: NodePath<types.ForInStatement | types.ForOfStatement>, internal: Internal) {
   const left = path.node.left;
 
-  meshExpression(path.get("right"), internal);
+  meshExpression(path.get("right"), internal, false);
   /* istanbul ignore else */
   if (t.isVariableDeclaration(left) && t.isVariableDeclarator(left.declarations[0])) {
     ignoreParams(path.get("left").get("declarations")[0].get("id"), internal, false);
@@ -754,17 +765,17 @@ function meshForHeader(path: NodePath<types.ForStatement>, internal: Internal) {
     const initPath = path.get("init");
 
     if (initPath.isExpression()) {
-      meshExpression(initPath, internal);
+      meshExpression(initPath, internal, false);
     } else {
       for (const declarationPath of initPath.get("declarations")) {
-        meshExpression(declarationPath.get("init"), internal);
+        meshExpression(declarationPath.get("init"), internal, false);
         ignoreParams(declarationPath.get("id"), internal, false);
       }
     }
   }
 
-  meshExpression(path.get("test"), internal);
-  meshExpression(path.get("update"), internal);
+  meshExpression(path.get("test"), internal, false);
+  meshExpression(path.get("update"), internal, false);
 }
 
 function meshClassBody(path: NodePath<types.ClassBody>, internal: Internal) {
@@ -780,7 +791,7 @@ function meshClassBody(path: NodePath<types.ClassBody>, internal: Internal) {
         const pos = value.node.loc;
 
         checkReactiveName(key, internal);
-        meshAllUnknown(value.get("arguments"), internal);
+        meshAllUnknown(value.get("arguments"), internal, true);
         value.replaceWith(
           ref(
             t.isExpression(refValue) ? refValue : null,
@@ -795,12 +806,12 @@ function meshClassBody(path: NodePath<types.ClassBody>, internal: Internal) {
         if (key.isIdentifier() && value.node !== null) {
           checkNonReactiveName(key, internal);
         }
-        meshExpression(item.get("value"), internal);
+        meshExpression(item.get("value"), internal, true);
       }
     } else {
       /* istanbul ignore else */
       if (item.isClassPrivateProperty()) {
-        meshExpression(item.get("value"), internal);
+        meshExpression(item.get("value"), internal, true);
       }
     }
   }
@@ -822,8 +833,9 @@ function procedureProcessObjectExpression(
         if (valuePath.isObjectExpression()) {
           procedureProcessObjectExpression(valuePath, internal, name ? (state[name] = {}) : {}, false);
         } else {
+          /* istanbul ignore else */
           if (valuePath.isExpression()) {
-            meshExpression(valuePath, internal);
+            meshExpression(valuePath, internal, canHasRef);
           }
         }
       };
@@ -831,11 +843,10 @@ function procedureProcessObjectExpression(
       // the property name is known in compile time
       if ((!property.node.computed || keyPath.isStringLiteral()) && valuePath.isExpression()) {
         const name = stringify(keyPath.node);
+        let isRef = false;
 
         if (processRefCall(valuePath, property.node, internal)) {
-          if (!canHasRef) {
-            err(Errors.RulesOfVasille, keyPath, "This object can not contain reactive fields", internal);
-          }
+          isRef = true;
           state[name] = 1;
         } else if (pathIsReactiveValue(valuePath)) {
           state[name] = 1;
@@ -843,6 +854,10 @@ function procedureProcessObjectExpression(
           meshValue(name);
           valuePath.replaceWith(internal.ref(valuePath.node, property.node, undefined, false));
           state[name] = 1;
+        }
+
+        if ((isRef || name.startsWith("$")) && !canHasRef) {
+          err(Errors.RulesOfVasille, keyPath, "This object can not contain reactive fields", internal);
         }
 
         if ((state[name] === 1) !== name.startsWith("$")) {
@@ -854,10 +869,10 @@ function procedureProcessObjectExpression(
           state[name] = 1;
         }
       } else {
+        meshValue(undefined);
         if (property.node.computed && internal.isComposing) {
           err(Errors.RulesOfVasille, prop.get("key"), "Computed property can not be used in object", internal);
         }
-        meshValue(undefined);
       }
     } else if (prop.isObjectMethod()) {
       if (
@@ -876,7 +891,7 @@ function procedureProcessObjectExpression(
         if (argumentPath.isObjectExpression()) {
           procedureProcessObjectExpression(argumentPath, internal, state, canHasRef);
         } else {
-          meshExpression(argumentPath, internal);
+          meshExpression(argumentPath, internal, canHasRef);
         }
       }
     }
@@ -906,14 +921,14 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
     case "DoWhileStatement": {
       const _path = path as NodePath<types.DoWhileStatement>;
 
-      meshExpression(_path.get("test"), internal);
+      meshExpression(_path.get("test"), internal, true);
       internal.stack.push();
       meshStatement(_path.get("body"), internal);
       internal.stack.pop();
       break;
     }
     case "ExpressionStatement":
-      meshExpression((path as NodePath<types.ExpressionStatement>).get("expression"), internal);
+      meshExpression((path as NodePath<types.ExpressionStatement>).get("expression"), internal, true);
       break;
 
     case "ForInStatement": {
@@ -950,7 +965,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
     case "IfStatement": {
       const _path = path as NodePath<types.IfStatement>;
 
-      meshExpression(_path.get("test"), internal);
+      meshExpression(_path.get("test"), internal, true);
       internal.stack.push();
       meshStatement(_path.get("consequent"), internal);
       internal.stack.pop();
@@ -965,23 +980,23 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
       break;
 
     case "ReturnStatement":
-      meshExpression((path as NodePath<types.ReturnStatement>).get("argument"), internal);
+      meshExpression((path as NodePath<types.ReturnStatement>).get("argument"), internal, true);
       break;
 
     case "SwitchStatement": {
       const _path = path as NodePath<types.SwitchStatement>;
 
-      meshExpression(_path.get("discriminant"), internal);
+      meshExpression(_path.get("discriminant"), internal, true);
       internal.stack.push();
       for (const _case of _path.get("cases")) {
-        meshExpression(_case.get("test"), internal);
+        meshExpression(_case.get("test"), internal, true);
         meshStatements(_case.get("consequent"), internal);
       }
       internal.stack.pop();
       break;
     }
     case "ThrowStatement":
-      meshExpression((path as NodePath<types.ThrowStatement>).get("argument"), internal);
+      meshExpression((path as NodePath<types.ThrowStatement>).get("argument"), internal, true);
       break;
 
     case "TryStatement":
@@ -1104,7 +1119,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
           const refValue = initPath.node.arguments[0];
           const pos = initPath.node.loc;
 
-          meshAllUnknown(initPath.get("arguments"), internal);
+          meshAllUnknown(initPath.get("arguments"), internal, false);
           checkReactiveName(idPath, internal);
           initPath.replaceWith(
             ref(refValue, internal, declaration.node, undefined, calls(initPath, ["safeState"], internal)),
@@ -1120,18 +1135,14 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
         }
         // calls context
         else if (calls(initPath, ["context"], internal)) {
-          meshAllUnknown(initPath.get("arguments"), internal);
+          meshAllUnknown(initPath.get("arguments"), internal, true);
           if (name && internal.appData) {
             internal.typeIdentifiersMapping.set(name, internal.appData.composeId(internal, name));
           }
         }
         // variable declaration
         else {
-          if (initPath.isObjectExpression() && t.isIdentifier(declaration.node.id) && _path.node.kind === "const") {
-            internal.stack.set(declaration.node.id.name, processObjectExpression(initPath, internal, false));
-          } else {
-            meshExpression(initPath, internal);
-          }
+          meshExpression(initPath, internal, true);
           ignoreParams(declaration.get("id"), internal, ["id", "array"]);
           idPath.isIdentifier() && checkNonReactiveName(idPath, internal);
         }
@@ -1141,7 +1152,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
     case "WhileStatement": {
       const _path = path as NodePath<types.WhileStatement>;
 
-      meshExpression(_path.get("test"), internal);
+      meshExpression(_path.get("test"), internal, true);
       internal.stack.push();
       meshStatement(_path.get("body"), internal);
       internal.stack.pop();
@@ -1157,12 +1168,15 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
         const resolvedPath = resolveSourceFilePath(sourcePath, internal);
 
         // Handle named re-exports: export { A, B as C } from './module'
+        /* istanbul ignore else */
         if (exportDecl.specifiers.length > 0) {
           for (const specifier of exportDecl.specifiers) {
+            /* istanbul ignore else */
             if (t.isExportSpecifier(specifier)) {
               const exportedId = specifier.exported;
               const localId = specifier.local;
 
+              /* istanbul ignore else */
               if (t.isIdentifier(exportedId) && t.isIdentifier(localId)) {
                 const externalId = `${resolvedPath}:${exportedId.name}`;
 
@@ -1205,6 +1219,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
       /* istanbul ignore else */
       if (idPath.isIdentifier()) {
         checkNonReactiveName(idPath, internal);
+        /* istanbul ignore else */
         if (internal.appData) {
           internal.typeIdentifiersMapping.set(idPath.node.name, internal.appData.composeId(internal, idPath.node.name));
         }
@@ -1219,7 +1234,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
 
       // export default 23;
       if (declarationPath.isExpression()) {
-        meshExpression(declarationPath, internal);
+        meshExpression(declarationPath, internal, true);
       }
       // export default function ..
       else if (declarationPath.isFunctionDeclaration()) {
@@ -1299,7 +1314,7 @@ export function meshFunction(
   const bodyPath = path.get("body");
 
   if (bodyPath.isExpression()) {
-    meshExpression(bodyPath, internal);
+    meshExpression(bodyPath, internal, true);
   } else {
     /* istanbul ignore else */
     if (bodyPath.isBlockStatement()) {
@@ -1375,7 +1390,7 @@ export function composeExpression(path: NodePath<types.Expression | null | undef
       ]);
       break;
     default:
-      meshExpression(path, internal);
+      meshExpression(path, internal, true);
   }
 }
 
@@ -1445,7 +1460,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
           const callPath = declaration.get("init") as NodePath<types.CallExpression>;
 
           reactiveArrayPattern(declaration.get("id"), internal);
-          meshAllUnknown(callPath.get("arguments"), internal);
+          meshAllUnknown(callPath.get("arguments"), internal, false);
 
           /* istanbul ignore else */
           if (internal.devLayer) {
@@ -1470,7 +1485,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
           const callPath = declaration.get("init") as NodePath<types.CallExpression>;
 
           callPath.node.arguments.unshift(ctx);
-          meshAllUnknown(callPath.get("arguments"), internal);
+          meshAllUnknown(callPath.get("arguments"), internal, false);
           meshInit = false;
           if (t.isIdentifier(id)) {
             checkNonReactiveName(declaration.get("id") as NodePath<types.Identifier>, internal);
@@ -1575,7 +1590,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
             }
             // let $x = y.z;
             else {
-              meshExpression(path, internal);
+              meshExpression(path, internal, false);
               meshInit = false;
 
               if (kind === "let" && t.isIdentifier(id) && id.name.startsWith("$")) {
@@ -1591,7 +1606,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
             if (initPath.isObjectExpression()) {
               processObjectExpression(initPath, internal, false);
             } else {
-              meshExpression(initPath, internal);
+              meshExpression(initPath, internal, true);
             }
 
             if (idPath.isIdentifier() && idPath.node.name.startsWith("$")) {
@@ -1630,7 +1645,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
               meshInit = false;
             } else {
               internal.autoUnwrapThrows = true;
-              meshExpression(initPath, internal);
+              meshExpression(initPath, internal, true);
               internal.autoUnwrapThrows = false;
               meshInit = false;
             }
@@ -1646,6 +1661,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
               const key = item.key;
               const renamed = item.value;
 
+              /* istanbul ignore else */
               if (t.isIdentifier(renamed)) {
                 if (!renamed.name.startsWith("$")) {
                   err(
@@ -1673,14 +1689,14 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
 
                   newLine.loc = property.node.loc;
                   path.insertBefore(newLine);
+                } else {
+                  err(
+                    Errors.RulesOfVasille,
+                    property,
+                    "Reactive field can not be extracted from a reactive object using destruction",
+                    internal,
+                  );
                 }
-              } else {
-                err(
-                  Errors.RulesOfVasille,
-                  property,
-                  "Reactive field can not be extracted from a reactive object using destruction",
-                  internal,
-                );
               }
             }
           }
@@ -1689,7 +1705,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
           path.remove();
         }
         if (meshInit) {
-          meshExpression(declaration.get("init"), internal);
+          meshExpression(declaration.get("init"), internal, true);
         }
         if (meshId) {
           ignoreParams(declaration.get("id"), internal, ["id", "array"]);

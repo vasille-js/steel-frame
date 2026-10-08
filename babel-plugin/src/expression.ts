@@ -278,10 +278,10 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
         path.node.arguments.length === 1 &&
         t.isExpression(path.node.arguments[0])
       ) {
-        meshExpression(path.get("arguments")[0] as NodePath<types.Expression>, search.external);
+        meshExpression(path.get("arguments")[0] as NodePath<types.Expression>, search.external, false);
         path.replaceWith(path.node.arguments[0]);
       } else if (!search.external.stateOnly && isDiCall(path, search.external)) {
-        meshAllUnknown(path.get("arguments"), search.external);
+        meshAllUnknown(path.get("arguments"), search.external, false);
         path.node.arguments.unshift(ctx);
       } else {
         const hint = calledFn(path, hintFunctions, search.external);

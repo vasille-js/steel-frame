@@ -143,3 +143,35 @@ it("dependency reexport check", function () {
   runJsxTest(__dirname, "DependencyReexport", { appData });
   throwTest(__dirname, "dependency-reexport-check", 'Missing dependencies: "unexisting"\n', true, { appData });
 });
+
+it("static live value", function () {
+  throwTest(__dirname, "static-live-value", "Computed expression has static value. Make it non reactive");
+});
+
+it("rest element in reactive destruction", function () {
+  throwTest(__dirname, "rest-in-reactive-destruction", "Rest element is not allowed in object destructuring");
+});
+
+it("destruction missing renaming", function () {
+  throwTest(__dirname, "destruction-missing-renaming", "Reactive object destruction required renaming of fields.");
+});
+
+it("destruction extracts reactive", function () {
+  throwTest(
+    __dirname,
+    "destruction-extracts-reactive",
+    "Reactive field can not be extracted from a reactive object using destruction",
+  );
+});
+
+it("computed property restriction", function () {
+  throwTest(__dirname, "computed-property", "Computed property can not be used in object");
+});
+
+it("restricted reference in object", function () {
+  throwTest(__dirname, "restricted-ref-in-object", "This object can not contain reactive fields");
+});
+
+it("restricted ref() in object", function () {
+  throwTest(__dirname, "restricted-ref-in-object-2", "This object can not contain reactive fields");
+});

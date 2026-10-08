@@ -1,8 +1,9 @@
 import { compose, ref } from "steel-frame";
 
-const $obj = ref({
+const o = {
   $nested: ref(2),
-});
+};
+const $obj = ref(o);
 
 const C = compose(() => {
   let $a = 0;

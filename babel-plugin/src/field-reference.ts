@@ -84,6 +84,7 @@ export function toFieldRef(
         .filter(item => !pathIsReactiveValue(item))
         .filter(item => !exprCall(item, item.node, internal, {}, item.node, false)),
       internal,
+      false,
     );
 
     if (props.length === 1) {
@@ -131,9 +132,9 @@ export function processDebounceRefCall(
 ) {
   const args = path.get("arguments");
   if (args.length === 2 && pathIsReactiveValue(args[0])) {
-    meshAllUnknown([args[1]], internal);
+    meshAllUnknown([args[1]], internal, false);
     if (args[0].isMemberExpression()) {
-      meshExpression(args[0].get("object"), internal);
+      meshExpression(args[0].get("object"), internal, false);
     }
     path.node.arguments.unshift(ctx);
 

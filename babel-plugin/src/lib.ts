@@ -279,7 +279,7 @@ export function processModelCall(
   if (!isConst) {
     err(Errors.RulesOfVasille, path, `${type} models must be declared as constants`, internal);
   }
-  meshAllUnknown(path.get("arguments"), internal);
+  meshAllUnknown(path.get("arguments"), internal, true);
   path.replaceWith(
     type === "Map"
       ? mapModel(args, usage, internal, name)

@@ -49,8 +49,8 @@ export function meshAssigment(
   const binary = assignmentToBinaryOperator(path.node.operator);
   const logical = assignmentToLogicalOperator(path.node.operator);
 
-  meshExpression(left.get("object"), internal);
-  meshExpression(right, internal);
+  meshExpression(left.get("object"), internal, false);
+  meshExpression(right, internal, false);
 
   /* istanbul ignore else */
   if (!t.isPrivateName(property)) {
