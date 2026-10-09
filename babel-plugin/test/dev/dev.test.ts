@@ -95,3 +95,7 @@ it("prompt", function () {
 it("safe", function () {
   runJsxTest(__dirname, "safe", { devLayer: true });
 });
+
+it("custom model", function () {
+  runTest(__dirname, "custom-model", { devLayer: true });
+});

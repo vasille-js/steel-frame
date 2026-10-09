@@ -60,9 +60,11 @@ export function resolveSourceFilePath(sourcePath: string, internal: Internal): s
   else {
     const packageJson = module.findPackageJSON(sourcePath, __filename);
     const packageJsonContent = packageJson && JSON.parse(fs.readFileSync(packageJson, "utf8"));
+    const relativePath = packageJsonContent?.exports?.browser ?? packageJsonContent?.exports?.["."]?.browser;
 
-    if (packageJsonContent?.exports?.browser) {
-      resolved = removeExtension(path.join(packageJsonContent.name, packageJsonContent.exports.browser));
+    /* istanbul ignore else */
+    if (relativePath) {
+      resolved = removeExtension(path.join(packageJsonContent.name, relativePath));
     }
   }
 
@@ -242,10 +244,7 @@ function throwOnAutoUnwrap(path: NodePath<types.Node | null | undefined>, intern
     err(
       Errors.RulesOfVasille,
       path,
-      [
-        'The reactivity breaks here, use unwrap "hint" if is special,',
-        "or use a variable name which start with $",
-      ].join(" "),
+      ["The reactivity breaks here, unwrap intentionally the reactive value, or use non reactive one"].join(" "),
       internal,
     );
   }
@@ -356,15 +355,6 @@ export function meshExpression(
           err(Errors.IncompatibleContext, path, "The router is not available in stores", internal);
         }
       }
-      // dependency injection
-      else if (
-        internal.isComposing &&
-        !internal.stateOnly &&
-        isDiCall(path, internal) &&
-        path.node.arguments[0] === ctx
-      ) {
-        meshAllUnknown(path.get("arguments"), internal, true);
-      }
       // abortSignal
       else if (internal.isComposing && calls(path, ["abortSignal"], internal)) {
         meshAllUnknown(path.get("arguments"), internal, false);
@@ -383,6 +373,7 @@ export function meshExpression(
         meshAllUnknown(path.get("arguments"), internal, true);
         path.node.arguments.unshift(ctx);
         if (internal.devLayer) {
+          /* istanbul ignore else */
           if (path.node.arguments.length < 4) {
             path.node.arguments.push(t.numericLiteral(0));
           }
@@ -467,6 +458,7 @@ export function meshExpression(
       }
 
       if (memberIsIValue(node)) {
+        /* istanbul ignore else */
         if (!nodeIsMeshed(path)) {
           throwOnAutoUnwrap(path, internal);
           if (exprIsSure(path, internal)) {
@@ -1136,6 +1128,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
         // calls context
         else if (calls(initPath, ["context"], internal)) {
           meshAllUnknown(initPath.get("arguments"), internal, true);
+          /* istanbul ignore else */
           if (name && internal.appData) {
             internal.typeIdentifiersMapping.set(name, internal.appData.composeId(internal, name));
           }

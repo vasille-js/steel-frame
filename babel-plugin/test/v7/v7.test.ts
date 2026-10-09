@@ -175,3 +175,28 @@ it("restricted reference in object", function () {
 it("restricted ref() in object", function () {
   throwTest(__dirname, "restricted-ref-in-object-2", "This object can not contain reactive fields");
 });
+
+it("rest element in internal slot", function () {
+  throwTest(__dirname, "rest-in-internal-slot", "Rest element can not be used in slots of internal components", true);
+});
+
+it("destruction of internal slot props", function () {
+  throwTest(__dirname, "destruction-of-slot-props", "Move destruction inside the function body", true);
+});
+
+it("safeInit with no args", function () {
+  throwTest(__dirname, "safe-init-no-args", "safeInit takes only one argument");
+});
+
+it("throws auto-unwrap error", function () {
+  throwTest(
+    __dirname,
+    "autounwrap",
+    "The reactivity breaks here, unwrap intentionally the reactive value, or use non reactive one",
+    true,
+  );
+});
+
+it("rest element in ref call", function () {
+  throwTest(__dirname, "rest-in-ref", "Invalid arguments: expected expression");
+});

@@ -8,6 +8,10 @@ it("autoremove unused key", function () {
   runTest(__dirname, "autoremove-key");
 });
 
+it("computed key to *", function () {
+  runTest(__dirname, "computed-key");
+});
+
 it("object method", function () {
   throwTest(__dirname, "object-method", "Object methods not supported here");
 });
