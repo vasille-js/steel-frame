@@ -1,9 +1,0 @@
-/.idea
-*.tgz
-/src
-/tsconfig*.json
-*.tsbuildinfo
-/.*
-qodana.yaml
-/test
-/coverage

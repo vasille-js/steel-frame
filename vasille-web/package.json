@@ -1,0 +1,65 @@
+{
+  "name": "vasille-web",
+  "version": "7.0.0-rc.3",
+  "description": "The same devkit which is designed to build fault tolerant frontends.",
+  "main": "index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./lib/index.js",
+      "browser": "./lib/index.js",
+      "node": "./lib/index.js"
+    },
+    "./jsx-runtime": {
+      "types": "./types/jsx-runtime.d.ts",
+      "import": "./lib/jsx-runtime.js",
+      "browser": "./lib/jsx-runtime.js",
+      "node": "./lib/jsx-runtime.js"
+    },
+    "./dev": {
+      "types": "./types/dev.d.ts",
+      "import": "./lib/dev.js",
+      "browser": "./lib/dev.js",
+      "node": "./lib/dev.js"
+    }
+  },
+  "scripts": {
+    "prepack": "cp -f ../README.md ./README.md",
+    "prettier": "prettier src --write",
+    "prebuild": "rm -rf lib types",
+    "build": "tsc --build tsconfig.json"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vasille-js/vasille-js.git"
+  },
+  "keywords": [
+    "frontend",
+    "dx",
+    "fast",
+    "simple",
+    "secure"
+  ],
+  "author": "lixcode",
+  "license": "LGPL-2.1-only",
+  "bugs": {
+    "url": "https://github.com/vasille-js/vasille-js/issues"
+  },
+  "homepage": "https://github.com/vasille-js/vasille-js#readme",
+  "dependencies": {
+    "csstype": "^3.1.3",
+    "vasille": "^7.0.0-rc.9",
+    "vasille-context": "^7.0.0-rc.1",
+    "vasille-css": "^7.0.0-rc.3",
+    "vasille-jsx": "^7.0.0-rc.7",
+    "vasille-router": "^7.0.0-rc.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/web": "^0.0.256",
+    "prettier": "^3.6.2",
+    "typescript": "^5.8.3"
+  }
+}
