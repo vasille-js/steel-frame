@@ -1,4 +1,4 @@
-import { compose, ref as VasilleRef, safeInit as VasilleSafeInit, safeLive as VasilleSafeExpr, safeState as VasilleSafeRef } from "vasille-web";
+import { compose, live, ref as VasilleRef, safeInit as VasilleSafeInit, safeLive as VasilleSafeExpr, safeState as VasilleSafeRef } from "vasille-web";
 const C1 = compose((Vasille, props) => {
   Vasille.tag("div", {}, Vasille => {
     Vasille.text(props.required);
@@ -32,5 +32,9 @@ const C2 = compose(Vasille => {
   C1({
     required: 1,
     "$optional": VasilleSafeRef(() => throwNow() + 3, Vasille)
+  }, Vasille);
+  C1({
+    required: 1,
+    "$optional": VasilleSafeRef(() => throwNow(), Vasille)
   }, Vasille);
 });

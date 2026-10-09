@@ -79,7 +79,7 @@ export function memberIsIValueInExpr(
   path: NodePath<types.MemberExpression | types.OptionalMemberExpression>,
   search: Search,
 ) {
-  return !hasBreakPoint(path, search.external) && memberIsIValue(path.node);
+  return hasBreakPoint(path, search.external) && memberIsIValue(path.node);
 }
 
 export function memberIsSure(path: NodePath<types.Expression | null | undefined>, internal: Internal) {
@@ -108,12 +108,6 @@ export function exprIsSure(path: NodePath<types.Expression | null | undefined>, 
   );
 }
 
-function meshMember(path: NodePath<types.MemberExpression | types.OptionalMemberExpression>, internal: Internal) {
-  if (memberIsIValue(path.node) && !nodeIsMeshed(path)) {
-    path.replaceWith(t.memberExpression(path.node, V, false, true));
-  }
-}
-
 function meshLValue(
   path: NodePath<types.LVal | types.OptionalMemberExpression | null | undefined>,
   internal: Internal,
@@ -122,8 +116,6 @@ function meshLValue(
     meshIdentifier(path, internal);
   } else if (path.isMemberExpression() || path.isOptionalMemberExpression()) {
     const object = path.get("object") as NodePath<unknown>;
-
-    meshMember(path, internal);
 
     /* istanbul ignore else */
     if (object.isLVal()) {
@@ -308,12 +300,7 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
       const right = path.get("right");
 
       if (left.isMemberExpression() && hasBreakPoint(left, search.external) && !pathIsReactiveValue(left)) {
-        err(
-          Errors.RulesOfVasille,
-          left,
-          "Expression contains a breakpoint and will break the reactivity",
-          search.external,
-        );
+        err(Errors.RulesOfVasille, left, "This assignment breaks the reactivity", search.external);
       }
       if (left.isMemberExpression() && !exprIsSure(left, search.external)) {
         meshAssigment(path, left, right, left.node.property, search.external);

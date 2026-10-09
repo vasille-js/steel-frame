@@ -1,4 +1,4 @@
-import { compose } from "steel-frame";
+import { compose, live } from "steel-frame";
 
 const C1 = compose<{ required: number; optional?: number; $optional?: number }>(props => {
   <div>
@@ -20,4 +20,5 @@ const C2 = compose(() => {
   <C1 required={throwNow()} optional={throwNow()} />;
   <C1 required={1} $optional={throwNow() + $a} />;
   <C1 required={1} $optional={throwNow() + 3} />;
+  <C1 required={1} $optional={live(throwNow())} />;
 });

@@ -36,7 +36,7 @@ import { stringify } from "./utils";
 import { nodeToStaticPosition } from "./transformer";
 import { fieldDataToObjectExpression, obtainInterfaceData, processInterface } from "./process-types";
 import { meshAssigment } from "./operators";
-import { processDebounceRefCall, processFieldRefCall, toFieldRef } from "./field-reference";
+import { hasBreakPoint, processDebounceRefCall, processFieldRefCall, toFieldRef } from "./field-reference";
 import path from "path";
 import module from "node:module";
 import fs from "fs";
@@ -409,6 +409,10 @@ export function meshExpression(
       const path = nodePath as NodePath<types.AssignmentExpression>;
       const left = path.get("left");
       const right = path.get("right");
+
+      if (left.isMemberExpression() && hasBreakPoint(left, internal) && !pathIsReactiveValue(left)) {
+        err(Errors.RulesOfVasille, left, "This assignment breaks the reactivity", internal);
+      }
 
       if (left.isMemberExpression() && !exprIsSure(left, internal)) {
         const property = left.node.property;

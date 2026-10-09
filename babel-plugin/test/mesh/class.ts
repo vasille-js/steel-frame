@@ -26,7 +26,7 @@ class Test2 {
   public $c: number;
 
   public constructor({ $3 }: { $3: number }) {
-    this.$b = 2;
+    this["$b"] = 2;
     this.$c = $3;
   }
 

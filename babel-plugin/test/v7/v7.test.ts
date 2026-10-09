@@ -138,10 +138,13 @@ it("has local dependency flow", function () {
 
 it("dependency reexport check", function () {
   const appData = new AppData();
+  const mapping = new Map<string, string>();
 
-  runJsxTest(__dirname, "DependencyStart", { appData });
+  runJsxTest(__dirname, "DependencyStart", { appData, typeIdentifiersMapping: mapping });
   runJsxTest(__dirname, "DependencyReexport", { appData });
   throwTest(__dirname, "dependency-reexport-check", 'Missing dependencies: "unexisting"\n', true, { appData });
+
+  expect(mapping.get("Reference")).toBe("vasille/lib/index:Reference");
 });
 
 it("static live value", function () {
@@ -199,4 +202,20 @@ it("throws auto-unwrap error", function () {
 
 it("rest element in ref call", function () {
   throwTest(__dirname, "rest-in-ref", "Invalid arguments: expected expression");
+});
+
+it("restricted member access in expression", function () {
+  throwTest(
+    __dirname,
+    "restricted-member-access",
+    "Reactive member access are not allowed in bind/computed expressions.",
+  );
+});
+
+it("breaks reactivity in watch", function () {
+  throwTest(__dirname, "reactivity-break", "This assignment breaks the reactivity");
+});
+
+it("breaks reactivity in function", function () {
+  throwTest(__dirname, "reactivity-break-2", "This assignment breaks the reactivity");
 });

@@ -85,7 +85,7 @@ export function processCalculateCall(
     );
 
     call.params = [...exprData.found.values()].map(item => item.paramName);
-    path.node.arguments.unshift(internal.isComposing ? ctx : t.nullLiteral());
+    path.node.arguments.unshift(ctx);
     path.node.arguments.push(t.arrayExpression([...exprData.found.values()].map(item => item.node)));
 
     if (internal.devLayer) {
@@ -185,7 +185,7 @@ export function exprCall(
           argPath.node,
         ),
       );
-      expr.arguments.unshift(internal.isComposing ? ctx : t.nullLiteral());
+      expr.arguments.unshift(ctx);
       expr.arguments.push(t.arrayExpression([...exprData.found.values()].map(item => item.node)));
 
       if (internal.devLayer) {
