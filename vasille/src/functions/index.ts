@@ -10,7 +10,7 @@ export {
     MapModelView,
     ZombieFn as Zombie,
 } from "./components.js";
-export { view, mount, model, store, Model, createModel, type Composed, type CompositionProps } from "./compose.js";
+export { view, mountApp, model, store, Model, createModel, type Composed, type CompositionProps } from "./compose.js";
 export { awaited, abortSignal } from "./library.js";
 export {
     ref,

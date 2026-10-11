@@ -1,10 +1,10 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { routerApp } from "vasille-ssg";
 import { readFile } from "node:fs/promises";
 import index from "./index.js";
 import embed from "./embed.js";
 import fileHtml from "./file-html.js";
+import { routerApp } from "../../../src/ssg/index.ts";
 
 it("router test", async () => {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));

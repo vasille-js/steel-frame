@@ -1,9 +1,8 @@
-import { routerApp } from "vasille-ssg";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { ScreenProps } from "vasille-router";
 import { fileURLToPath } from "node:url";
-import type { Mode } from "../src/router.ts";
+import { ScreenProps } from "vasille";
+import { Mode, routerApp } from "../../src/ssg/router.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

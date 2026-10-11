@@ -1,28 +1,20 @@
-import {
-    Answer,
-    QueryParams,
-    Router as AbstractRouter,
-    RouterInitialization,
-    Routing,
-    ScreenProps,
-} from "vasille-router";
-import { Element, Node, Runner, TagOptions } from "./runner.js";
-import { App, Fragment } from "vasille";
+import { Element, Node, SsgRunner, SsgTagOptions } from "./runner.js";
 import { waitForAsyncData } from "./awaited.js";
 import { mountStyles } from "./css.js";
+import { Fragment, ScreenProps, Answer, QueryParams, Router, RouterInitialization, Routing, AppNode } from "vasille";
 
 export type Mode = "html" | "markdown" | "git-doc";
 
-export class Router extends AbstractRouter<Node, Element, TagOptions, string, {}, []> {
-    protected readonly runner: Runner;
-    protected readonly node: Fragment<Node, Element, TagOptions>;
+export class SsgRouter extends Router<Node, Element, SsgTagOptions, string, {}, []> {
+    protected readonly runner: SsgRunner;
+    protected readonly node: Fragment<Node, Element, SsgTagOptions>;
     public readonly html: boolean;
     public readonly markdown: boolean;
 
     public constructor(
-        runner: Runner,
-        node: Fragment<Node, Element, TagOptions>,
-        init: RouterInitialization<Node, Element, TagOptions, string, {}>,
+        runner: SsgRunner,
+        node: Fragment<Node, Element, SsgTagOptions>,
+        init: RouterInitialization<Node, Element, SsgTagOptions, string, {}>,
         mode: Mode,
     ) {
         super(init);
@@ -37,7 +29,7 @@ export class Router extends AbstractRouter<Node, Element, TagOptions, string, {}
     }
 
     public async renderStatic(
-        routing: Routing<Node, Element, TagOptions, string, {}>,
+        routing: Routing<Node, Element, SsgTagOptions, string, {}>,
         prefix: string,
         routes: Record<string, string>,
     ) {
@@ -77,7 +69,7 @@ export class Router extends AbstractRouter<Node, Element, TagOptions, string, {}
     }
 
     protected async loadTarget<Route extends string>(
-        target: Answer<Node, Element, TagOptions, Route, {}>,
+        target: Answer<Node, Element, SsgTagOptions, Route, {}>,
         props: ScreenProps<Route>,
     ): Promise<void> {
         this.runner.head.children.splice(0);
@@ -88,7 +80,7 @@ export class Router extends AbstractRouter<Node, Element, TagOptions, string, {}
     }
 
     protected async renderScreen<Props>(
-        screen: (props: Props, ctx: Fragment<Node, Element, TagOptions>) => void | Promise<void>,
+        screen: (props: Props, ctx: Fragment<Node, Element, SsgTagOptions>) => void | Promise<void>,
         props: Props,
     ): Promise<void> {
         await screen(props, this.node);
@@ -97,13 +89,13 @@ export class Router extends AbstractRouter<Node, Element, TagOptions, string, {}
     }
 }
 
-export function routerApp(init: RouterInitialization<Node, Element, TagOptions, string, {}>, mode: Mode = "html") {
+export function routerApp(init: RouterInitialization<Node, Element, SsgTagOptions, string, {}>, mode: Mode = "html") {
     const head = new Element("head", {});
     const body = new Element("body", {});
-    const runner = new Runner(head, body);
-    const app = new App(body, runner);
-    const fragment = new Fragment<Node, Element, TagOptions>(runner, 1);
+    const runner = new SsgRunner(head, body);
+    const app = new AppNode(body, runner);
+    const fragment = new Fragment<Node, Element, SsgTagOptions>(runner, 1);
 
     app.child(fragment);
-    return new Router(runner, fragment, init, mode);
+    return new SsgRouter(runner, fragment, init, mode);
 }

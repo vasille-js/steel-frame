@@ -119,7 +119,7 @@ export {
     devEnsure,
     devExpr,
     devModel,
-    devMount,
+    devMountApp,
     DevSlot,
     devView,
     devMapModel,

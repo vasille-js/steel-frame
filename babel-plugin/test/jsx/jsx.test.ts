@@ -72,10 +72,6 @@ it("expected event handler error", function () {
   throwTest(__dirname, "expected-event-handler", "Expected event handler", true);
 });
 
-it("method in class object error", function () {
-  throwTest(__dirname, "method-class-object", "Methods are not allowed here", true);
-});
-
 it("method in style object error", function () {
   throwTest(__dirname, "method-style-object", "Methods are not allowed here", true);
 });

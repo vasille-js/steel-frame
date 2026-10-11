@@ -1,10 +1,11 @@
-import type { TagOptions as WebTagOptions } from "vasille/web-runner";
-import { TextNode as AbstractTextNode, Tag as AbstractTag, Runner as IRunner, IValue } from "vasille";
 import escapeHTML from "escape-html";
-import { CssStyleInjector } from "vasille-css";
+import { WebTagOptions } from "../web/runner/runner.js";
+import { IRunner, IValue, Tag, TextNode } from "vasille";
+import { CssStyleInjector } from "../web/css/index.js";
+import { ClassItem } from "../web/jsx/jsx-runtime.js";
 
-export type TagOptions = Omit<WebTagOptions, "slot" | "events" | "callback"> & {
-    slot?(ctx: Tag): void;
+export type SsgTagOptions = Omit<WebTagOptions, "slot" | "events" | "callback"> & {
+    slot?(ctx: SsgTag): void;
 };
 
 export abstract class Node {
@@ -74,18 +75,28 @@ export class Text extends Node {
     }
 }
 
+function addClass(classes: string[], item: ClassItem | IValue<ClassItem, unknown>) {
+    if (item instanceof IValue) {
+        addClass(classes, item.V);
+    } else if (typeof item === "string") {
+        classes.push(item);
+    } else if (item instanceof CssStyleInjector) {
+        classes.push(item.inject());
+    }
+}
+
 export class Element extends Node {
     public readonly name: string;
-    public readonly options: TagOptions;
+    public readonly options: SsgTagOptions;
 
-    public constructor(name: string, options: TagOptions) {
+    public constructor(name: string, options: SsgTagOptions) {
         super();
         this.name = name;
         this.options = options;
 
-        if(options.c) {
+        if (options.c) {
             for (const item of options.c) {
-                if(item instanceof CssStyleInjector) {
+                if (item instanceof CssStyleInjector) {
                     item.inject();
                 }
             }
@@ -148,24 +159,7 @@ export class Element extends Node {
             }
 
             for (const item of this.options.c) {
-                if (item instanceof IValue) {
-                    classes.push(item.V);
-                } else if (typeof item === "string") {
-                    classes.push(item);
-                } else if (item instanceof CssStyleInjector) {
-                    classes.push(item.inject());
-                } else {
-                    /* istanbul ignore else */
-                    if (item) {
-                        for (const [name, value] of Object.entries(item)) {
-                            const enabled = value instanceof IValue ? value.V : value;
-
-                            if (enabled) {
-                                classes.push(name);
-                            }
-                        }
-                    }
-                }
+                addClass(classes, item);
             }
 
             attrs.class = classes.join(" ");
@@ -359,7 +353,7 @@ export class Element extends Node {
     }
 }
 
-export class TextNode extends AbstractTextNode<Node, Element, TagOptions> {
+export class SsgTextNode extends TextNode<Node, Element, SsgTagOptions> {
     protected node: Text;
 
     public compose() {
@@ -372,8 +366,8 @@ export class TextNode extends AbstractTextNode<Node, Element, TagOptions> {
     }
 }
 
-export class Tag extends AbstractTag<Node, Element, TagOptions> {
-    public node: Element;
+export class SsgTag extends Tag<Node, Element, SsgTagOptions, SsgRunner> {
+    declare public node: Element;
 
     public compose() {
         this.node = new Element(this.name, this.options);
@@ -381,23 +375,19 @@ export class Tag extends AbstractTag<Node, Element, TagOptions> {
         this.applyOptions(this.options);
     }
 
-    protected applyOptions(options: TagOptions) {
+    protected applyOptions(options: SsgTagOptions) {
         options.slot?.(this);
     }
 }
 
-class HeadTag extends Tag {
-    public readonly runner: Runner;
-
+class HeadTag extends SsgTag {
     public compose(): void {
         this.node = this.runner.head;
         this.applyOptions(this.options);
     }
 }
 
-class BodyTag extends Tag {
-    public readonly runner: Runner;
-
+class BodyTag extends SsgTag {
     public compose(): void {
         this.node = this.runner.body;
         for (const key in this.options) {
@@ -407,7 +397,7 @@ class BodyTag extends Tag {
     }
 }
 
-export class Runner implements IRunner<Node, Element, TagOptions> {
+export class SsgRunner implements IRunner<Node, Element, SsgTagOptions> {
     head: Element;
     body: Element;
 
@@ -429,16 +419,16 @@ export class Runner implements IRunner<Node, Element, TagOptions> {
         node.appendChild(child);
     }
 
-    textNode(deep: number, text: unknown): AbstractTextNode<Node, Element, TagOptions> {
-        return new TextNode({ text }, this, deep);
+    textNode(deep: number, text: unknown): TextNode<Node, Element, SsgTagOptions> {
+        return new SsgTextNode({ text }, this, deep);
     }
 
     tag(
         deep: number,
         tagName: string,
-        input: TagOptions,
-        cb?: ((ctx: AbstractTag<Node, Element, TagOptions>) => void) | undefined,
-    ): AbstractTag<Node, Element, TagOptions> {
+        input: SsgTagOptions,
+        cb?: ((ctx: Tag<Node, Element, SsgTagOptions>) => void) | undefined,
+    ): Tag<Node, Element, SsgTagOptions> {
         if (cb) {
             input.slot = cb;
         }
@@ -447,6 +437,6 @@ export class Runner implements IRunner<Node, Element, TagOptions> {
             ? new HeadTag(input, this, tagName, deep)
             : tagName === "body"
               ? new BodyTag(input, this, tagName, deep)
-              : new Tag(input, this, tagName, deep);
+              : new SsgTag(input, this, tagName, deep);
     }
 }

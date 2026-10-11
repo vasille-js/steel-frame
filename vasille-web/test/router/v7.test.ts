@@ -1,8 +1,7 @@
 import { page } from "./page.js";
-import { routeApp, Router } from "../src/web/router.js";
-import { Fragment } from "vasille";
-import { TagOptions } from "vasille/web-runner";
-import { Slot } from "vasille-jsx";
+import { Fragment, Slot } from "vasille";
+import { WebRouter, webRouterApp } from "../../src/web/router/router.ts";
+import { WebTagOptions } from "../../src/web/runner/runner.ts";
 
 it("initialize router", function (done) {
     const window = page();
@@ -10,13 +9,13 @@ it("initialize router", function (done) {
     let index = 0;
     let screenCalled = 0;
     let initialized = 0;
-    let router!: Router<string>;
+    let router!: WebRouter<string>;
 
-    routeApp(body, window as unknown as Window, window.location, {
+    webRouterApp(body, window as unknown as Window, window.location, {
         routes: {
             "/": {
                 screen: (props, ctx) => {
-                    if ("router" in ctx.runner && ctx.runner.router instanceof Router) {
+                    if ("router" in ctx.runner && ctx.runner.router instanceof WebRouter) {
                         router = ctx.runner.router;
                     }
                     screenCalled = ++index;
@@ -47,13 +46,13 @@ it("router initialization fails", function (done) {
     const body = window.document.body;
     let screenCalled = 0;
     let initialized = 0;
-    let router!: Router<string>;
+    let router!: WebRouter<string>;
 
-    routeApp(body, window as unknown as Window, window.location, {
+    webRouterApp(body, window as unknown as Window, window.location, {
         routes: {
             "/": {
                 screen: (props, ctx) => {
-                    if ("router" in ctx.runner && ctx.runner.router instanceof Router) {
+                    if ("router" in ctx.runner && ctx.runner.router instanceof WebRouter) {
                         router = ctx.runner.router;
                     }
                     screenCalled++;
@@ -82,14 +81,14 @@ it("router initialization fails", function (done) {
 it("router with wrapper", function (done) {
     const window = page();
     const body = window.document.body;
-    let router!: Router<string>;
+    let router!: WebRouter<string>;
 
-    routeApp(body, window as unknown as Window, window.location, {
+    webRouterApp(body, window as unknown as Window, window.location, {
         routes: {
             "/": {
                 screen: (props, ctx) => {
                     ctx.tag("div", { c: ["screen"] });
-                    if ("router" in ctx.runner && ctx.runner.router instanceof Router) {
+                    if ("router" in ctx.runner && ctx.runner.router instanceof WebRouter) {
                         router = ctx.runner.router;
                     }
                     return Promise.resolve();
@@ -103,8 +102,8 @@ it("router with wrapper", function (done) {
             },
         },
         wrapper(
-            data: { slot(data: object, ctx: Fragment<Node, Element, TagOptions>): void },
-            ctx: Fragment<Node, Element, TagOptions>,
+            data: { slot(data: object, ctx: Fragment<Node, Element, WebTagOptions>): void },
+            ctx: Fragment<Node, Element, WebTagOptions>,
         ) {
             ctx.tag("div", { c: ["wrapper"] }, ctx => {
                 Slot({ model: data.slot }, ctx);

@@ -3,7 +3,7 @@ import { awaited, If, page } from "steel-frame";
 export default page(async () => {
     const [$err, $data] = awaited(
         () =>
-            new Promise(resolve => {
+            new Promise<number>(resolve => {
                 throw 1;
             }),
     );

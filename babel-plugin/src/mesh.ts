@@ -250,6 +250,19 @@ function throwOnAutoUnwrap(path: NodePath<types.Node | null | undefined>, intern
   }
 }
 
+export function checkStyleUsage(
+  path: NodePath<types.MemberExpression | types.OptionalMemberExpression>,
+  internal: Internal,
+) {
+  const object = path.get("object");
+  const node = path.node;
+  const property = node.property;
+
+  if (object.isIdentifier() && internal.stack.get(object.node.name) === VariablesStatus.StyleSheet) {
+    internal.usedStylesProps.add(!node.computed && t.isIdentifier(property) ? property.name : "*");
+  }
+}
+
 export function meshExpression(
   nodePath: NodePath<types.Expression | null | undefined>,
   internal: Internal,
@@ -453,9 +466,7 @@ export function meshExpression(
       const propertyPath = path.get("property");
       const object = path.get("object");
 
-      if (object.isIdentifier() && internal.stack.get(object.node.name) === VariablesStatus.StyleSheet) {
-        internal.usedStylesProps.add(!node.computed && t.isIdentifier(property) ? property.name : "*");
-      }
+      checkStyleUsage(path, internal);
       meshExpression(object, internal, canHasRef);
       if (t.isExpression(property) && (!propertyPath.isIdentifier() || (node.computed && idIsIValue(propertyPath)))) {
         meshOrIgnoreExpression<types.PrivateName>(propertyPath, internal, true);

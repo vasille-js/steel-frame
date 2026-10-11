@@ -1,6 +1,6 @@
 import { Fragment, reportError } from "../src/classes/index.js";
 import { IRunner } from "../src/classes/node/runner.js";
-import { mount } from "../src/functions/index.js";
+import { mountApp } from "../src/functions/index.js";
 import { Answer, QueryParams, Router, RouterInitialization, ScreenProps } from "../src/router/index.js";
 import { Runner, TagOptions } from "./runner.js";
 
@@ -70,7 +70,7 @@ export function routeApp<Routes extends string>(
 ) {
     const runner = new Runner(window.document);
 
-    return mount(
+    return mountApp(
         node,
         (_data, node) => {
             const router = new MockRouter<Routes>(init, location, node);

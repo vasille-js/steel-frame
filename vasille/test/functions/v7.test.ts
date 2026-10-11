@@ -2,7 +2,7 @@ import { Reactive } from "../../src/classes/index.js";
 import {
     abortSignal,
     debounceRef,
-    mount,
+    mountApp,
     ref,
     toDeepFieldRef,
     toFieldRef,
@@ -20,7 +20,7 @@ it("handles destroy via callback", function () {
     const body = window.document.body;
     let destroyed = false;
 
-    const app = mount(body, test, node.runner, {
+    const app = mountApp(body, test, node.runner, {
         callback: $ => {
             expect($.a).toBe(1);
             return () => {
@@ -38,7 +38,7 @@ it("handles destroy via runOnDestroy", function () {
     const body = window.document.body;
     let destroyed = false;
 
-    const app = mount(body, test, node.runner, {
+    const app = mountApp(body, test, node.runner, {
         runOnDestroy() {
             destroyed = true;
         },
@@ -55,7 +55,7 @@ it("handles destroy via both methods", function () {
     let destroyed_directly = 0;
     let counter = 0;
 
-    const app = mount(body, test, node.runner, {
+    const app = mountApp(body, test, node.runner, {
         callback: $ => {
             expect($.a).toBe(1);
             return () => {

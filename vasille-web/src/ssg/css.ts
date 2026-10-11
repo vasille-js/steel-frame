@@ -1,5 +1,5 @@
 import { Element, RawContentNode } from "./runner.js";
-import { CssStyleInjector, laptopMaxWidth, mobileMaxWidth, tabletMaxWidth } from "vasille-css";
+import { CssStyleInjector, laptopMaxWidth, mobileMaxWidth, tabletMaxWidth } from "../web/css/index.js";
 
 const styles: { rules: string[]; media(): string }[] & { length: 6 } = [
     { rules: [], media: () => "" },
@@ -22,22 +22,12 @@ class StaticCssStyleInjector extends CssStyleInjector {
     }
 }
 
-const sheets: [{ [k: string]: (string | [number, string])[] }, { [k: string]: CssStyleInjector }][] = [];
-
-function initStyleSheet(
-    styles: { [k: string]: (string | [number, string])[] },
-    result: { [k: string]: CssStyleInjector },
-) {
-    for (const key in styles) {
-        result[key] = new StaticCssStyleInjector(styles[key]);
-    }
-}
-
 export function styleSheet(styles: { [k: string]: (string | [number, string])[] }): { [k: string]: CssStyleInjector } {
     const result: { [k: string]: CssStyleInjector } = {};
 
-    sheets.push([styles, result]);
-    initStyleSheet(styles, result);
+    for (const key in styles) {
+        result[key] = new StaticCssStyleInjector(styles[key]);
+    }
 
     return result;
 }
@@ -52,11 +42,5 @@ export function mountStyles(head: Element) {
             head.appendChild(style);
             item.rules = [];
         }
-    }
-
-    // Reset all global states
-
-    for (const args of sheets) {
-        initStyleSheet(...args);
     }
 }

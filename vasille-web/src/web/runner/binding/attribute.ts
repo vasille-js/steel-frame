@@ -1,6 +1,5 @@
 import { Binding } from "./binding.js";
-import type { Tag } from "../../../node/node.js";
-import type { IValue } from "../../../core/ivalue.js";
+import { IValue, Tag } from "vasille";
 
 /**
  * Represents an Attribute binding description

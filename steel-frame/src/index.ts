@@ -21,26 +21,24 @@ import {
     DevSetModelView,
     DevArrayModelView,
     DevZombie,
-    devEdgeRef,
     devDebounceRef,
     toDevFieldRef,
     toDevDeepFieldRef,
     devSafeRef,
     devSafeExpr,
-} from "vasille-jsx/dev";
+    DevAppNode,
+} from "vasille/dev";
 import { WebRouterInitialization } from "vasille-web";
-import { devModal, devPrompt, devRouterApp, devMount } from "vasille-web/dev";
-import { App } from "vasille";
-import { TagOptions } from "vasille/web-runner";
-import { devScreen } from "vasille-router/dev";
+import { devModal, devPrompt, DevWebTagOptions, webDevMountApp, webDevRouterApp } from "vasille-web/dev";
+import { devScreen } from "vasille-web/dev";
 import { Inspector } from "./inspector.js";
 
-export { executionPosition, wrapFn, runFn, registerReference, positionedText, setupPosition } from "vasille/dev";
-export { setErrorHandler } from "vasille-jsx/dev";
-export { QueuedRender } from "vasille-jsx";
+export { executionPosition, wrapFn, runFn, setupPosition } from "vasille/dev";
+export { devSetErrorHandler } from "vasille/dev";
+export { QueuedRender } from "vasille";
 export { type IdeSide, type AppSide } from "./communication.js";
 
-export { devStyleSheet as styleSheet } from "vasille/dev";
+export { devStyleSheet as styleSheet, positionedText } from "vasille-web/dev";
 export {
     type QueryParams,
     type ScreenProps,
@@ -49,7 +47,7 @@ export {
     type ErrorScreenProps,
     type WebRouterInitialization,
     type NavigationMode,
-    type Router,
+    type WebRouter,
     safe,
     abortSignal,
     safeInit,
@@ -58,8 +56,8 @@ export {
     devSetLaptopMaxWidth as setLaptopMaxWidth,
     devSetTabletMaxWidth as setTabletMaxWidth,
     devSetMobileMaxWidth as setMobileMaxWidth,
-} from "vasille-css/dev";
-export { context, impute, receive, share, receiveOptional } from "vasille-context";
+} from "vasille-web/dev";
+export { context, impute, receive, share, receiveOptional } from "vasille";
 
 export const view = devView;
 export const component = devView;
@@ -88,7 +86,6 @@ export const MapModelView = DevMapModelView;
 export const SetModelView = DevSetModelView;
 export const ArrayModelView = DevArrayModelView;
 export const Zombie = DevZombie;
-export const edgeRef = devEdgeRef;
 export const debounceRef = devDebounceRef;
 export const toFieldRef = toDevFieldRef;
 export const toDeepFieldRef = toDevDeepFieldRef;
@@ -101,9 +98,13 @@ export const page = devScreen;
 export const modal = devModal;
 export const prompt = devPrompt;
 
-export function mount<T>(element: Element, component: ($: T) => void, input: T): App<Node, Element, TagOptions> {
+export function mount<T>(
+    element: Element,
+    component: ($: T) => void,
+    input: T,
+): DevAppNode<Node, Element, DevWebTagOptions> {
     const inspector = new Inspector();
-    const app = devMount<T>(element, component, input, inspector);
+    const app = webDevMountApp<T>(element, component, input, inspector);
     inspector.setup(app);
     return app;
 }
@@ -111,9 +112,9 @@ export function mount<T>(element: Element, component: ($: T) => void, input: T):
 export function routerApp<Routes extends string>(
     init: WebRouterInitialization<Routes>,
     element?: Element,
-): App<Node, Element, TagOptions> {
+): DevAppNode<Node, Element, DevWebTagOptions> {
     const inspector = new Inspector();
-    const app = devRouterApp(init, element ?? document.body, inspector);
+    const app = webDevRouterApp(init, element ?? document.body, inspector);
     inspector.setup(app);
     return app;
 }

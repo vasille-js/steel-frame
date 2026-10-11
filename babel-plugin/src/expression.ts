@@ -3,7 +3,7 @@ import * as t from "@babel/types";
 import { calledFn, calls, dependencyInjections, hintFunctions, isDiCall, unwrapFunctions } from "./call.js";
 import { ctx, Internal, StackedStates, V } from "./internal.js";
 import { checkNonReactiveName, err, Errors, pathIsReactiveValue } from "./lib";
-import { ignoreParams, meshAllUnknown, meshExpression } from "./mesh";
+import { checkStyleUsage, ignoreParams, meshAllUnknown, meshExpression } from "./mesh";
 import { routerReplace } from "./router";
 import { stringify } from "./utils";
 import { meshAssigment } from "./operators";
@@ -313,6 +313,8 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
     case "MemberExpression":
     case "OptionalMemberExpression": {
       const path = nodePath as NodePath<types.MemberExpression | types.OptionalMemberExpression>;
+
+      checkStyleUsage(path, search.external);
 
       if (memberIsIValueInExpr(path, search)) {
         const code = path.getSource().replace(/[\s\n]+/g, " ");

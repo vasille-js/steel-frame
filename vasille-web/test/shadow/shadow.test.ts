@@ -1,5 +1,5 @@
 import { register } from "./components/Component.js";
-import { ref } from "vasille-jsx";
+import { ref } from "vasille";
 import { IValue } from "vasille";
 import { page } from "./page.js";
 

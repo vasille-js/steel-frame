@@ -355,12 +355,8 @@ function transformJsxExpressionContainer(
   return expression.node as types.Expression;
 }
 
-function idToProp(
-  id: types.JSXIdentifier | types.Identifier | types.StringLiteral,
-  value: types.Expression,
-  from?: number,
-) {
-  let str = t.isIdentifier(id) || t.isJSXIdentifier(id) ? id.name : id.value;
+function idToProp(id: types.JSXIdentifier, value: types.Expression, from?: number) {
+  let str = id.name;
   let expr: types.Expression;
 
   if (from) {
@@ -462,8 +458,7 @@ function transformJsxElement(
     const events: types.ObjectProperty[] = [];
     const bind: types.ObjectProperty[] = [];
     const classElements: types.ArrayExpression["elements"] = [];
-    const classObject: (types.ObjectProperty | types.SpreadElement)[] = [];
-    const classStatic: types.StringLiteral[] = [];
+    let classStatic: types.StringLiteral | null = null;
     const styleObject: (types.ObjectProperty | types.SpreadElement)[] = [];
     const styleStatic: [types.Identifier, types.StringLiteral][] = [];
     let callback: types.Expression | null = null;
@@ -497,55 +492,8 @@ function transformJsxElement(
 
               for (const elementPath of arrayExprPath.get("elements")) {
                 if (elementPath.isExpression()) {
-                  // class={[cond && "string"]}
-                  if (
-                    elementPath.isLogicalExpression() &&
-                    elementPath.node.operator === "&&" &&
-                    t.isStringLiteral(elementPath.node.right)
-                  ) {
-                    exprCall(elementPath.get("left"), elementPath.node.left, internal, {}, elementPath.node, true);
-
-                    classObject.push(idToProp(elementPath.node.right, elementPath.node.left));
-                  }
-                  // class={[{..}]}
-                  else if (elementPath.isObjectExpression()) {
-                    for (const propPath of elementPath.get("properties")) {
-                      // class={[{a: b}]}
-                      if (propPath.isObjectProperty()) {
-                        const keyPath = propPath.get("key");
-                        const valuePath = propPath.get("value");
-
-                        /* istanbul ignore else */
-                        if (valuePath.isExpression()) {
-                          exprCall(valuePath, valuePath.node, internal, {}, elementPath.node, true);
-                        }
-
-                        if (keyPath.isExpression() && !keyPath.isIdentifier()) {
-                          meshExpression(keyPath, internal, false);
-                        }
-
-                        classObject.push(t.objectProperty(keyPath.node, valuePath.node));
-                      }
-                      // class={[{...a}]}
-                      else if (propPath.isSpreadElement()) {
-                        classObject.push(propPath.node);
-                      }
-                      // class={[{a(){}}]}
-                      else {
-                        err(Errors.TokenNotSupported, propPath, "Methods are not allowed here", internal);
-                      }
-                    }
-                  }
-                  // class={[".."]}
-                  else if (elementPath.isStringLiteral()) {
-                    classStatic.push(elementPath.node);
-                  }
-                  // class={[..]}
-                  else {
-                    exprCall(elementPath, elementPath.node, internal, { strong: true }, elementPath.node, true);
-
-                    classElements.push(elementPath.node);
-                  }
+                  exprCall(elementPath, elementPath.node, internal, { strong: true }, elementPath.node, true);
+                  classElements.push(elementPath.node);
                 }
                 // class={[...array]}
                 else {
@@ -576,7 +524,7 @@ function transformJsxElement(
             else {
               /* istanbul ignore else */
               if (valuePath.isStringLiteral()) {
-                classStatic.push(valuePath.node);
+                classStatic = valuePath.node;
               }
             }
           } else if (name.name === "style") {
@@ -710,14 +658,8 @@ function transformJsxElement(
       }
     }
 
-    if (classStatic.length > 0) {
-      const first = classStatic[0];
-      const value =
-        classStatic.length === 1 ? classStatic[0] : t.stringLiteral(classStatic.map(item => item.value).join(" "));
-
-      value.loc = first.loc;
-
-      attrs.push(t.objectProperty(t.identifier("class"), value));
+    if (classStatic) {
+      attrs.push(t.objectProperty(t.identifier("class"), classStatic));
     }
     if (styleStatic.length > 0) {
       attrs.push(
@@ -735,17 +677,7 @@ function transformJsxElement(
         ...(attrs.length > 0 ? [t.objectProperty(t.identifier("a"), t.objectExpression(attrs))] : []),
         ...(events.length > 0 ? [t.objectProperty(t.identifier("e"), t.objectExpression(events))] : []),
         ...(bind.length > 0 ? [t.objectProperty(t.identifier("b"), t.objectExpression(bind))] : []),
-        ...(classElements.length > 0 || classObject.length
-          ? [
-              t.objectProperty(
-                t.identifier("c"),
-                t.arrayExpression([
-                  ...classElements,
-                  ...(classObject.length > 0 ? [t.objectExpression(classObject)] : []),
-                ]),
-              ),
-            ]
-          : []),
+        ...(classElements.length > 0 ? [t.objectProperty(t.identifier("c"), t.arrayExpression(classElements))] : []),
         ...(styleObject.length > 0 ? [t.objectProperty(t.identifier("s"), t.objectExpression(styleObject))] : []),
         ...(callback ? [t.objectProperty(t.identifier("k"), callback)] : []),
         ...(internal.devLayer ? [t.objectProperty(t.identifier("usage"), nodeToStaticPosition(path.node))] : []),

@@ -1,153 +1,112 @@
-import { App, Fragment, Runner as IRunner } from "vasille";
-import { TagOptions } from "vasille/web-runner";
-import { devMount as coreMount, devDynamicalModule, DevFragmentMap } from "vasille-jsx/dev";
-import { devRouteApp as coreRouteApp } from "vasille-router/dev";
+import { devScreen } from "./router.js";
+import { devModal, devPrompt, webDevMountApp, webDevRouterApp } from "./mount.js";
+import { DevWebTagOptions } from "./runner.js";
+import { Inspector } from "./inspector.js";
+import { WebRouterInitialization } from "../web/router/router.js";
 import {
-    DevFragment,
-    DevPortal,
-    DevRunner,
-    DevTagOptions,
-    errorToString,
-    Inspector,
-    inspector,
-    StaticPosition,
-    toDevValue,
+    devArrayModel,
+    DevArrayModelView,
+    DevArrayView,
+    devAwaited,
+    devDebounceRef,
+    DevDelay,
+    devEnsure,
+    devExpr,
+    DevFor,
+    devMapModel,
+    DevMapModelView,
+    devMatch,
+    devModel,
+    devRef,
+    devSafeExpr,
+    devSafeRef,
+    devSet,
+    devSetModel,
+    DevSetModelView,
+    DevSlot,
+    devStore,
+    DevSwitch,
+    devView,
+    DevWatch,
+    DevZombie,
+    toDevDeepFieldRef,
+    toDevFieldRef,
+    DevAppNode,
 } from "vasille/dev";
-import { modal, Prompt, prompt, PromptProps } from "./index.js";
-import { WebRouterInitialization } from "vasille-router/web-router";
-import { CompositionProps } from "vasille-jsx";
 
-function createPortal<Runner extends IRunner<Node, Element, TagOptions>>(
-    node: Fragment<Node, Element, TagOptions>,
-    declaration: StaticPosition | undefined,
-    usage: StaticPosition | undefined,
-    name: string | undefined,
-) {
-    const portal = new DevPortal<Node, Element, TagOptions, Runner>(
-        document.body,
-        node.runner as Runner,
-        declaration,
-        usage,
-        name,
-    );
+export { Prompt, showPrompt } from "../web/index.js";
+export { executionPosition, wrapFn, runFn, setupPosition } from "vasille/dev";
+export { devSetErrorHandler as setErrorHandler } from "vasille/dev";
+export { QueuedRender, Model, SteelContext } from "vasille";
 
-    node.child(portal);
+export { devStyleSheet as styleSheet } from "./css-injector.js";
+export { positionedText } from "./runner.js";
 
-    return portal;
-}
+export { safe, abortSignal, safeInit } from "vasille";
+export {
+    devSetLaptopMaxWidth as setLaptopMaxWidth,
+    devSetTabletMaxWidth as setTabletMaxWidth,
+    devSetMobileMaxWidth as setMobileMaxWidth,
+} from "./css.js";
+export { context, impute, receive, share, receiveOptional } from "vasille";
 
-export function devModal<T extends CompositionProps>(
-    modalFn: (node: Fragment<Node, Element, TagOptions>, input: T) => void,
-    declaration: StaticPosition,
-    name: string,
-): (input: T, node: Fragment<Node, Element, TagOptions>, slot?: T["slot"], usage?: StaticPosition) => void {
-    const fragments: DevFragmentMap<Node, Element, TagOptions, T> = new Map();
-    const run = function (parent: Fragment<Node, Element, TagOptions>, input: T, usage: StaticPosition | undefined) {
-        modal<T>(modalFn, node => {
-            const portal = createPortal(node, declaration, usage, name);
-            const event = {
-                position: usage,
-                target: portal.id,
-            } as const;
+export const view = devView;
+export const component = devView;
+export const compose = devView;
+export const ensure = devEnsure;
+export const ref = devRef;
+export const expr = devExpr;
+export const bind = devExpr;
+export const calculate = devExpr;
+export const watch = devExpr;
+export const effect = devExpr;
+export const safeLive = devSafeExpr;
+export const safeState = devSafeRef;
+export const set = devSet;
+export const Delay = DevDelay;
+export const For = DevFor;
+export const Slot = DevSlot;
+export const Watch = DevWatch;
+export const awaited = devAwaited;
+export const store = devStore;
+export const model = devModel;
+export const setModel = devSetModel;
+export const mapModel = devMapModel;
+export const arrayModel = devArrayModel;
+export const Switch = DevSwitch;
+export const match = devMatch;
+export const ArrayView = DevArrayView;
+export const MapModelView = DevMapModelView;
+export const SetModelView = DevSetModelView;
+export const ArrayModelView = DevArrayModelView;
+export const Zombie = DevZombie;
+export const debounced = devDebounceRef;
+export const toFieldRef = toDevFieldRef;
+export const toDeepFieldRef = toDevDeepFieldRef;
 
-            inspector.eventTrigger({
-                eventName: "open",
-                time: Date.now(),
-                ...event,
-            });
-            portal.runOnDestroy(() => {
-                inspector.eventTrigger({
-                    eventName: "close",
-                    time: Date.now(),
-                    ...event,
-                });
-            });
+export const screen = devScreen;
+export const page = devScreen;
 
-            return portal;
-        })(input, parent, undefined);
-    };
+export const modal = devModal;
+export const prompt = devPrompt;
 
-    const renderer = (
-        input: T,
-        node?: Fragment<Node, Element, TagOptions>,
-        slot?: T["slot"],
-        usage?: StaticPosition,
-    ) => {
-        if (!node) {
-            throw new Error("Vasille: Modal context is missing");
-        }
-        const frag = new DevFragment<Node, Element, TagOptions>(node.runner, null, null, name, {});
-
-        if (!input.slot && slot) {
-            input.slot = slot;
-        }
-
-        node.child(frag);
-        fragments.set(frag, { props: input, node: frag, usage });
-        run(frag, input, usage);
-    };
-
-    return devDynamicalModule(renderer, fragments, run);
-}
-
-export function devPrompt<T extends PromptProps>(
-    modal: (node: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>, input: T) => void,
-    declaration: StaticPosition,
-    name: string,
-): Prompt<T, [number, StaticPosition]> {
-    let target: number | undefined;
-
-    return new Prompt<T, [number, StaticPosition]>(
-        modal,
-        (node, extra) => {
-            const portal = createPortal(node, declaration, extra[1], name);
-            target = portal.id;
-
-            inspector.eventTrigger({
-                eventName: "open",
-                time: Date.now(),
-                target,
-            });
-
-            return portal;
-        },
-        {
-            resolve(data: unknown) {
-                if (inspector && target) {
-                    inspector.eventTrigger({
-                        eventName: "close",
-                        time: Date.now(),
-                        target,
-                        result: {
-                            value: toDevValue(data),
-                        },
-                    });
-                }
-            },
-            reject(err: unknown) {
-                if (inspector && target) {
-                    inspector.eventTrigger({
-                        eventName: "close",
-                        time: Date.now(),
-                        target,
-                        result: {
-                            error: errorToString(err),
-                        },
-                    });
-                }
-            },
-        },
-    );
-}
-
-export function devMount<T>(element: Element, component: ($: T) => void, input: T, inspector: Inspector) {
-    return coreMount<T>(element, component, new DevRunner(window.document), input, inspector);
-}
-
-export function devRouterApp<Routes extends string>(
-    init: WebRouterInitialization<Routes>,
+export function mount<T>(
     element: Element,
-    inspector: Inspector,
-): App<Node, Element, DevTagOptions, IRunner<Node, Element, DevTagOptions>> {
-    return coreRouteApp(element, window, window.location, init, inspector);
+    component: ($: T) => void,
+    input: T,
+): DevAppNode<Node, Element, DevWebTagOptions> {
+    const inspector = new Inspector();
+    const app = webDevMountApp<T>(element, component, input, inspector);
+    inspector.setup(app);
+    return app;
+}
+
+export function routerApp<Routes extends string>(
+    init: WebRouterInitialization<Routes>,
+    element?: Element,
+): DevAppNode<Node, Element, DevWebTagOptions> {
+    const inspector = new Inspector();
+    const app = webDevRouterApp(init, element ?? document.body, inspector);
+    inspector.setup(app);
+    return app;
 }

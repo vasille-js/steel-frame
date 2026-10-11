@@ -1,11 +1,7 @@
-import { App, Fragment, Portal, reportError, Runner as IRunner } from "vasille";
-import { Runner, TagOptions } from "vasille/web-runner";
-import { CompositionProps, mount as coreMount } from "vasille-jsx";
-import { routeApp as coreRouteApp, WebRouterInitialization } from "vasille-router/web-router";
+import { webRouterApp, WebRouterInitialization } from "./router/router.js";
+import { AppNode, CompositionProps, Fragment, mountApp, PortalNode } from "vasille";
+import { WebRunner, WebTagOptions } from "./runner/runner.js";
 
-export { styleSheet } from "vasille-css";
-export type { RawStyleProps as StyleProps, StyleSheetProps } from "./spec/css.js";
-export type { ClassItem } from "./jsx-runtime.js";
 export { safe } from "vasille";
 
 export {
@@ -17,8 +13,8 @@ export {
     expr,
     expr as bind,
     expr as calculate,
-    expr as computed,
     expr as watch,
+    expr as effect,
     set,
     Delay,
     For,
@@ -38,36 +34,24 @@ export {
     MapModelView,
     SetModelView,
     QueuedRender,
-    debounceRef,
-    edgeRef,
-    safeExpr,
-    safeExpr as safeBind,
-    safeExpr as safeComputed,
-    safeRef,
+    debounceRef as debounced,
+    safeExpr as safeLive,
+    safeRef as safeState,
+    safeInit,
     toDeepFieldRef,
     toFieldRef,
     Zombie,
     abortSignal,
-} from "vasille-jsx";
+    SteelContext,
+    Model,
+} from "vasille";
 
-export {
-    type QueryParams,
-    type ScreenProps,
-    type RouteParameters,
-    screen,
-    screen as page,
-    type FallbackScreenProps,
-    type ErrorScreenProps,
-} from "vasille-router";
+export { screen, screen as page } from "vasille";
+export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth, styleSheet } from "./css/index.js";
+export { context, impute, receive, share, receiveOptional } from "vasille";
 
-export { Router, type WebRouterInitialization, type NavigationMode } from "vasille-router/web-router";
-
-export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth } from "vasille-css";
-
-export { context, impute, receive, share, receiveOptional } from "vasille-context";
-
-function createPortal(node: Fragment<Node, Element, TagOptions>) {
-    const portal = new Portal<Node, Element, TagOptions>(document.body, node.runner, node.sDeep + 1);
+function createPortal(node: Fragment<Node, Element, WebTagOptions>) {
+    const portal = new PortalNode<Node, Element, WebTagOptions>(document.body, node.runner, node.sDeep + 1);
 
     node.child(portal);
 
@@ -75,9 +59,9 @@ function createPortal(node: Fragment<Node, Element, TagOptions>) {
 }
 
 export function modal<T extends CompositionProps>(
-    modal: (node: Fragment<Node, Element, TagOptions>, input: T) => void,
-    create: (node: Fragment<Node, Element, TagOptions>) => Portal<Node, Element, TagOptions> = createPortal,
-): (input: T, node: Fragment<Node, Element, TagOptions>, slot?: T["slot"]) => void {
+    modal: (node: Fragment<Node, Element, WebTagOptions>, input: T) => void,
+    create: (node: Fragment<Node, Element, WebTagOptions>) => PortalNode<Node, Element, WebTagOptions> = createPortal,
+): (input: T, node: Fragment<Node, Element, WebTagOptions>, slot?: T["slot"]) => void {
     return function (props, node, slot) {
         if (!node) {
             throw new Error("Vasille: Modal context is missing");
@@ -96,22 +80,22 @@ export function modal<T extends CompositionProps>(
     };
 }
 
-export interface PromptProps {
+interface PromptProps {
     resolve(data: unknown): void;
     reject(err: unknown): void;
 }
 
 export class Prompt<T extends PromptProps, Extra extends [number, ...unknown[]]> {
     constructor(
-        private readonly modal: (node: Fragment<Node, Element, TagOptions>, input: T) => void,
+        private readonly modal: (node: Fragment<Node, Element, WebTagOptions>, input: T) => void,
         private readonly create: (
-            node: Fragment<Node, Element, TagOptions>,
+            node: Fragment<Node, Element, WebTagOptions>,
             extra: Extra,
-        ) => Portal<Node, Element, TagOptions>,
+        ) => PortalNode<Node, Element, WebTagOptions>,
         private readonly debugProps?: PromptProps,
     ) {}
 
-    public show(node: Fragment<Node, Element, TagOptions>, input: T, ...extra: Extra): Promise<unknown> {
+    public show(node: Fragment<Node, Element, WebTagOptions>, input: T, ...extra: Extra): Promise<unknown> {
         const { modal, create, debugProps } = this;
 
         return new Promise((resolve, reject) => {
@@ -152,14 +136,14 @@ export class Prompt<T extends PromptProps, Extra extends [number, ...unknown[]]>
 }
 
 export function prompt<T extends PromptProps, Extra extends [number, ...unknown[]]>(
-    modal: (node: Fragment<Node, Element, TagOptions>, input: T) => void,
-    create: (node: Fragment<Node, Element, TagOptions>) => Portal<Node, Element, TagOptions> = createPortal,
+    modal: (node: Fragment<Node, Element, WebTagOptions>, input: T) => void,
+    create: (node: Fragment<Node, Element, WebTagOptions>) => PortalNode<Node, Element, WebTagOptions> = createPortal,
 ): Prompt<T, Extra> {
     return new Prompt<T, Extra>(modal, create);
 }
 
 export function showPrompt<T extends PromptProps, Extra extends [number, ...unknown[]]>(
-    ctx: Fragment<Node, Element, TagOptions>,
+    ctx: Fragment<Node, Element, WebTagOptions>,
     prompt: Prompt<T, Extra>,
     input: T,
     ...args: Extra
@@ -167,13 +151,13 @@ export function showPrompt<T extends PromptProps, Extra extends [number, ...unkn
     return prompt.show(ctx, input, ...args);
 }
 
-export function mount<T>(element: Element, component: ($: T) => void, input: T): App<Node, Element, TagOptions> {
-    return coreMount<Node, Element, TagOptions, T>(element, component, new Runner(window.document), input);
+export function mount<T>(element: Element, component: ($: T) => void, input: T): AppNode<Node, Element, WebTagOptions> {
+    return mountApp<Node, Element, WebTagOptions, T>(element, component, new WebRunner(window.document), input);
 }
 
 export function routerApp<Routes extends string>(
     init: WebRouterInitialization<Routes>,
     element?: Element,
-): App<Node, Element, TagOptions> {
-    return coreRouteApp(element ?? document.body, window, window.location, init);
+): AppNode<Node, Element, WebTagOptions> {
+    return webRouterApp(element ?? document.body, window, window.location, init);
 }

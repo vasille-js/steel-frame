@@ -1,11 +1,11 @@
-import { runTest, throwTest } from "../run-test.js";
+import { runJsxTest, runTest, throwTest } from "../run-test.js";
 
 it("style test", function () {
   runTest(__dirname, "style");
 });
 
 it("autoremove unused key", function () {
-  runTest(__dirname, "autoremove-key");
+  runJsxTest(__dirname, "autoremove-key");
 });
 
 it("computed key to *", function () {

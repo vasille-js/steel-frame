@@ -1,21 +1,9 @@
-import { CssStyleInjector } from "vasille-css";
-import { IValue } from "../core/ivalue.js";
-import { TextProps } from "../node/node.js";
-import { IRunner } from "../node/runner.js";
-import { Runner, Tag, TagOptions, TextNode } from "../runner/web/runner.js";
-import {
-    getPosition,
-    inspector,
-    provideId,
-    StaticPosition,
-    toDevId,
-    toDevIdOrValue,
-    processDevObject,
-    toDevValue,
-} from "./inspectable.js";
-import { DevExpression, DevReference } from "./state.js";
+import { WebRunner, WebTag, WebTagOptions, WebTextNode } from "../web/runner/runner.js";
+import { getPosition, inspector, processDevObject, provideId, StaticPosition, toDevIdOrValue } from "vasille/dev";
+import { IRunner, TextProps } from "vasille";
+import { CssStyleInjector } from "../web/css/index.js";
 
-export interface DevTagOptions extends TagOptions {
+export interface DevWebTagOptions extends WebTagOptions {
     usage?: StaticPosition;
 }
 
@@ -33,10 +21,10 @@ export function positionedText(text: unknown, position: StaticPosition) {
     return new PositionedText(text, position);
 }
 
-export class DevTextNode extends TextNode<DevTagOptions, DevRunner> {
+export class DevWebTextNode extends WebTextNode<DevWebTagOptions, DevWebRunner> {
     public override id: number;
 
-    public constructor(input: TextProps, runner: DevRunner, deep: number, usage: StaticPosition) {
+    public constructor(input: TextProps, runner: DevWebRunner, deep: number, usage: StaticPosition) {
         super(input, runner, deep);
         this.id = provideId();
 
@@ -72,12 +60,12 @@ export function remapObject<Before, After>(
     return r;
 }
 
-export class DevTag extends Tag<DevTagOptions, DevRunner> {
+export class DevWebTag extends WebTag<DevWebTagOptions, DevWebRunner> {
     public override id: number;
 
     public constructor(
-        options: DevTagOptions,
-        runner: DevRunner,
+        options: DevWebTagOptions,
+        runner: DevWebRunner,
         deep: number,
         tagName: string,
         usage: StaticPosition | undefined,
@@ -114,15 +102,9 @@ export class DevTag extends Tag<DevTagOptions, DevRunner> {
         });
         if (options.c) {
             for (const item of options.c) {
-                const value = item instanceof CssStyleInjector ? item.inject() : item instanceof IValue ? item.V : item;
+                const value = item instanceof CssStyleInjector ? item.inject() : item;
 
-                if (typeof value === "string") {
-                    inspector.tagClass({ id: id, value: toDevId(item) ?? value, name: value });
-                } else {
-                    processDevObject(value, (name, condition) => {
-                        inspector.tagClass({ id, name, value: toDevId(condition) ?? (condition ? "true" : "false") });
-                    });
-                }
+                inspector.tagClass({ id: id, value: toDevIdOrValue(value) });
             }
         }
         processDevObject(options.s, (name, value) => {
@@ -136,7 +118,7 @@ export class DevTag extends Tag<DevTagOptions, DevRunner> {
         });
     }
 
-    public override applyOptions(options: DevTagOptions): void {
+    public override applyOptions(options: DevWebTagOptions): void {
         if (options.e) {
             for (const [key, handler] of Object.entries(options.e)) {
                 const userHandler = handler instanceof Array ? handler[0] : handler;
@@ -170,25 +152,25 @@ export class DevTag extends Tag<DevTagOptions, DevRunner> {
     }
 }
 
-export class DevRunner extends Runner<DevTagOptions> implements IRunner<Node, Element, DevTagOptions> {
-    public override textNode(deep: number, text: unknown): TextNode<DevTagOptions, DevRunner> {
+export class DevWebRunner extends WebRunner<DevWebTagOptions> implements IRunner<Node, Element, DevWebTagOptions> {
+    public override textNode(deep: number, text: unknown): WebTextNode<DevWebTagOptions, DevWebRunner> {
         if (text instanceof PositionedText) {
-            return new DevTextNode({ text: text.text }, this, deep, text.position);
+            return new DevWebTextNode({ text: text.text }, this, deep, text.position);
         }
 
-        return new TextNode({ text: text }, this, deep);
+        return new WebTextNode({ text: text }, this, deep);
     }
 
     public override tag(
         deep: number,
         tagName: string,
-        input: DevTagOptions,
-        cb?: ((ctx: DevTag) => void) | undefined,
-    ): DevTag {
+        input: DevWebTagOptions,
+        cb?: ((ctx: DevWebTag) => void) | undefined,
+    ): DevWebTag {
         if (cb) {
             input.l = cb;
         }
 
-        return new DevTag(input, this, deep, tagName, input.usage);
+        return new DevWebTag(input, this, deep, tagName, input.usage);
     }
 }

@@ -1,5 +1,4 @@
-import { ref } from "vasille-jsx";
-import { IValue } from "vasille";
+import { IValue, ref } from "vasille";
 
 const promises: Promise<unknown>[] = [];
 

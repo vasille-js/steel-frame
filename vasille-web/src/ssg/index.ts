@@ -1,6 +1,5 @@
-import { Fragment, Portal } from "vasille";
-import { Runner, Node, Element, type TagOptions } from "./runner.js";
-import { view } from "vasille-jsx";
+import { Fragment, PortalNode, view } from "vasille";
+import { SsgRunner, Node, Element, type SsgTagOptions } from "./runner.js";
 
 export { safe } from "vasille";
 export {
@@ -24,35 +23,35 @@ export {
     setErrorHandler,
     match,
     view,
-    debounceRef,
-    edgeRef,
+    debounceRef as debounced,
     toDeepFieldRef,
     toFieldRef,
-    safeRef,
-    safeExpr,
+    safeRef as safeState,
+    safeExpr as safeLive,
     safeInit,
     abortSignal,
     // no zombies in SSG
     Slot as Zombie,
-} from "vasille-jsx";
+    ArrayModelView,
+    expr as effect,
+    ArrayView,
+    MapModelView,
+    SetModelView,
+    QueuedRender,
+    receiveOptional,
+    SteelContext,
+    Model,
+} from "vasille";
 
 export { styleSheet } from "./css.js";
-export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth } from "vasille-css";
+export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth } from "../web/index.js";
 
-export { context, impute, receive, share } from "vasille-context";
+export { context, impute, receive, share } from "vasille";
 
-export {
-    type QueryParams,
-    type ScreenProps,
-    type RouteParameters,
-    screen,
-    screen as page,
-    type FallbackScreenProps,
-    type ErrorScreenProps,
-} from "vasille-router";
+export { screen, screen as page } from "vasille";
 
 export { awaited } from "./awaited.js";
-export { routerApp, type Mode } from "./router.js";
+export { routerApp } from "./router.js";
 
 interface CompositionProps {
     slot?: (...args: any[]) => void;
@@ -62,14 +61,14 @@ export const component = view;
 export const compose = view;
 
 export function modal<T extends CompositionProps>(
-    modal: (node: Fragment<Node, Element, TagOptions, Runner>, input: T) => void,
-): (input: T, node: Fragment<Node, Element, TagOptions, Runner>) => void {
+    modal: (node: Fragment<Node, Element, SsgTagOptions, SsgRunner>, input: T) => void,
+): (input: T, node: Fragment<Node, Element, SsgTagOptions, SsgRunner>) => void {
     return function (props, node) {
         if (!node) {
             throw new Error("Vasille: Modal context is missing");
         }
-        const runner: Runner = node.runner;
-        const portal = new Portal<Node, Element, TagOptions, Runner>(runner.body, runner, node.sDeep + 1);
+        const runner: SsgRunner = node.runner;
+        const portal = new PortalNode<Node, Element, SsgTagOptions, SsgRunner>(runner.body, runner, node.sDeep + 1);
 
         node.child(portal);
         modal(portal, props);
@@ -77,11 +76,15 @@ export function modal<T extends CompositionProps>(
 }
 
 // no prompts support in SSG
-export function prompt(compose: () => void): () => void {
-    return function () {
-        compose();
-        throw new Error("User input is not supported in SSG");
-    };
+
+export class Prompt {}
+
+export function prompt(): void {
+    new Prompt();
+}
+
+export function showPrompt(): void {
+    throw new Error("User input is not supported in SSG");
 }
 
 // SSG works only with file-based router

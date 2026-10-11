@@ -1,4 +1,4 @@
-import { CssStyleInjector, laptopMaxWidth, mobileMaxWidth, tabletMaxWidth } from "vasille-css";
+import { CssStyleInjector, laptopMaxWidth, mobileMaxWidth, tabletMaxWidth } from "../web/css/index.js";
 
 export class StyleSheetsManager {
     protected readonly sheets: CSSStyleSheet[] = [];

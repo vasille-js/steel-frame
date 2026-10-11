@@ -1,5 +1,4 @@
-import { Destroyable } from "../../../core/destroyable.js";
-import type { IValue } from "../../../core/ivalue.js";
+import { IValue, Destroyable } from "vasille";
 
 /**
  * Describe a common binding logic

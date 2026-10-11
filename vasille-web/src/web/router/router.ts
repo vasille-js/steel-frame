@@ -1,30 +1,38 @@
-import { Fragment, Reference, reportError } from "vasille";
-import { Runner, TagOptions } from "vasille/web-runner";
-import { Router as AbstractRouter, RouteRenderScope, RouterInitialization } from "../router.js";
-import { QueryParams, Answer, ScreenProps } from "../types.js";
-import { mount } from "vasille-jsx";
+import {
+    Answer,
+    Fragment,
+    mountApp,
+    QueryParams,
+    Reference,
+    reportError,
+    Router,
+    RouteRenderScope,
+    RouterInitialization,
+    ScreenProps,
+} from "vasille";
+import { WebRunner, WebTagOptions } from "../runner/runner.js";
 
 export interface WebRouterInitialization<Routes extends string> extends RouterInitialization<
     Node,
     Element,
-    TagOptions,
+    WebTagOptions,
     Routes,
     {}
 > {
-    loadingScreen?(props: object, node: Fragment<Node, Element, TagOptions>): void;
-    loadingOverlay?(props: object, node: Fragment<Node, Element, TagOptions>): void;
+    loadingScreen?(props: object, node: Fragment<Node, Element, WebTagOptions>): void;
+    loadingOverlay?(props: object, node: Fragment<Node, Element, WebTagOptions>): void;
     wrapper?(
-        data: { slot(data: object, ctx: Fragment<Node, Element, TagOptions>): void },
-        ctx: Fragment<Node, Element, TagOptions>,
+        data: { slot(data: object, ctx: Fragment<Node, Element, WebTagOptions>): void },
+        ctx: Fragment<Node, Element, WebTagOptions>,
     ): void;
 }
 
 export type NavigationMode = "silent" | "loading-screen" | "loading-overlay";
 
-export class Router<Routes extends string> extends AbstractRouter<
+export class WebRouter<Routes extends string> extends Router<
     Node,
     Element,
-    TagOptions,
+    WebTagOptions,
     Routes,
     {},
     [NavigationMode]
@@ -35,16 +43,16 @@ export class Router<Routes extends string> extends AbstractRouter<
     protected readonly webInit: WebRouterInitialization<Routes>;
     protected readonly window: Window;
     protected readonly location: Location;
-    protected readonly node: Fragment<Node, Element, TagOptions>;
+    protected readonly node: Fragment<Node, Element, WebTagOptions>;
 
-    protected loadingNode: Fragment<Node, Element, TagOptions>;
-    protected contentNode: Fragment<Node, Element, TagOptions>;
-    protected overlayNode: Fragment<Node, Element, TagOptions>;
+    protected loadingNode: Fragment<Node, Element, WebTagOptions>;
+    protected contentNode: Fragment<Node, Element, WebTagOptions>;
+    protected overlayNode: Fragment<Node, Element, WebTagOptions>;
 
     public constructor(
         window: Window,
         location: Location,
-        node: Fragment<Node, Element, TagOptions>,
+        node: Fragment<Node, Element, WebTagOptions>,
         init: WebRouterInitialization<Routes>,
     ) {
         super(init);
@@ -59,7 +67,7 @@ export class Router<Routes extends string> extends AbstractRouter<
         if (init.wrapper) {
             init.wrapper(
                 {
-                    slot(_data: object, ctx: Fragment<Node, Element, TagOptions>) {
+                    slot(_data: object, ctx: Fragment<Node, Element, WebTagOptions>) {
                         routerNode = ctx;
                     },
                 },
@@ -111,7 +119,7 @@ export class Router<Routes extends string> extends AbstractRouter<
 
     protected parseUrl(url: string): [string, QueryParams, string] {
         const parsed = new URL(url, this.location.origin);
-        const query = [...parsed.searchParams.keys()].reduce((prev, key) => {
+        const query = [...parsed.searchParams].reduce((prev, [key]) => {
             return { ...prev, [key]: parsed.searchParams.getAll(key) };
         }, {} as QueryParams);
 
@@ -119,7 +127,7 @@ export class Router<Routes extends string> extends AbstractRouter<
     }
 
     protected async loadTarget<Route extends string>(
-        target: Answer<Node, Element, TagOptions, Route, {}>,
+        target: Answer<Node, Element, WebTagOptions, Route, {}>,
         props: ScreenProps<Route>,
         mode: NavigationMode,
     ): Promise<void> {
@@ -154,13 +162,13 @@ export class Router<Routes extends string> extends AbstractRouter<
     }
 
     protected async renderScreen<Props>(
-        screen: (props: Props, ctx: Fragment<Node, Element, TagOptions>) => void | Promise<void>,
+        screen: (props: Props, ctx: Fragment<Node, Element, WebTagOptions>) => void | Promise<void>,
         props: Props,
         scope: RouteRenderScope,
     ): Promise<void> {
         const children = this.contentNode.children;
         const oldChildren = [...children];
-        let ctx: Fragment<Node, Element, TagOptions> | null = null;
+        let ctx: Fragment<Node, Element, WebTagOptions> | null = null;
 
         this.build(this.contentNode, node => (ctx = node));
 
@@ -184,7 +192,7 @@ export class Router<Routes extends string> extends AbstractRouter<
         this.clearNode(this.overlayNode);
     }
 
-    protected clearNode(node: Fragment<Node, Element, TagOptions>) {
+    protected clearNode(node: Fragment<Node, Element, WebTagOptions>) {
         const { children } = node;
 
         children.forEach(node => node.destroy(node.sDeep));
@@ -192,27 +200,27 @@ export class Router<Routes extends string> extends AbstractRouter<
     }
 
     protected build(
-        node: Fragment<Node, Element, TagOptions>,
-        run?: (node: Fragment<Node, Element, TagOptions>) => void,
+        node: Fragment<Node, Element, WebTagOptions>,
+        run?: (node: Fragment<Node, Element, WebTagOptions>) => void,
     ) {
-        const child = new Fragment<Node, Element, TagOptions>(node.runner, node.sDeep + 1);
+        const child = new Fragment<Node, Element, WebTagOptions>(node.runner, node.sDeep + 1);
 
         node.child(child, run);
     }
 }
 
-export function routeApp<Routes extends string>(
+export function webRouterApp<Routes extends string>(
     node: Element,
     window: Window,
     location: Location,
     init: WebRouterInitialization<Routes>,
 ) {
-    const runner = new Runner(window.document);
+    const runner = new WebRunner(window.document);
 
-    return mount(
+    return mountApp(
         node,
         (_data, node) => {
-            const router = new Router(window, location, node, init);
+            const router = new WebRouter(window, location, node, init);
 
             Object.defineProperty(runner, "router", {
                 value: router,

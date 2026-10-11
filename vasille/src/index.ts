@@ -31,6 +31,9 @@ export {
     ZombieNode,
 } from "./classes/index.js";
 
+export { internalError } from "./classes/core/errors.js";
+export { type TextProps, type SwitchedNodeCase } from "./classes/node/node.js";
+
 export {
     ref,
     arrayModel,
@@ -43,7 +46,7 @@ export {
     safeRef,
     safeInit,
     safeExpr,
-    mount,
+    mountApp,
     model,
     store,
     Model,
@@ -84,5 +87,8 @@ export {
     type Screen,
     type RouteParameters,
 } from "./router/index.js";
+
+export type { RouteRenderScope } from "./router/router.js";
+export { createScreen } from "./router/screen.js";
 
 export { impute, receive, context, share, receiveOptional, SteelContext } from "./context/index.js";

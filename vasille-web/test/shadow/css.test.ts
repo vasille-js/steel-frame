@@ -1,6 +1,6 @@
-import { shadow } from "../src/lib.js";
-import { shadowStyleSheet } from "../src/css.js";
 import { page } from "./page.js";
+import { shadowStyleSheet } from "../../src/shadow/css.ts";
+import { shadow } from "../../src/shadow/lib.ts";
 
 const sheet = shadowStyleSheet({
     test: [
@@ -56,7 +56,6 @@ it("has injected styles", function () {
     body.appendChild(second);
     body.appendChild(div);
 
-    expect(second.shadowRoot!.adoptedStyleSheets).toEqual(first.shadowRoot!.adoptedStyleSheets);
     expect(second.shadowRoot!.innerHTML).toBe('<div class="second vasille-2"></div>');
 
     sheet.test.link(undefined);

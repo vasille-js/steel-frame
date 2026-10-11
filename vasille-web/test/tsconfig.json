@@ -1,20 +1,20 @@
 {
-  "include": ["./**/*.ts", "./**/*.tsx"],
-  "compilerOptions": {
-    "allowJs": true,
-    "declaration": false,
-    "noEmit": true,
-    "jsx": "preserve",
-    "jsxImportSource": "steel-frame",
-    "target": "ES2024",
-    "lib": ["es2022"],
-    "module": "Node16",
-    "moduleResolution": "node16",
-    "skipLibCheck": true,
-    "strictNullChecks": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "allowImportingTsExtensions": true,
-    "types": ["node", "jest"]
-  }
+    "include": ["./**/*"],
+    "compilerOptions": {
+        "allowJs": true,
+        "declaration": false,
+        "noEmit": true,
+        "jsx": "preserve",
+        "jsxImportSource": "steel-frame",
+        "target": "ES2024",
+        "lib": ["es2022"],
+        "module": "Node16",
+        "moduleResolution": "node16",
+        "skipLibCheck": true,
+        "strictNullChecks": true,
+        "esModuleInterop": true,
+        "isolatedModules": true,
+        "allowImportingTsExtensions": true,
+        "types": ["node", "jest"]
+    }
 }

@@ -1,15 +1,14 @@
-import { setErrorHandler } from "vasille";
-import { TagOptions } from "vasille/web-runner";
-import { screen } from "../src/screen.js";
-import { routeApp, Router, WebRouterInitialization } from "../src/web/router.js";
+import { screen, setErrorHandler } from "vasille";
 import { page } from "./page.js";
 import { jest } from "@jest/globals";
+import { WebRouter, webRouterApp, WebRouterInitialization } from "../../src/web/router/router.ts";
+import { WebTagOptions } from "../../src/web/runner/runner.ts";
 
 it("empty", function (done) {
     const window = page();
     const body = window.document.body;
 
-    routeApp(body, window as unknown as Window, window.location, {
+    webRouterApp(body, window as unknown as Window, window.location, {
         fallbackScreen(props, ctx) {
             ctx.tag("div", { c: ["fallback"] }, div => {
                 div.text(props.cause);
@@ -31,7 +30,7 @@ it("error", function (done) {
     const window = page();
     const body = window.document.body;
 
-    routeApp(body, window as unknown as Window, window.location, {
+    webRouterApp(body, window as unknown as Window, window.location, {
         fallbackScreen: () => {
             throw new Error("test error");
         },
@@ -61,7 +60,7 @@ it("report error", function (done) {
 
     setErrorHandler(reportError);
 
-    routeApp(body, window as unknown as Window, window.location, {
+    webRouterApp(body, window as unknown as Window, window.location, {
         fallbackScreen() {
             throw new Error("test error");
         },
@@ -88,7 +87,7 @@ it("report invalid URL error", function (done) {
 
     setErrorHandler(reportError);
 
-    routeApp(body, window as unknown as Window, window.location, {
+    webRouterApp(body, window as unknown as Window, window.location, {
         fallbackScreen() {},
         errorScreen() {},
         routes: {},
@@ -113,12 +112,12 @@ it("static /", function (done) {
     const window = page();
     const body = window.document.body;
 
-    routeApp(body, window as unknown as Window, createLocation("/?text=queryText"), {
+    webRouterApp(body, window as unknown as Window, createLocation("/?text=queryText"), {
         fallbackScreen() {},
         errorScreen() {},
         routes: {
             "/": {
-                screen: screen<Node, Element, TagOptions, "/">((ctx, props) => {
+                screen: screen<Node, Element, WebTagOptions, "/">((ctx, props) => {
                     expect(props.path).toBe("/");
                     ctx.tag("div", { c: ["answer200"] }, div => {
                         div.text(props.query.text);
@@ -142,7 +141,7 @@ it("static /about", function (done) {
     const window = page();
     const body = window.document.body;
 
-    routeApp(body, window as unknown as Window, createLocation("/about?text=1&text=2"), {
+    webRouterApp(body, window as unknown as Window, createLocation("/about?text=1&text=2"), {
         fallbackScreen() {},
         errorScreen() {},
         routes: {
@@ -169,7 +168,7 @@ it("static /error/404", function (done) {
     const window = page();
     const body = window.document.body;
 
-    routeApp(body, window as unknown as Window, createLocation("/error/404#hash"), {
+    webRouterApp(body, window as unknown as Window, createLocation("/error/404#hash"), {
         fallbackScreen() {},
         errorScreen() {},
         routes: {
@@ -196,7 +195,7 @@ it("dynamic /(test)", function (done) {
     const window = page();
     const body = window.document.body;
 
-    routeApp(body, window as unknown as Window, createLocation("/test-value"), {
+    webRouterApp(body, window as unknown as Window, createLocation("/test-value"), {
         fallbackScreen() {},
         errorScreen() {},
         routes: {
@@ -220,7 +219,7 @@ it("dynamic /path/(value)", function (done) {
     const window = page();
     const body = window.document.body;
 
-    routeApp(body, window as unknown as Window, createLocation("/path/c23"), {
+    webRouterApp(body, window as unknown as Window, createLocation("/path/c23"), {
         fallbackScreen() {},
         errorScreen() {},
         routes: {
@@ -244,7 +243,7 @@ it("dynamic /before/(value)/after", function (done) {
     const window = page();
     const body = window.document.body;
 
-    routeApp(body, window as unknown as Window, createLocation("/before/vx/after"), {
+    webRouterApp(body, window as unknown as Window, createLocation("/before/vx/after"), {
         fallbackScreen() {},
         errorScreen() {},
         routes: {
@@ -296,7 +295,7 @@ it("dynamic /(v) /1/(v) /(v)/2/3 /1/2/(v)/4", function (done) {
             },
         };
 
-        routeApp(body, window as unknown as Window, createLocation(path), init);
+        webRouterApp(body, window as unknown as Window, createLocation(path), init);
 
         return body;
     }
@@ -351,7 +350,7 @@ it("dynamic vs static /1 /(v) /1/2 /1/(v)", function (done) {
             },
         };
 
-        routeApp(body, window as unknown as Window, createLocation(path), init);
+        webRouterApp(body, window as unknown as Window, createLocation(path), init);
 
         return body;
     }
@@ -377,9 +376,9 @@ it("dynamic vs static /1 /(v) /1/2 /1/(v)", function (done) {
 it("switch page: found -> found", function (done) {
     const window = page();
     const body = window.document.body;
-    let router!: Router<string>;
+    let router!: WebRouter<string>;
 
-    routeApp(body, window as unknown as Window, createLocation("/about"), {
+    webRouterApp(body, window as unknown as Window, createLocation("/about"), {
         fallbackScreen() {},
         errorScreen() {},
         routes: {
@@ -387,7 +386,7 @@ it("switch page: found -> found", function (done) {
                 async screen(props, ctx) {
                     ctx.tag("div", { c: [`about`] });
                     expect("router" in ctx.runner).toBe(true);
-                    if ("router" in ctx.runner && ctx.runner.router instanceof Router) {
+                    if ("router" in ctx.runner && ctx.runner.router instanceof WebRouter) {
                         router = ctx.runner.router;
                     }
                 },
@@ -419,9 +418,9 @@ it("switch page: found -> found", function (done) {
 it("switch page: found -> fallback", function (done) {
     const window = page();
     const body = window.document.body;
-    let router!: Router<string>;
+    let router!: WebRouter<string>;
 
-    routeApp(body, window as unknown as Window, createLocation("/found"), {
+    webRouterApp(body, window as unknown as Window, createLocation("/found"), {
         fallbackScreen(props, ctx) {
             ctx.tag("div", { c: [`fallback`] });
         },
@@ -430,7 +429,7 @@ it("switch page: found -> fallback", function (done) {
             "/found": {
                 async screen(props, ctx) {
                     ctx.tag("div", { c: [`found`] });
-                    if ("router" in ctx.runner && ctx.runner.router instanceof Router) {
+                    if ("router" in ctx.runner && ctx.runner.router instanceof WebRouter) {
                         router = ctx.runner.router;
                     }
                 },
@@ -453,12 +452,12 @@ it("switch page: found -> fallback", function (done) {
 it("switch page: fallback -> error", function (done) {
     const window = page();
     const body = window.document.body;
-    let router!: Router<string>;
+    let router!: WebRouter<string>;
 
-    routeApp(body, window as unknown as Window, createLocation("/"), {
+    webRouterApp(body, window as unknown as Window, createLocation("/"), {
         fallbackScreen(props, ctx) {
             ctx.tag("div", { c: [`fallback`] });
-            if ("router" in ctx.runner && ctx.runner.router instanceof Router) {
+            if ("router" in ctx.runner && ctx.runner.router instanceof WebRouter) {
                 router = ctx.runner.router;
             }
         },
@@ -482,15 +481,15 @@ it("switch page: fallback -> error", function (done) {
 it("switch page: error -> found", function (done) {
     const window = page();
     const body = window.document.body;
-    let router!: Router<string>;
+    let router!: WebRouter<string>;
 
-    routeApp(body, window as unknown as Window, createLocation("/missing"), {
+    webRouterApp(body, window as unknown as Window, createLocation("/missing"), {
         fallbackScreen() {
             throw new Error("error");
         },
         errorScreen(props, ctx) {
             ctx.tag("div", { c: [`error`] });
-            if ("router" in ctx.runner && ctx.runner.router instanceof Router) {
+            if ("router" in ctx.runner && ctx.runner.router instanceof WebRouter) {
                 router = ctx.runner.router;
             }
         },
@@ -517,16 +516,16 @@ it("switch page: error -> found", function (done) {
 it("no access fallback", function (done) {
     const window = page();
     const body = window.document.body;
-    let router!: Router<string>;
+    let router!: WebRouter<string>;
     let giveAccess = false;
 
-    routeApp(body, window as unknown as Window, createLocation("/exists"), {
+    webRouterApp(body, window as unknown as Window, createLocation("/exists"), {
         checkAccess(path) {
             return Promise.resolve(path !== "/exists" || giveAccess);
         },
         fallbackScreen(props, ctx) {
             ctx.tag("div", { c: [props.cause] });
-            if ("router" in ctx.runner && ctx.runner.router instanceof Router) {
+            if ("router" in ctx.runner && ctx.runner.router instanceof WebRouter) {
                 router = ctx.runner.router;
             }
         },
@@ -558,7 +557,7 @@ it("window popstate event", function (done) {
     const body = window.document.body;
     const location = createLocation("/init");
 
-    routeApp(body, window as unknown as Window, location, {
+    webRouterApp(body, window as unknown as Window, location, {
         fallbackScreen(props, ctx) {
             ctx.tag("div", { c: ["fallback"] });
         },
@@ -604,7 +603,7 @@ it("loading screen: before first screen", function (done) {
     const body = window.document.body;
     let resolve: ((v: unknown) => void) | null = null;
 
-    routeApp(body, window as unknown as Window, window.location, {
+    webRouterApp(body, window as unknown as Window, window.location, {
         fallbackScreen() {},
         errorScreen() {},
         loadingScreen(_, node) {
@@ -635,10 +634,10 @@ it("loading screen: before first screen", function (done) {
 it("loading screen: between screens", function (done) {
     const window = page();
     const body = window.document.body;
-    let router!: Router<string>;
+    let router!: WebRouter<string>;
     let resolve: ((v: unknown) => void) | null = null;
 
-    routeApp(body, window as unknown as Window, createLocation("/"), {
+    webRouterApp(body, window as unknown as Window, createLocation("/"), {
         fallbackScreen() {},
         errorScreen() {},
         loadingScreen(_, node) {
@@ -648,7 +647,7 @@ it("loading screen: between screens", function (done) {
             "/": {
                 async screen(props, ctx) {
                     ctx.tag("div", { c: [`first`] });
-                    if ("router" in ctx.runner && ctx.runner.router instanceof Router) {
+                    if ("router" in ctx.runner && ctx.runner.router instanceof WebRouter) {
                         router = ctx.runner.router;
                     }
                 },
@@ -688,13 +687,13 @@ it("loading screen: between screens", function (done) {
 it("loading overlay", function (done) {
     const window = page();
     const body = window.document.body;
-    let router!: Router<string>;
+    let router!: WebRouter<string>;
     let resolve: ((v: unknown) => void) | null = null;
 
-    routeApp(body, window as unknown as Window, window.location, {
+    webRouterApp(body, window as unknown as Window, window.location, {
         fallbackScreen(props, ctx) {
             ctx.tag("div", { c: [`fallback`] });
-            if ("router" in ctx.runner && ctx.runner.router instanceof Router) {
+            if ("router" in ctx.runner && ctx.runner.router instanceof WebRouter) {
                 router = ctx.runner.router;
             }
         },
@@ -734,7 +733,7 @@ it("throw error in component", function (done) {
     const window = page();
     const body = window.document.body;
 
-    routeApp(body, window as unknown as Window, window.location, {
+    webRouterApp(body, window as unknown as Window, window.location, {
         fallbackScreen() {},
         errorScreen(props, ctx) {
             ctx.tag("div", { c: ["error"] }, div => {

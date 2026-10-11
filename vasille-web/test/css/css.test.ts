@@ -1,13 +1,13 @@
-import { styleSheet } from "vasille-css";
-import { App } from "../../src/index.js";
-import { Runner, TagOptions } from "../../src/runner/web/runner.js";
-import { page } from "../page.js";
+import { AppNode } from "vasille";
+import { styleSheet } from "../../src/web/css/index.ts";
+import { WebRunner, WebTagOptions } from "../../src/web/runner/runner.ts";
+import { page } from "../page.ts";
 
 const styles = styleSheet({
     field: ["{}{display: none}"],
 });
 
-class MyApp extends App<Node, Element, TagOptions> {
+class MyApp extends AppNode<Node, Element, WebTagOptions> {
     public compose() {
         this.tag("div", {
             c: [styles.field],
@@ -17,7 +17,7 @@ class MyApp extends App<Node, Element, TagOptions> {
 
 it("has css stylesheet", function () {
     const window = page();
-    const app = new MyApp(window.document.body, new Runner(window.document));
+    const app = new MyApp(window.document.body, new WebRunner(window.document));
 
     global.document = window.document;
     app.compose();

@@ -9,6 +9,13 @@
   "bracketSpacing": true,
   "bracketSameLine": true,
   "arrowParens": "avoid",
-  "parser": "typescript",
+  "overrides": [
+    {
+      "files": ["*.mts", "*.cts", "*.ts"],
+      "options": {
+        "parser": "typescript"
+      }
+    }
+  ],
   "singleAttributePerLine": false
 }

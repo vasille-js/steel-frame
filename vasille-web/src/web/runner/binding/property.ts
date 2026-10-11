@@ -1,6 +1,5 @@
-import { IValue } from "../../../core/ivalue.js";
-import type { Tag } from "../../../node/node.js";
 import { Binding } from "./binding.js";
+import { IValue, Tag } from "vasille";
 
 /**
  * Represents a property binding

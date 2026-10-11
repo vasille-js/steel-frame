@@ -1,9 +1,7 @@
-import { Router, WebRouterInitialization } from "./router.js";
-import { DevFragment, DevRunner, DevTagOptions, inspector, Inspector, StaticPosition } from "vasille/dev";
-import { Fragment, Runner as IRunner } from "vasille";
-import { ScreenProps } from "../types.js";
-import { devMount } from "vasille-jsx/dev";
-import { createScreen } from "../screen.js";
+import { DevFragment, Inspector, inspector, StaticPosition, devMountApp } from "vasille/dev";
+import { createScreen, Fragment, IRunner, ScreenProps } from "vasille";
+import { WebRouter, WebRouterInitialization } from "../web/router/router.js";
+import { DevWebRunner, DevWebTagOptions } from "./runner.js";
 
 export function devScreen<Node, Element, TagOptions extends object, Route extends string>(
     renderer: (node: DevFragment<Node, Element, TagOptions>, input: ScreenProps<Route>) => Promise<void>,
@@ -21,11 +19,11 @@ export function devScreen<Node, Element, TagOptions extends object, Route extend
 
 let targetLookUpResultId = 0;
 
-export class DevRouter<Routes extends string> extends Router<Routes> {
+export class DevWebRouter<Routes extends string> extends WebRouter<Routes> {
     public constructor(
         window: Window,
         location: Location,
-        node: Fragment<Node, Element, DevTagOptions, IRunner<Node, Element, DevTagOptions>>,
+        node: Fragment<Node, Element, DevWebTagOptions, IRunner<Node, Element, DevWebTagOptions>>,
         init: WebRouterInitialization<Routes>,
     ) {
         super(window, location, node, init);
@@ -87,19 +85,19 @@ export class DevRouter<Routes extends string> extends Router<Routes> {
     }
 }
 
-export function devRouteApp<Routes extends string>(
+export function devRouterApp<Routes extends string>(
     node: Element,
     window: Window,
     location: Location,
     init: WebRouterInitialization<Routes>,
     inspector: Inspector,
 ) {
-    const runner = new DevRunner(window.document);
+    const runner = new DevWebRunner(window.document);
 
-    return devMount<object>(
+    return devMountApp<object, Node, Element, DevWebTagOptions>(
         node,
         (_data, node) => {
-            const router = new DevRouter(window, location, node, init);
+            const router = new DevWebRouter(window, location, node, init);
 
             Object.defineProperty(runner, "router", {
                 value: router,

@@ -1,7 +1,6 @@
-import { App, Fragment, Reference } from "vasille";
-import { ref } from "vasille-jsx";
-import { Runner, Tag, TagOptions } from "vasille/web-runner";
+import { WebRunner, WebTag, WebTagOptions } from "../web/runner/runner.js";
 import { ShadowCssStyleInjector, StyleSheetsManager } from "./css.js";
+import { AppNode, Fragment, IValue, ref, Reference } from "vasille";
 
 const any = 0;
 const string = 1;
@@ -12,8 +11,8 @@ interface PropsDeclaration {
     [key: string]: typeof string | typeof number | typeof boolean | typeof any;
 }
 
-class ShadowTag extends Tag<TagOptions, ShadowRunner> {
-    public applyOptions(options: TagOptions) {
+class ShadowTag extends WebTag<WebTagOptions, ShadowRunner> {
+    public applyOptions(options: WebTagOptions) {
         if (options.c) {
             for (const className of options.c) {
                 if (className instanceof ShadowCssStyleInjector) {
@@ -25,14 +24,14 @@ class ShadowTag extends Tag<TagOptions, ShadowRunner> {
     }
 }
 
-class ShadowFragment extends Fragment<Node, Element, TagOptions, ShadowRunner> {
-    public constructor(app: App<Node, Element, TagOptions, ShadowRunner>) {
+class ShadowFragment extends Fragment<Node, Element, WebTagOptions, ShadowRunner> {
+    public constructor(app: AppNode<Node, Element, WebTagOptions, ShadowRunner>) {
         super(app.runner, app.sDeep + 1);
         this.parent = app;
     }
 }
 
-class ShadowRunner extends Runner<TagOptions> {
+class ShadowRunner extends WebRunner<WebTagOptions> {
     public readonly styles: StyleSheetsManager;
 
     public constructor(document: Document, styles: StyleSheetsManager) {
@@ -43,9 +42,9 @@ class ShadowRunner extends Runner<TagOptions> {
     tag(
         deep: number,
         tagName: string,
-        input: TagOptions,
-        cb?: ((ctx: Tag<TagOptions, ShadowRunner>) => void) | undefined,
-    ): Tag<TagOptions, ShadowRunner> {
+        input: WebTagOptions,
+        cb?: ((ctx: WebTag<WebTagOptions, ShadowRunner>) => void) | undefined,
+    ): WebTag<WebTagOptions, ShadowRunner> {
         if (cb) {
             input.l = cb;
         }
@@ -71,7 +70,7 @@ function toKebabCase(propName: string) {
 }
 
 function readRef(ref: unknown) {
-    if (ref instanceof Reference) {
+    if (ref instanceof IValue) {
         return ref.V;
     }
 
@@ -91,7 +90,7 @@ function matchAndSet(o: object, key: string, value: unknown) {
 }
 
 export function shadow(
-    renderer: (node: Fragment<Node, Element, TagOptions>, input: object) => unknown,
+    renderer: (node: Fragment<Node, Element, WebTagOptions>, input: object) => unknown,
     name: string,
     props: PropsDeclaration,
 ): void {
@@ -114,7 +113,7 @@ export function shadow(
 
             protected props: { [k: string]: unknown };
             protected events: { [k: string]: unknown };
-            protected root: App<Node, Element, TagOptions, ShadowRunner>;
+            protected root: AppNode<Node, Element, WebTagOptions, ShadowRunner>;
 
             public constructor() {
                 super();
@@ -149,7 +148,7 @@ export function shadow(
                 const shadowRoot = this.attachShadow({ mode: "open" });
 
                 styleManager.addRoot(shadowRoot);
-                this.root = new App<Node, Element, TagOptions, ShadowRunner>(
+                this.root = new AppNode<Node, Element, WebTagOptions, ShadowRunner>(
                     shadowRoot as unknown as Element,
                     new ShadowRunner(document, styleManager),
                 );

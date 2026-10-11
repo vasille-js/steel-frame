@@ -1,6 +1,6 @@
-import { setErrorHandler } from "../../src/classes/index.js";
-import { routeApp } from "../../src/web/router.js";
 import { page } from "./page.js";
+import { setErrorHandler } from "vasille";
+import { webRouterApp } from "../../src/web/router/router.ts";
 
 it("empty router", function (done) {
     const window = page();
@@ -12,7 +12,7 @@ it("empty router", function (done) {
         counter++;
     });
 
-    routeApp(body, window as unknown as Window, window.location, { routes: {} });
+    webRouterApp(body, window as unknown as Window, window.location, { routes: {} });
 
     setTimeout(() => {
         expect(counter).toBe(1);

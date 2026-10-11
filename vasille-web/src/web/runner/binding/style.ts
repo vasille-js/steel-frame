@@ -1,6 +1,5 @@
-import { Tag } from "../../../node/node.js";
 import { Binding } from "./binding.js";
-import type { IValue } from "../../../core/ivalue.js";
+import { IValue, Tag } from "vasille";
 
 export function stringifyStyleValue(value: string | number | number[]): string {
     if (value instanceof Array) {

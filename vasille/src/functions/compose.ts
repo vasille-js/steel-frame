@@ -75,7 +75,7 @@ export function createModel<In extends object, Out extends object>(
     return model.create(o, parent);
 }
 
-export function mount<Node, Element, TagOptions extends object, T>(
+export function mountApp<Node, Element, TagOptions extends object, T>(
     tag: Element,
     view: ($: T, node: Fragment<Node, Element, TagOptions>) => unknown,
     runner: IRunner<Node, Element, TagOptions>,

@@ -178,13 +178,13 @@ export function createDevModel<In extends object, Out extends object>(
     return model.create(o, parent, usage);
 }
 
-export function devMount<T, Node, Element, TagOptions extends object>(
+export function devMountApp<T, Node, Element, TagOptions extends object>(
     tag: Element,
     view: ($: T, node: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>) => unknown,
     runner: IRunner<Node, Element, TagOptions>,
     $: T,
     devInspector: Inspector,
-): AppNode<Node, Element, TagOptions> {
+): DevAppNode<Node, Element, TagOptions> {
     const root = new DevAppNode<Node, Element, TagOptions>(tag, runner);
     const frag = new DevFragment<Node, Element, TagOptions>(runner, null, null, "Root", {});
 

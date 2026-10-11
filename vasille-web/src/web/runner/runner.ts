@@ -1,22 +1,21 @@
-import { TextNode as AbstractTextNode, Tag as AbstractTag, Runner as IRunner, IValue, safe } from "../../index.js";
-import { internalError } from "../../core/errors.js";
 import { AttributeBinding } from "./binding/attribute.js";
-import { AbstractCssStyleInjector, addClass, DynamicalClassBinding } from "./binding/class.js";
+import { addClass, DynamicalClassBinding } from "./binding/class.js";
 import { PropertyBinding } from "./binding/property.js";
 import { stringifyStyleValue, StyleBinding } from "./binding/style.js";
+import { internalError, IRunner, IValue, safe, Tag, TextNode } from "vasille";
+import { CssStyleInjector } from "../css/index.js";
 
-export { AbstractCssStyleInjector } from "./binding/class.js";
 export type AttrType<T> = IValue<T | string | null, unknown> | T | string | null | undefined;
 export type StyleType<T> = T | number | number[] | IValue<string | number | number[] | undefined, unknown> | undefined;
 
-export interface TagOptions {
+export interface WebTagOptions {
     /** attributes */
     a?: Record<string, AttrType<number | boolean>>;
     /** classes */
     c?: (
         | string
-        | AbstractCssStyleInjector
-        | IValue<string | AbstractCssStyleInjector | false | null | undefined, unknown>
+        | CssStyleInjector
+        | IValue<string | CssStyleInjector | false | null | undefined, unknown>
         | null
         | undefined
     )[];
@@ -27,14 +26,14 @@ export interface TagOptions {
     /** bindings */
     b?: Record<string, any>;
     /** slot */
-    l?: (ctx: Tag<typeof this, Runner<typeof this>>) => void;
+    l?: (ctx: WebTag<typeof this, WebRunner<typeof this>>) => void;
     /** callback */
     k?: (node: Element) => void | Element | (() => void);
     /** run on destroy */
     d?: () => void;
 }
 
-export class TextNode<Options extends TagOptions, RunnerT extends Runner<Options>> extends AbstractTextNode<
+export class WebTextNode<Options extends WebTagOptions, RunnerT extends WebRunner<Options>> extends TextNode<
     Node,
     Element,
     Options,
@@ -80,7 +79,7 @@ export class TextNode<Options extends TagOptions, RunnerT extends Runner<Options
     }
 }
 
-export class Tag<Options extends TagOptions, RunnerT extends Runner<Options>> extends AbstractTag<
+export class WebTag<Options extends WebTagOptions, RunnerT extends WebRunner<Options>> extends Tag<
     Node,
     Element,
     Options,
@@ -136,7 +135,7 @@ export class Tag<Options extends TagOptions, RunnerT extends Runner<Options>> ex
         }
     }
 
-    protected applyOptions(options: TagOptions): void {
+    protected applyOptions(options: WebTagOptions): void {
         const { node } = this;
 
         if (options.a && node) {
@@ -165,7 +164,7 @@ export class Tag<Options extends TagOptions, RunnerT extends Runner<Options>> ex
                     this.bind(new DynamicalClassBinding(this, item));
                 } else if (typeof item == "string") {
                     addClass(this, item);
-                } else if (item instanceof AbstractCssStyleInjector) {
+                } else if (item instanceof CssStyleInjector) {
                     addClass(this, item.inject());
                 }
             });
@@ -211,7 +210,7 @@ export class Tag<Options extends TagOptions, RunnerT extends Runner<Options>> ex
     }
 }
 
-export class Runner<Options extends TagOptions> implements IRunner<Node, Element, Options> {
+export class WebRunner<Options extends WebTagOptions> implements IRunner<Node, Element, Options> {
     public readonly document: Document;
 
     public constructor(document: Document) {
@@ -229,19 +228,19 @@ export class Runner<Options extends TagOptions> implements IRunner<Node, Element
     appendChild(node: Element, child: Element | Node): void {
         node.appendChild(child);
     }
-    textNode(deep: number, text: unknown): AbstractTextNode<Node, Element, Options> {
-        return new TextNode({ text }, this, deep);
+    textNode(deep: number, text: unknown): TextNode<Node, Element, Options> {
+        return new WebTextNode({ text }, this, deep);
     }
     tag(
         deep: number,
         tagName: string,
         input: Options,
-        cb?: ((ctx: AbstractTag<Node, Element, Options>) => void) | undefined,
-    ): AbstractTag<Node, Element, Options> {
+        cb?: ((ctx: Tag<Node, Element, Options>) => void) | undefined,
+    ): Tag<Node, Element, Options> {
         if (cb) {
             input.l = cb;
         }
 
-        return new Tag(input, this, tagName, deep);
+        return new WebTag(input, this, tagName, deep);
     }
 }

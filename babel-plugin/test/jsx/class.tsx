@@ -11,7 +11,7 @@ const C = compose(() => {
   <div class={[$a === "b" && "aIsB"]} />;
   <div class={[c === "b" && "cIsB"]} />;
   <div class={[c]} />;
-  <div class={[{ hover: true, ["b"]: $b, ...{ active: true } }]} />;
+  <div class={["hover", $b && "b", "active"]} />;
   <div class={[...[$a]]} />;
   <div class="a b" />;
   <div class={"a b"} />;

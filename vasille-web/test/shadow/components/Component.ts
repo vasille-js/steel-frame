@@ -1,7 +1,5 @@
-import { shadow } from "../../src/lib.js";
-import { expr, ref, Switch } from "vasille-jsx";
-import { IValue } from "vasille";
-import { watch } from "vasille-web";
+import { expr, IValue, ref, Switch } from "vasille";
+import { shadow } from "../../../src/shadow/lib.ts";
 
 interface Props {
     $idNumber: IValue<number, unknown>;
@@ -17,7 +15,7 @@ export function register() {
         (node, input: Props) => {
             let altName = ref<string | undefined>(undefined);
 
-            watch(
+            expr(
                 node,
                 visible => {
                     if (!visible) {

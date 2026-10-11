@@ -4,7 +4,8 @@ interface Props {
     slot?(): void;
 }
 
-const DivModal = modal(({ slot }: Props) => {
+const DivModal = modal((props: Props) => {
+    const { slot } = props;
     <div class="modal">
         <Slot slot={slot} />
     </div>;

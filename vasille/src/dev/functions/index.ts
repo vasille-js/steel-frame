@@ -17,7 +17,7 @@ export {
     devStore,
     type DevComposed,
     devModel,
-    devMount,
+    devMountApp,
     devView,
     devDynamicalModule,
     createDevModel,

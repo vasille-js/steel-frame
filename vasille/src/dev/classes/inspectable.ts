@@ -112,9 +112,7 @@ export interface ProtocolTagAttr extends Inspectable {
 }
 
 export interface ProtocolTagClass extends Inspectable {
-    name: string;
-    value: number | string;
-    condition?: number | DevValue;
+    value: number | DevValue;
 }
 
 export interface ProtocolTagStyle extends Inspectable {

@@ -1,12 +1,15 @@
-import { inspector, StaticPosition } from "./inspectable.js";
+import { inspector, StaticPosition } from "vasille/dev";
+import { CssStyleInjector } from "../web/css/index.js";
 
 let injectorId = 0;
 
-export class InspectedCssStyleInjector extends DevCssStyleInjector {
+export class InspectedCssStyleInjector extends CssStyleInjector {
+    protected key: string;
     public readonly id: number;
 
     public constructor(key: string, rules: (string | [number, string])[], position: StaticPosition) {
-        super(key, rules);
+        super(rules);
+        this.key = key;
 
         const id = (this.id = ++injectorId);
         const name = this.inject();
@@ -17,6 +20,10 @@ export class InspectedCssStyleInjector extends DevCssStyleInjector {
             className: name,
             time: Date.now(),
         });
+    }
+
+    protected generateClassName(): string {
+        return `${super.generateClassName()}-${this.key}`;
     }
 
     protected override insertRule(rule: string | [number, string], className: string) {

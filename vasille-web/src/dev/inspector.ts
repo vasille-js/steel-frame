@@ -1,13 +1,13 @@
 import type { AppSide, IdeSide } from "./communication.js";
-import { App, Fragment, Reactive } from "vasille";
-import { TagOptions } from "vasille/web-runner";
-import { expr, ref } from "vasille-jsx";
-import { DevFragment, DevTag, DevTextNode, inspector } from "vasille/dev";
+import { AppNode, expr, Fragment, Reactive, ref } from "vasille";
+import { DevFragment, inspector } from "vasille/dev";
 import { AbstractInspector } from "vasille/dev";
+import { DevWebTag, DevWebTagOptions, DevWebTextNode } from "./runner.js";
+import { WebTagOptions } from "../web/runner/runner.js";
 
 class AppHandler implements AppSide {
     private canvas: HTMLCanvasElement | null = null;
-    private app: App<Node, Element, TagOptions> | null = null;
+    private app: AppNode<Node, Element, WebTagOptions> | null = null;
     private active = ref(false);
     private $width = ref(window.innerWidth);
     private $height = ref(window.innerHeight);
@@ -19,7 +19,7 @@ class AppHandler implements AppSide {
         });
     }
 
-    public setup(app: App<Node, Element, TagOptions>, bridge: Inspector): void {
+    public setup(app: AppNode<Node, Element, WebTagOptions>, bridge: Inspector): void {
         this.app = app;
 
         app.tag("canvas", {
@@ -104,10 +104,10 @@ class AppHandler implements AppSide {
             return;
         }
 
-        const tags = new Set<DevTag>();
-        const texts = new Set<DevTextNode>();
+        const tags = new Set<DevWebTag>();
+        const texts = new Set<DevWebTextNode>();
 
-        this.iterateFragment(this.app as unknown as Fragment<Node, Element, TagOptions>, new Set(ids), tags, texts);
+        this.iterateFragment(this.app as unknown as Fragment<Node, Element, WebTagOptions>, new Set(ids), tags, texts);
 
         const canvas = this.canvas;
         const ctx = canvas?.getContext("2d");
@@ -154,10 +154,10 @@ class AppHandler implements AppSide {
     }
 
     protected iterateFragment(
-        node: Fragment<Node, Element, TagOptions>,
+        node: Fragment<Node, Element, WebTagOptions>,
         ids: Set<number>,
-        set: Set<DevTag>,
-        texts: Set<DevTextNode>,
+        set: Set<DevWebTag>,
+        texts: Set<DevWebTextNode>,
     ) {
         for (const child of node.children) {
             if ("id" in child && ids.has(child.id as number)) {
@@ -168,32 +168,36 @@ class AppHandler implements AppSide {
         }
     }
 
-    protected addTag(node: DevTag, set: Set<DevTag>) {
+    protected addTag(node: DevWebTag, set: Set<DevWebTag>) {
         set.add(node);
     }
 
-    protected addText(node: DevTextNode, set: Set<DevTag>) {
+    protected addText(node: DevWebTextNode, set: Set<DevWebTag>) {
         let it = node.parent;
 
         while (it instanceof DevFragment) {
             it = it.parent;
         }
 
-        if (it instanceof DevTag) {
+        if (it instanceof DevWebTag) {
             set.add(it);
         }
     }
 
-    protected addFragment(node: DevFragment<Node, Element, TagOptions>, set: Set<DevTag>, texts: Set<DevTextNode>) {
+    protected addFragment(
+        node: DevFragment<Node, Element, DevWebTagOptions>,
+        set: Set<DevWebTag>,
+        texts: Set<DevWebTextNode>,
+    ) {
         for (const child of node.children) {
             this.addReactive(child, set, texts);
         }
     }
 
-    protected addReactive(node: Reactive, set: Set<DevTag>, texts: Set<DevTextNode>) {
-        if (node instanceof DevTag) {
+    protected addReactive(node: Reactive, set: Set<DevWebTag>, texts: Set<DevWebTextNode>) {
+        if (node instanceof DevWebTag) {
             this.addTag(node, set);
-        } else if (node instanceof DevTextNode) {
+        } else if (node instanceof DevWebTextNode) {
             this.addText(node, set);
             texts.add(node);
         } else if (node instanceof DevFragment) {
@@ -217,7 +221,7 @@ export class Inspector extends AbstractInspector implements IdeSide {
         inspector.connect(this);
     }
 
-    public setup(app: App<Node, Element, TagOptions>) {
+    public setup(app: AppNode<Node, Element, WebTagOptions>) {
         this.app.setup(app, this);
     }
 
