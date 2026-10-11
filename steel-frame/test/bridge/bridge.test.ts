@@ -1,0 +1,74 @@
+import { runTest, throwTest } from "../run-test.js";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+it("router test", function () {
+    runTest(__dirname, "router");
+});
+
+it("bridge/router global import", function () {
+    runTest(__dirname, "global-import");
+});
+
+it("bind test", function () {
+    runTest(__dirname, "bind");
+});
+
+it("module level reactivity test", function () {
+    runTest(__dirname, "module-level-reactivity");
+});
+
+it("object property key-value match test", function () {
+    runTest(__dirname, "object-property-match");
+});
+
+it("array item set test", function () {
+    runTest(__dirname, "array-item-set");
+});
+
+it("router outside of compose error", function () {
+    throwTest(__dirname, "router", 'Usage of hint "router" is restricted here');
+});
+
+it("router in store error 1", function () {
+    throwTest(__dirname, "router-in-store-1", "The router is not available in stores");
+});
+
+it("router in store error 2", function () {
+    throwTest(__dirname, "router-in-store-2", "The router is not available in stores");
+});
+
+it("router in store error 3", function () {
+    throwTest(__dirname, "router-in-store-3", "The router is not available in stores");
+});
+
+it("bind in object error", function () {
+    throwTest(__dirname, "bind-in-object", 'Usage of hint "bind" is restricted here');
+});
+
+it("field renaming error", function () {
+    throwTest(__dirname, "field-renaming", 'Property "$a" can not be renamed to "a": rename it to "$a"');
+});
+
+it("field renaming error 2", function () {
+    throwTest(__dirname, "field-renaming-2", 'Property "a" can not be renamed to "$a": rename it to "a"');
+});
+
+it("property is not reactive error", function () {
+    throwTest(__dirname, "prop-not-reactive", "Reactivity mismatch between field name and value");
+});
+
+it("raw without args error", function () {
+    throwTest(__dirname, "raw-no-args", "Failed to unwrap value");
+});
+
+it("beforeMount arg error", function () {
+    throwTest(__dirname, "before-mount-arg", "Incorrect hint argument");
+});
+
+it("non reactive module var name check error", function () {
+    throwTest(__dirname, "non-reactive-module-var", "Non-reactive variable name must not start with $");
+});

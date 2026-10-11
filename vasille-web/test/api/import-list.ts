@@ -69,7 +69,6 @@ export function checkImports(folder: string, isDev = false) {
     if (!existsSync(fName)) {
         throw new Error(`The file ${fName} does not exist`);
     }
-    console.log("ts", ts);
     const program = ts.createProgram([fName], { allowJs: true });
     const checker = program.getTypeChecker();
     const sourceFile = program.getSourceFile(fName);

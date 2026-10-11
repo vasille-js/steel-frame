@@ -7,7 +7,7 @@ module.exports = {
                 plugins: [
                     "@babel/plugin-syntax-jsx",
                     [
-                        "vasille",
+                        "steel-frame/babel-plugin",
                         {
                             devMode: true,
                             strictFolders: false,

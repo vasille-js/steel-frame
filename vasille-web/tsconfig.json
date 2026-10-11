@@ -4,7 +4,7 @@
     "compilerOptions": {
         "allowJs": true,
         "declaration": true,
-        "rootDir": ".",
+        "rootDir": "./src",
         "outDir": "build",
         "declarationDir": "build",
         "target": "ES2020",

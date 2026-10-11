@@ -17,7 +17,7 @@ import {
 import { modal, Prompt } from "../web/index.js";
 import { DevWebRunner, DevWebTagOptions } from "./runner.js";
 import { WebRouterInitialization } from "../web/router/router.js";
-import { PromptProps } from "../../../steel-frame/fake-types/index.js";
+import { PromptProps } from "../web/mount.js";
 
 function createPortal<Runner extends IRunner<Node, Element, SsgTagOptions>>(
     node: Fragment<Node, Element, SsgTagOptions>,
@@ -92,7 +92,7 @@ export function devModal<T extends CompositionProps>(
     return devDynamicalModule(renderer, fragments, run);
 }
 
-export function devPrompt<T extends PromptProps<unknown>>(
+export function devPrompt<T extends PromptProps>(
     modal: (node: Fragment<Node, Element, SsgTagOptions, IRunner<Node, Element, SsgTagOptions>>, input: T) => void,
     declaration: StaticPosition,
     name: string,

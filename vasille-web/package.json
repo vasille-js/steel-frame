@@ -40,6 +40,12 @@
             "import": "./build/ssg/index.js",
             "browser": "./build/ssg/index.js",
             "node": "./build/ssg/index.js"
+        },
+        "./types": {
+            "types": "./build/types/index.d.ts",
+            "import": "./build/types/index.js",
+            "browser": "./build/types/index.js",
+            "node": "./build/types/index.js"
         }
     },
     "scripts": {
@@ -80,7 +86,6 @@
         "@types/jsdom": "^30.0.0",
         "@types/node": "^24.3.0",
         "@types/web": "^0.0.256",
-        "babel-plugin-vasille": "file:../babel-plugin",
         "jest": "^30.5.2",
         "jsdom": "^29.1.1",
         "prettier": "^3.9.10",
