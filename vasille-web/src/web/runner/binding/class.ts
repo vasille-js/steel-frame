@@ -28,7 +28,7 @@ export class DynamicalClassBinding extends Binding<string | CssStyleInjector | f
                 if (value instanceof CssStyleInjector) {
                     addClass(node, (this.current = value.inject()));
                 } else if (typeof value === "string" && value.length) {
-                    addClass(node, value);
+                    addClass(node, (this.current = value));
                 } else {
                     this.current = "";
                 }

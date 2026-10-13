@@ -103,7 +103,11 @@ export function showPrompt<T extends PromptProps, Extra extends [number, ...unkn
     return prompt.show(ctx, input, ...args);
 }
 
-export function mount<T>(element: Element, component: ($: T) => void, input: T): AppNode<Node, Element, WebTagOptions> {
+export function mount<T>(
+    element: Element,
+    component: ($: T, node: Fragment<Node, Element, WebTagOptions>) => void,
+    input: T,
+): AppNode<Node, Element, WebTagOptions> {
     return mountApp<Node, Element, WebTagOptions, T>(element, component, new WebRunner(window.document), input);
 }
 
