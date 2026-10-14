@@ -221,7 +221,7 @@ it("INode", function () {
             expect(el.style.width).toBe("300px");
             expect(el.style.inset).toBe("12px 23px");
 
-            dyn.V = "100px";
+            dyn.V = 100;
             expect(el.style.margin).toBe("100px");
             expect(el.style.padding).toBe("110px");
         })();
