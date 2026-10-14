@@ -56,6 +56,7 @@ export class WebTextNode<Options extends WebTagOptions, RunnerT extends WebRunne
     }
 
     public override destroy(deep: number, keepNodes?: boolean) {
+        /* istanbul ignore else */
         if (!keepNodes) {
             this.node.remove();
         }
@@ -164,8 +165,11 @@ export class WebTag<Options extends WebTagOptions, RunnerT extends WebRunner<Opt
                     this.bind(new DynamicalClassBinding(this, item));
                 } else if (typeof item == "string") {
                     addClass(this, item);
-                } else if (item instanceof CssStyleInjector) {
-                    addClass(this, item.inject());
+                } else {
+                    /* istanbul ignore else */
+                    if (item instanceof CssStyleInjector) {
+                        addClass(this, item.inject());
+                    }
                 }
             });
         }

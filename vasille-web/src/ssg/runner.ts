@@ -80,8 +80,11 @@ function addClass(classes: string[], item: ClassItem | IValue<ClassItem, unknown
         addClass(classes, item.V);
     } else if (typeof item === "string") {
         classes.push(item);
-    } else if (item instanceof CssStyleInjector) {
-        classes.push(item.inject());
+    } else {
+        /* istanbul ignore else */
+        if (item instanceof CssStyleInjector) {
+            classes.push(item.inject());
+        }
     }
 }
 
@@ -152,11 +155,6 @@ export class Element extends Node {
 
         if (this.options.c) {
             const classes: string[] = [];
-            const attrValue = this.options.a?.class;
-
-            if (typeof attrValue === "string") {
-                classes.push(attrValue);
-            }
 
             for (const item of this.options.c) {
                 addClass(classes, item);

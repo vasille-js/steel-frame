@@ -473,7 +473,7 @@ function transformJsxElement(
         const events: types.ObjectProperty[] = [];
         const bind: types.ObjectProperty[] = [];
         const classElements: types.ArrayExpression["elements"] = [];
-        let classStatic: types.StringLiteral | null = null;
+        let classStatic: types.Expression | null = null;
         const styleObject: (types.ObjectProperty | types.SpreadElement)[] = [];
         const styleStatic: [types.Identifier, types.StringLiteral][] = [];
         let callback: types.Expression | null = null;
@@ -525,7 +525,7 @@ function transformJsxElement(
                         }
                         // class={"a b"}
                         else if (expressionPath && expressionPath.isStringLiteral()) {
-                            attrs.push(t.objectProperty(t.identifier("class"), expressionPath.node));
+                            classStatic = expressionPath.node;
                         }
                         // class={`a ${b}`}
                         else if (expressionPath && expressionPath.isExpression()) {
@@ -544,7 +544,7 @@ function transformJsxElement(
                                 internal.reportError("This will slow down your application", attrPath.node);
                             }
                             if (isTemplate) {
-                                attrs.push(t.objectProperty(t.identifier("class"), expressionPath.node));
+                                classStatic = expressionPath.node;
                             } else {
                                 classElements.push(expressionPath.node);
                             }

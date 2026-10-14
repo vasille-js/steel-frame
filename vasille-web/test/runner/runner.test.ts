@@ -200,7 +200,7 @@ it("INode", function () {
         //style
         (function () {
             const dyn = new Reference(0);
-            const num = expr<number, [string]>(root, x => parseFloat(x) + 10, [dyn]);
+            const num = expr<number, [number]>(root, x => x + 10, [dyn]);
             let el!: HTMLElement;
 
             test.tag("div", {
