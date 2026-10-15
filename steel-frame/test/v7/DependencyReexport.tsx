@@ -1,1 +1,2 @@
-export { DependencyStart } from "./DependencyStart.js";
+// @ts-ignore
+export { DependencyStart } from "./DependencyStart";
