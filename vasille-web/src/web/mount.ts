@@ -1,4 +1,4 @@
-import { AppNode, CompositionProps, Fragment, mountApp, PortalNode } from "vasille";
+import { AppNode, CompositionProps, Fragment, mountApp, PortalNode, reportError } from "vasille";
 import { WebRunner, WebTagOptions } from "./runner/runner.js";
 import { webRouterApp, WebRouterInitialization } from "./router/router.js";
 
@@ -13,7 +13,7 @@ function createPortal(node: Fragment<Node, Element, WebTagOptions>) {
 export function modal<T extends CompositionProps>(
     modal: (node: Fragment<Node, Element, WebTagOptions>, input: T) => void,
     create: (node: Fragment<Node, Element, WebTagOptions>) => PortalNode<Node, Element, WebTagOptions> = createPortal,
-): (input: T, node: Fragment<Node, Element, WebTagOptions>, slot?: T["slot"]) => void {
+): (input: T, node?: Fragment<Node, Element, WebTagOptions>, slot?: T["slot"]) => void {
     return function (props, node, slot) {
         if (!node) {
             throw new Error("Vasille: Modal context is missing");
@@ -47,7 +47,11 @@ export class Prompt<T extends PromptProps, Extra extends [number, ...unknown[]]>
         private readonly debugProps?: PromptProps,
     ) {}
 
-    public show(node: Fragment<Node, Element, WebTagOptions>, input: T, ...extra: Extra): Promise<unknown> {
+    public show(
+        node: Fragment<Node, Element, WebTagOptions>,
+        input: Omit<T, "resolve" | "reject">,
+        ...extra: Extra
+    ): Promise<unknown> {
         const { modal, create, debugProps } = this;
 
         return new Promise((resolve, reject) => {
@@ -66,7 +70,7 @@ export class Prompt<T extends PromptProps, Extra extends [number, ...unknown[]]>
 
             try {
                 modal(portal, {
-                    ...input,
+                    ...(input as unknown as T),
                     resolve(value) {
                         destroy();
                         debugProps?.resolve(value);
@@ -97,7 +101,7 @@ export function prompt<T extends PromptProps, Extra extends [number, ...unknown[
 export function showPrompt<T extends PromptProps, Extra extends [number, ...unknown[]]>(
     ctx: Fragment<Node, Element, WebTagOptions>,
     prompt: Prompt<T, Extra>,
-    input: T,
+    input: Omit<T, "resolve" | "reject">,
     ...args: Extra
 ): Promise<unknown> {
     return prompt.show(ctx, input, ...args);
