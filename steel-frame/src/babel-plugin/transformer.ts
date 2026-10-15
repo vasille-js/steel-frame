@@ -208,6 +208,7 @@ export interface TransformerOptions {
     routes: string[][] | undefined;
     appData: AppData | undefined;
     typeIdentifiersMapping: Map<string, string> | undefined;
+    legacyNaming: boolean;
 }
 
 export function nodeToStaticPosition(node: types.Node) {
@@ -301,6 +302,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
         usedStylesProps: new Set(),
         packageName: packageJson.name,
         isWrapper: relativePath === "/src/router/Wrapper.tsx",
+        legacyNaming: opts.legacyNaming,
         ref(arg, area, name, safe) {
             const fnName = safe ? "safeState" : "ref";
             const fixedArg = arg ? (safe ? t.arrowFunctionExpression([], arg) : arg) : t.buildUndefinedNode();
