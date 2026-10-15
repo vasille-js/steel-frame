@@ -1,0 +1,11 @@
+import { compose, ref as VasilleRef } from "vasille-web";
+const C = compose(Vasille => {
+  const $a = VasilleRef("text", Vasille);
+  Vasille.tag("div", {}, Vasille => {
+    Vasille.text("text1 Hello ");
+    Vasille.text("world");
+    Vasille.text($a);
+    Vasille.text(" is text");
+    Vasille.tag("div", {});
+  });
+});

@@ -1,0 +1,25 @@
+import { beforeMount, compose, prompt, PromptProps, showPrompt } from "steel-frame";
+
+const promptName = prompt<string>(props => {
+  function save() {
+    props.resolve("x");
+    props.reject(new Error("x"));
+  }
+});
+
+interface Props extends PromptProps<string> {
+  rules: string[];
+}
+
+const promptWithRules = prompt<string, Props>(props => {
+  function save() {
+    props.resolve(props.rules[0]);
+  }
+});
+
+const App = compose(() => {
+  beforeMount(() => {
+    showPrompt(promptName, {}) satisfies Promise<string>;
+    showPrompt(promptWithRules, { rules: ["x"] }) satisfies Promise<string>;
+  });
+});

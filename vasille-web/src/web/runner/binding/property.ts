@@ -1,0 +1,23 @@
+import { Binding } from "./binding.js";
+import { IValue, Tag } from "vasille";
+
+/**
+ * Represents a property binding
+ * @class PropertyBinding
+ * @extends Binding
+ */
+export class PropertyBinding<T> extends Binding<T> {
+    /**
+     * Constructs a property binding description
+     * @param node the vasille node
+     * @param name the name of property
+     * @param value the value of property
+     */
+    public constructor(node: Tag<Node, Element, object>, name: string, value: IValue<T, unknown>) {
+        super(value);
+
+        this.init(value => {
+            (node.node as unknown as Record<string, unknown>)[name] = value;
+        });
+    }
+}

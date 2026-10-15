@@ -1,18 +1,19 @@
 {
-  "include": ["src/**/*"],
+    "include": ["src/**/*"],
 
-  "compilerOptions": {
-    "allowJs": true,
-    "declaration": true,
-    "outDir": "lib",
-    "declarationDir": "types",
-    "target": "ES2020",
-    "module": "Node16",
-    "moduleResolution": "node16",
-    "skipLibCheck": true,
-    "strictNullChecks": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "types": ["node"]
-  }
+    "compilerOptions": {
+        "allowJs": true,
+        "declaration": true,
+        "rootDir": "src",
+        "outDir": "build",
+        "declarationDir": "build",
+        "target": "ES2020",
+        "module": "Node16",
+        "moduleResolution": "node16",
+        "skipLibCheck": true,
+        "strictNullChecks": true,
+        "esModuleInterop": true,
+        "isolatedModules": true,
+        "types": ["node", "vite/client"]
+    }
 }

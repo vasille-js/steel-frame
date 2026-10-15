@@ -1,0 +1,22 @@
+import { throwTest } from "../run-test.js";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+it("incorrect number of arguments error", function () {
+    throwTest(__dirname, "incorrect-args-number", "Incorrect number of arguments");
+});
+
+it("incorrect number of properties error", function () {
+    throwTest(__dirname, "incorrect-props-number", "Argument of calculate cannot have parameters");
+});
+
+it("first argument id not a function error", function () {
+    throwTest(__dirname, "arg-not-func", "Argument of calculate must be a function");
+});
+
+it("malformed component error", function () {
+    throwTest(__dirname, "malformed-component", "Malformed component detected");
+});

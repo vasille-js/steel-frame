@@ -1,0 +1,76 @@
+{
+  "name": "vasille",
+  "description": "The same devkit which is designed to build fault tolerant frontends (core library).",
+  "main": "lib/index.js",
+  "types": "types/index.d.ts",
+  "version": "7.0.0-rc.9",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.js",
+      "browser": "./build/index.js",
+      "node": "./build/index.js"
+    },
+    "./dev": {
+      "types": "./build/dev/index.d.ts",
+      "import": "./build/dev/index.js",
+      "browser": "./build/dev/index.js",
+      "node": "./build/dev/index.js"
+    }
+  },
+  "scripts": {
+    "prepack": "cp -f ../README.md ./README.md",
+    "prettier": "npx prettier src test --write",
+    "prebuild": "rm -rf build",
+    "build": "tsc --build tsconfig.json",
+    "tsc-tests": "tsc --build test/tsconfig.json",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test-coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vasille-js/vasille-js.git"
+  },
+  "type": "module",
+  "keywords": [
+    "front-end",
+    "web",
+    "app",
+    "safe",
+    "powerful"
+  ],
+  "author": "lixcode",
+  "license": "LGPL-2.1-only",
+  "browserslist": [
+    "safari 6",
+    "ie 10",
+    "chrome 23",
+    "firefox 21",
+    "opera 15"
+  ],
+  "bugs": {
+    "url": "https://github.com/vasille-js/vasille-js/issues"
+  },
+  "homepage": "https://github.com/vasille-js/vasille-js#readme",
+  "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/eslint": "^9.6.1",
+    "@types/eslint-scope": "^8.3.1",
+    "@types/estree": "^1.0.8",
+    "@types/events": "^3.0.3",
+    "@types/jest": "^30.0.0",
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^24.2.1",
+    "eslint": "^9.33.0",
+    "eslint-plugin-compat": "^6.0.2",
+    "jest": "^30.0.5",
+    "jsdom": "^26.1.0",
+    "prettier": "^3.6.2",
+    "ts-jest": "^29.4.0",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.39.0"
+  },
+  "dependencies": {
+  }
+}

@@ -1,0 +1,13 @@
+import { compose, ref as VasilleRef, expr as VasilleExpr } from "vasille-web";
+const C = compose(Vasille => {
+  const $a = VasilleRef("a", Vasille);
+  const $b = VasilleRef(1, Vasille);
+  Vasille.tag("div", {
+    a: {
+      dir: "ltr",
+      "data-let": $a,
+      "data-derived": VasilleExpr(Vasille, Vasille_0 => Vasille_0 + 1, [$b]),
+      contenteditable: true
+    }
+  });
+});

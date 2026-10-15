@@ -22,12 +22,17 @@ jobs:
       # Loop through each package and run tests sequentially
       - name: Run tests for all packages sequentially
         run: |
-          for pkg in core jsx css babel-plugin context router shadow ssg; do
-            echo "== Testing $pkg =="
+          for pkg in vasille vasille-web steel-frame; do
+            echo "== Building $pkg =="
             cd $pkg
             export COVERALLS_FLAG_NAME=$pkg
             npm i
             npm run build
+            cd ..
+          done
+          for pkg in vasille vasille-web steel-frame; do
+            echo "== Testing $pkg =="
+            cd $pkg
             npm run test-coverage
             cd ..
           done
