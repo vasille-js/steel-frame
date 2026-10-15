@@ -23,11 +23,16 @@ jobs:
       - name: Run tests for all packages sequentially
         run: |
           for pkg in vasille vasille-web steel-frame; do
-            echo "== Testing $pkg =="
+            echo "== Building $pkg =="
             cd $pkg
             export COVERALLS_FLAG_NAME=$pkg
             npm i
             npm run build
+            cd ..
+          done
+          for pkg in vasille vasille-web steel-frame; do
+            echo "== Testing $pkg =="
+            cd $pkg
             npm run test-coverage
             cd ..
           done
