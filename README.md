@@ -2,7 +2,9 @@
 
 ![Vasille.js logo](https://raw.githubusercontent.com/vasille-js/vasille-js/refs/heads/v5/doc/img/logo.png)
 
-`SteelFrameKit` is a front-end development kit, which is developed to provide fault tolerant web applications.
+AI can produce code. Organizations still have to produce software.
+Agentic development is changing how software gets made,
+but it hasn't changed what it cost to be wrong, `Steel Frame` do it.
 
 [![npm](https://img.shields.io/npm/v/steel-frame?style=round-square)](https://www.npmjs.com/package/steel-frame)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/vasille-js/steel-frame)
@@ -21,7 +23,7 @@
   - [How POWERFUL is SteelFrameKit](#how-powerful-is-steelframekit)
   - [Road map](#road-map)
   - [Change log](#change-log)
-    - [7.0](#70)
+    - [7.0 RC (WIP)](#70-rc-wip)
     - [6.0 RC (never released)](#60-rc-never-released)
     - [5.0 - 5.1](#50---51)
     - [4.0 - 4.3](#40---43)
@@ -50,7 +52,7 @@ $ npm create steel-frame
 
 - [Learn `SteelFrameKit` in 5 minutes](https://github.com/vasille-js/vasille-js/blob/v5/doc/V4-API.md)
 - [Router Documentation](https://github.com/vasille-js/vasille-js/blob/v5/doc/Router-API.md)
-- [Compostion functions](https://github.com/vasille-js/vasille-js/blob/v5/doc/Compositions.md)
+- [Composition functions](https://github.com/vasille-js/vasille-js/blob/v5/doc/Compositions.md)
 - [Dependency injection](https://github.com/vasille-js/vasille-js/blob/v5/doc/Context.md)
 
 ### Examples
@@ -132,10 +134,18 @@ We respect semantic versioning:
 
 ### 7.0 RC (WIP)
 
-- Add `debounceRef`, `edgeRef` and `fieldRef` functions, which extend the reativity system.
+- Add `debounced` and `field` functions, which extend the reativity system.
 - Add `Zombie` component, it keeps HTML elements alive some time after destruction.
 - Add `abortSignal` to cancel fetch requests and timers when component is destroyed.
-- Add `safeRef`, `safeExpr`, `safeInit` functions, they make the JSX much safer.
+- Renamed `ref` to `state`, `bind` to `live`, depracated `calculate`. **[backward compatible]**
+- Add `safeState`, `safeLive`, `safeInit` functions, they make the JSX much safer.
+- `callback` handler can return cleanup function.
+- Navigation paths are now checked in compile time, missing paths are reported.
+- Injected dependencies now are tracked in compile time, missing dependencies are reported.
+- Support for wrapper in router, it can provide global dependencies.
+- Reactive members are forbidden in live expressions. **[API change]**
+- Reactive values are not unwrapped automatically, need `unwrap` call. **[API change]**
+- Reactivity breaking is now reported in compile time. **[API change]**
 
 ### 6.0 RC (never released)
 
@@ -174,7 +184,7 @@ We respect semantic versioning:
 ### 1.0 - 1.2
 
 - Initial version of a core library.
-- Developemnt direction: `performance-first`.
+- Development direction: `performance-first`.
 
 ## Questions
 
