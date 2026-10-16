@@ -79,11 +79,11 @@ it("field ref no breakpoint", function () {
 });
 
 it("field ref double breakpoint", function () {
-    throwTest(__dirname, "field-ref-double-breakpoint", "Nested breakpoints are not allowed");
+    throwTest(__dirname, "field-ref-double-breakpoint", "Nested reactivity is not supported");
 });
 
 it("field ref has double breakpoint", function () {
-    throwTest(__dirname, "field-ref-has-double-breakpoint", "Nested breakpoints are not allowed");
+    throwTest(__dirname, "field-ref-has-double-breakpoint", "Nested reactivity is not supported");
 });
 
 it("field ref with private name", function () {
@@ -156,7 +156,7 @@ it("dependency reexport check", function () {
 });
 
 it("static live value", function () {
-    throwTest(__dirname, "static-live-value", "Computed expression has static value. Make it non reactive");
+    throwTest(__dirname, "static-live-value", "Unexpected reactivity mark in variable name");
 });
 
 it("rest element in reactive destruction", function () {
@@ -221,7 +221,7 @@ it("restricted member access in expression", function () {
 });
 
 it("breaks reactivity in watch", function () {
-    throwTest(__dirname, "reactivity-break", "This assignment breaks the reactivity");
+    throwTest(__dirname, "reactivity-break", "Assigment are forbidden in live values and effects");
 });
 
 it("breaks reactivity in function", function () {

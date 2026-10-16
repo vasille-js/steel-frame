@@ -2,7 +2,15 @@ import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { calledFn, calls, hintFunctions, isDiCall, unwrapFunctions } from "./call.js";
 import { ctx, Internal, StackedStates, V } from "./internal.js";
-import { checkNonReactiveName, err, Errors, forceReactiveName, pathIsReactiveValue, ReactiveType } from "./lib.js";
+import {
+    checkNonReactiveName,
+    err,
+    Errors,
+    forceReactiveName,
+    pathIsReactiveValue,
+    ReactiveType,
+    reactivityTypeOfNode,
+} from "./lib.js";
 import { checkStyleUsage, ignoreParams, meshAllUnknown, meshExpression } from "./mesh.js";
 import { routerReplace } from "./router.js";
 import { stringify } from "./utils.js";
@@ -320,12 +328,8 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
             const left = path.get("left");
             const right = path.get("right");
 
-            if (
-                left.isMemberExpression() &&
-                hasBreakPoint(left, search.external) &&
-                !pathIsReactiveValue(left, "writable", search.external)
-            ) {
-                err(Errors.RulesOfVasille, left, "This assignment breaks the reactivity", search.external);
+            if (reactivityTypeOfNode(left, search.external)) {
+                err(Errors.RulesOfVasille, left, "Assigment are forbidden in live values and effects", search.external);
             }
             if (left.isMemberExpression() && !exprIsSure(left, search.external)) {
                 meshAssigment(path, left, right, left.node.property, search.external);

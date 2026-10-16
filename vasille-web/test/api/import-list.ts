@@ -6,6 +6,7 @@ const importList = new Set([
     "ref",
     "safeState",
     "expr",
+    "live",
     "safeLive",
     "setModel",
     "mapModel",

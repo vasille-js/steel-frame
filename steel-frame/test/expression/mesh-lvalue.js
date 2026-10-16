@@ -12,7 +12,6 @@ const C = compose(Vasille => {
   }, [$a, $nested]);
   watch(Vasille, function update(Vasille_0, Vasille_1) {
     let rest;
-    $a.V = 3;
     [$a.V, $nested.V.level2, ...rest] = [Vasille_0.level2, Vasille_1];
   }, [$nested, $a]);
 });

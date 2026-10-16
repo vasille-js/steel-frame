@@ -9,7 +9,10 @@ import {
     Errors,
     exprCall,
     isReactiveName,
+    isReadableName,
+    isWritableName,
     nodeIsUnsafe,
+    reactivityTypeOfNode,
     toKebabCase,
 } from "./lib.js";
 import { compose, meshExpression, processRefCall } from "./mesh.js";
@@ -779,7 +782,7 @@ function transformJsxElement(
             // <A prop=../>
             if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name)) {
                 const valuePath = attrPath.isJSXAttribute() && attrPath.get("value");
-                const needReactive = isReactiveName(attr.name.name, "any", internal);
+                const needReactive = isReactiveName(attr.name.name, internal);
                 // <A prop=".."/>
                 if (valuePath && valuePath.isStringLiteral()) {
                     props.push(
@@ -793,6 +796,21 @@ function transformJsxElement(
                 // <A prop={..}/>
                 else if (valuePath && valuePath.isJSXExpressionContainer()) {
                     const propertyValueExpr = valuePath.get("expression");
+                    const nameIsWritable =
+                        isWritableName(attr.name.name, internal) && !isReadableName(attr.name.name, internal);
+                    const valueIsWritable =
+                        nameIsWritable &&
+                        valuePath.isJSXExpressionContainer() &&
+                        reactivityTypeOfNode(valuePath.get("expression"), internal) === "writable";
+
+                    if (nameIsWritable !== valueIsWritable) {
+                        err(
+                            Errors.RulesOfVasille,
+                            attrPath,
+                            "Reactive writable property requires writable value",
+                            internal,
+                        );
+                    }
 
                     isNotSafe ||=
                         nodeIsUnsafe(valuePath, internal) &&
@@ -801,7 +819,7 @@ function transformJsxElement(
                         !optionals?.has(attr.name.name);
 
                     const isSystem = internal.mapping.has(name.name);
-                    const requiresReactive = isReactiveName(attr.name.name, "any", internal);
+                    const requiresReactive = isReactiveName(attr.name.name, internal);
                     // lixcode: don't alter conditions
                     const acceptPassive =
                         !requiresReactive ||
@@ -811,6 +829,7 @@ function transformJsxElement(
                         mapped in strongSlotMap &&
                         attr.name.name === "slot" &&
                         precheckSlotParams(mapped, valuePath.get("expression"), internal);
+
                     const value = transformJsxExpressionContainer(valuePath, internal, [
                         (!isSystem || attr.name.name === "slot") && "acceptSlots",
                         isSystem && attr.name.name === "slot" && "isInternalSlot",
@@ -866,7 +885,7 @@ function transformJsxElement(
                 /* istanbul ignore else */
                 if (t.isJSXAttribute(attr) && t.isJSXNamespacedName(attr.name)) {
                     const fullName = `${attr.name.namespace.name}:${attr.name.name.name}`;
-                    const isReactive = isReactiveName(fullName, "any", internal);
+                    const isReactive = isReactiveName(fullName, internal);
                     let value: types.Expression | undefined;
 
                     if (attr.name.name.name === "path") {

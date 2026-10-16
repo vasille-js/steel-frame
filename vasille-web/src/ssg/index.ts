@@ -9,6 +9,7 @@ export {
     expr as bind,
     expr as calculate,
     expr as watch,
+    expr as live,
     set,
     Delay,
     For,

@@ -7,7 +7,10 @@ export function runTest(dir: string, name: string, opts: Partial<Options> = {}) 
     const input = fs.readFileSync(path.join(dir, `${name}.ts`), { encoding: "utf8" });
     const result = babel.transformSync(input, {
         plugins: [
-            [vasillePlugin, { devLayer: false, strictFolders: false, appData: new AppData(), ...opts }],
+            [
+                vasillePlugin,
+                { devLayer: false, strictFolders: false, legacyNaming: true, appData: new AppData(), ...opts },
+            ],
             "@babel/plugin-transform-typescript",
         ],
         filename: path.join(dir, `${name}.ts`),
@@ -32,7 +35,10 @@ export function throwTest(
     expect(() => {
         babel.transformSync(input, {
             plugins: [
-                [vasillePlugin, { strictFolders: false, throwAtFirstError: true, appData, ...opts }],
+                [
+                    vasillePlugin,
+                    { strictFolders: false, throwAtFirstError: true, legacyNaming: true, appData, ...opts },
+                ],
                 ["@babel/plugin-transform-typescript", { isTSX: isTsx }],
             ],
             filename: opts.filename ?? fileName,
@@ -45,7 +51,16 @@ export function runJsxTest(dir: string, name: string, opts: Partial<Options> & {
     const input = fs.readFileSync(path.join(dir, `${name}.tsx`), { encoding: "utf8" });
     const result = babel.transformSync(input, {
         plugins: [
-            [vasillePlugin, { devLayer: false, strictFolders: false, appData: new AppData(), ...opts }],
+            [
+                vasillePlugin,
+                {
+                    devLayer: false,
+                    strictFolders: false,
+                    appData: new AppData(),
+                    legacyNaming: true,
+                    ...opts,
+                },
+            ],
             ["@babel/plugin-transform-typescript", { isTSX: true }],
         ],
         filename: opts.filename ?? path.join(dir, `${name}.tsx`),

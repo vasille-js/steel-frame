@@ -49,7 +49,7 @@ export function checkOrder(paths: NodePath<types.Statement | null | undefined>[]
                 [
                     "Malformed component detected, required component structure is:",
                     "1. Variable declarations.",
-                    "2. Watchers/effects (calls of `watch` function).",
+                    "2. Watchers/effects (calls of `effect` function).",
                     "3. Dependency sharing (calls of `share` function).",
                     "4. Function declarations.",
                     "5. Before mount hint (call of `beforeMount` function)",

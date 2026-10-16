@@ -1,6 +1,3 @@
-import { ClassItem, EventHandlers, prefixedObject, TagAttrs, TagEvents, TagProps } from "../web/jsx/jsx-runtime.js";
-import { ElementStyleProps } from "../web/jsx/spec/css.js";
-
 export {
     context,
     impute,
@@ -56,6 +53,7 @@ export {
     SteelContext,
     Model,
     safeState,
+    live,
 } from "../web/index.js";
 
 export { shadow as compose, shadow as component } from "./lib.js";

@@ -12,7 +12,7 @@ function unwrapTsConstructions(path: NodePath<types.Expression>): NodePath<types
 }
 
 export function hasBreakPoint(node: NodePath<types.Expression>, internal: Internal, has = false): boolean {
-    if (pathIsReactiveValue(node, "any", internal)) {
+    if (pathIsReactiveValue(node, "any", internal, false)) {
         if (has) {
             err(Errors.RulesOfVasille, node, "Nested reactivity is not supported", internal);
         }
@@ -39,9 +39,9 @@ export function splitByBreakPoint(
     internal: Internal,
     data: BreakpointParts = { props: [] },
 ): BreakpointParts {
-    if (pathIsReactiveValue(path, "any", internal)) {
+    if (pathIsReactiveValue(path, "any", internal, false)) {
         if (data.obj) {
-            err(Errors.RulesOfVasille, path, "Nested breakpoints are not allowed", internal);
+            err(Errors.RulesOfVasille, path, "Nested reactivity is not supported", internal);
         }
         data.obj = path;
     }

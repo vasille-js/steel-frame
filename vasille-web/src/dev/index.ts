@@ -58,6 +58,7 @@ export const ref = devRef;
 export const expr = devExpr;
 export const bind = devExpr;
 export const calculate = devExpr;
+export const live = devExpr;
 export const watch = devExpr;
 export const effect = devExpr;
 export const safeLive = devSafeExpr;

@@ -27,10 +27,12 @@ import {
     isReactiveName,
     isReadableName,
     isWritableName,
+    leftIsThisInConstructor,
     parseCalculateCall,
     pathIsReactiveValue,
     processModelCall,
     reactivityTypeByName,
+    reactivityTypeOfNode,
     ref,
     removeExtension,
     toKebabCase,
@@ -436,42 +438,29 @@ export function meshExpression(
             const path = nodePath as NodePath<types.AssignmentExpression>;
             const left = path.get("left");
             const right = path.get("right");
+            const leftReactivity = reactivityTypeOfNode(left, internal);
+            const rightReactivity = reactivityTypeOfNode(right, internal);
+            let bypassMesh = false;
 
-            if (
-                left.isMemberExpression() &&
-                hasBreakPoint(left, internal) &&
-                !pathIsReactiveValue(left, "writable", internal)
-            ) {
+            if (left.isMemberExpression() && hasBreakPoint(left, internal) && !memberIsIValue(left, "any", internal)) {
                 err(Errors.RulesOfVasille, left, "This assignment breaks the reactivity", internal);
             }
 
+            if (leftReactivity && rightReactivity) {
+                if (leftIsThisInConstructor(left)) {
+                    if (leftReactivity === "writable" && rightReactivity === "readable") {
+                        err(Errors.RulesOfVasille, left, "Cannot assign readonly reactive value to writable", internal);
+                    }
+                    bypassMesh = true;
+                }
+            } else if (leftReactivity === "readable") {
+                err(Errors.RulesOfVasille, left, "Writing to readonly reactive values is forbidden", internal);
+            }
             if (left.isMemberExpression() && !exprIsSure(left, internal)) {
-                const property = left.node.property;
-                let iterator: NodePath<unknown> = path;
-                let inConstructor = false,
-                    inFunction = false;
-
-                while (iterator && !inConstructor && !inFunction) {
-                    inConstructor =
-                        iterator.isClassMethod() &&
-                        t.isIdentifier(iterator.node.key) &&
-                        iterator.node.key.name === "constructor";
-                    inFunction = iterator.isFunction();
-                    iterator = iterator.parentPath;
+                if (!bypassMesh) {
+                    meshAssigment(path, left, right, left.node.property, internal);
                 }
-
-                const expectedType = t.isIdentifier(property) && reactivityTypeByName(property.name, internal);
-
-                if (!(
-                    inConstructor &&
-                    expectedType &&
-                    t.isThisExpression(left.node.object) &&
-                    ((right.isIdentifier() && idIsIValue(right, expectedType, internal)) ||
-                        (right.isMemberExpression() && memberIsIValue(right, expectedType, internal)))
-                )) {
-                    meshAssigment(path, left, right, property, internal);
-                }
-            } else if (internal.devLayer && pathIsReactiveValue(left, "writable", internal)) {
+            } else if (internal.devLayer && pathIsReactiveValue(left, "any", internal)) {
                 meshExpression(right, internal, canHasRef);
                 path.replaceWith(internal.updateIValue(path.node, left.node, right.node));
             } else {
@@ -728,7 +717,7 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
 
             if (valuePath.isObjectPattern()) {
                 /* istanbul ignore else */
-                if (originName && isReactiveName(originName, "any", internal)) {
+                if (originName && isReactiveName(originName, internal)) {
                     err(Errors.RulesOfVasille, path, "You can not destruct a reactive value", internal);
                 }
 
@@ -740,8 +729,8 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
                 meshExpression(right, internal, false);
 
                 if (
-                    (t.isIdentifier(property.key) && isReactiveName(property.key.name, "any", internal)) ||
-                    (t.isStringLiteral(property.key) && isReactiveName(property.key.value, "any", internal))
+                    (t.isIdentifier(property.key) && isReactiveName(property.key.name, internal)) ||
+                    (t.isStringLiteral(property.key) && isReactiveName(property.key.value, internal))
                 ) {
                     right.replaceWith(internal.ref(right.node, property, undefined, false));
                 } else {
@@ -760,7 +749,7 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
                 if (t.isIdentifier(property.value)) {
                     internal.stack.set(property.value.name, {});
 
-                    if (isReactiveName(property.value.name, "any", internal)) {
+                    if (isReactiveName(property.value.name, internal)) {
                         path.get("value").replaceWith(
                             t.assignmentPattern(property.value, internal.ref(null, property, undefined, false)),
                         );
@@ -834,7 +823,7 @@ function meshClassBody(path: NodePath<types.ClassBody>, internal: Internal) {
             const key = item.get("key");
             const value = item.get("value");
 
-            if (value.isCallExpression() && calls(value, ["ref"], internal)) {
+            if (value.isCallExpression() && calls(value, refFunctions, internal)) {
                 const refValue = value.node.arguments[0];
                 const pos = value.node.loc;
 
@@ -934,8 +923,8 @@ function procedureProcessObjectExpression(
             }
         } else if (prop.isObjectMethod()) {
             if (
-                (keyPath.isIdentifier() && isReactiveName(keyPath.node.name, "any", internal) && !prop.node.computed) ||
-                (keyPath.isStringLiteral() && isReactiveName(keyPath.node.value, "any", internal))
+                (keyPath.isIdentifier() && isReactiveName(keyPath.node.name, internal) && !prop.node.computed) ||
+                (keyPath.isStringLiteral() && isReactiveName(keyPath.node.value, internal))
             ) {
                 err(Errors.RulesOfVasille, prop.get("key"), "Method name can not contain reactivity mark", internal);
             }
@@ -1627,27 +1616,45 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                         meshInit = false;
                     }
                     // const $x = field($y.z);
-                    else if ("field" === called && isWritableName(idPath.node.name, internal)) {
+                    else if ("field" === called && forceReactiveName(idPath.node.name, "writable", idPath, internal)) {
                         initPath.replaceWith(processFieldRefCall(callPath, internal, declaration, idName()));
                         checkReactiveName(idPath, "writable", internal);
                     }
                     // const x = { .. }
-                    else if (initPath.isObjectExpression() && !isReactiveName(idPath.node.name, "any", internal)) {
+                    else if (initPath.isObjectExpression() && !isReactiveName(idPath.node.name, internal)) {
                         internal.stack.replace(idName(), processObjectExpression(initPath, internal, kind === "const"));
                         meshInit = false;
                     }
-                    // const x = y[z]
+                    // const $x = y[z]
                     else if (
                         (initPath.isOptionalMemberExpression() || initPath.isMemberExpression()) &&
                         isWritableName(idPath.node.name, internal)
                     ) {
                         const path = initPath as NodePath<t.MemberExpression | t.OptionalMemberExpression>;
-                        const split = toFieldRef(path, internal, declaration, idName());
+                        const split =
+                            (kind === "let" || !isReadableName(idPath.node.name, internal)) &&
+                            toFieldRef(path, internal, declaration, idName());
 
                         // let $x = $y.z;
                         // let $z = $y[$z];
                         if (split) {
                             initPath.replaceWith(split);
+                            meshInit = false;
+                        }
+                        // const $x = $y.z;
+                        // const $x = y[$z];
+                        else if (
+                            kind === "const" &&
+                            isReadableName(idPath.node.name, internal) &&
+                            exprCall(
+                                path,
+                                path.node,
+                                internal,
+                                { name: idName(), strong: true },
+                                declaration.node,
+                                false,
+                            )
+                        ) {
                             meshInit = false;
                         }
                         // let $x = y.z;
@@ -1666,7 +1673,10 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                             meshExpression(initPath, internal, true);
                         }
 
-                        if (idPath.isIdentifier() && isWritableName(idPath.node.name, internal)) {
+                        if (
+                            idPath.isIdentifier() &&
+                            forceReactiveName(idPath.node.name, "writable", idPath, internal)
+                        ) {
                             declaration
                                 .get("init")
                                 .replaceWith(ref(declaration.node.init, internal, declaration.node, idName(), false));
@@ -1677,30 +1687,25 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                     }
                     // const x = ..
                     else {
-                        if (isReadableName(idPath.node.name, internal)) {
-                            if (
-                                !exprCall(
-                                    initPath,
-                                    initPath.node,
-                                    internal,
-                                    {
-                                        name: idName(),
-                                        strong: true,
-                                    },
-                                    declaration.node,
-                                    false,
-                                )
-                            ) {
-                                err(
-                                    Errors.IncorrectArguments,
-                                    declaration,
-                                    "Computed expression has static value. Make it non reactive",
-                                    internal,
-                                );
-                            }
+                        if (
+                            isReactiveName(idPath.node.name, internal) &&
+                            exprCall(
+                                initPath,
+                                initPath.node,
+                                internal,
+                                {
+                                    name: idName(),
+                                    strong: true,
+                                },
+                                declaration.node,
+                                false,
+                            )
+                        ) {
+                            forceReactiveName(idPath.node.name, "readable", idPath, internal);
                             meshInit = false;
                         } else {
                             internal.autoUnwrapThrows = true;
+                            checkNonReactiveName(idPath, internal);
                             meshExpression(initPath, internal, true);
                             internal.autoUnwrapThrows = false;
                             meshInit = false;
@@ -1724,7 +1729,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
 
                             /* istanbul ignore else */
                             if (t.isIdentifier(renamed)) {
-                                if (!isReactiveName(renamed.name, "any", internal)) {
+                                if (!isReactiveName(renamed.name, internal)) {
                                     err(
                                         Errors.RulesOfVasille,
                                         property.get("value"),
@@ -1734,10 +1739,8 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                                 }
                                 if (
                                     (item.computed &&
-                                        (!t.isStringLiteral(key) || !isReactiveName(key.value, "any", internal))) ||
-                                    (!item.computed &&
-                                        t.isIdentifier(key) &&
-                                        !isReactiveName(key.name, "any", internal))
+                                        (!t.isStringLiteral(key) || !isReactiveName(key.value, internal))) ||
+                                    (!item.computed && t.isIdentifier(key) && !isReactiveName(key.name, internal))
                                 ) {
                                     const newLine = t.variableDeclaration("const", [
                                         t.variableDeclarator(
