@@ -290,14 +290,18 @@ export function processModelCall(
     );
 }
 
-export function checkReactiveName(idPath: NodePath<unknown>, type: ReactiveType, internal: Internal) {
-    idPath.isIdentifier() && forceReactiveName(idPath.node.name, type, idPath, internal);
-    idPath.isStringLiteral() && forceReactiveName(idPath.node.value, type, idPath, internal);
+export function checkReactiveName(idPath: NodePath<unknown>, internal: Internal) {
+    if (
+        !(idPath.isIdentifier() && idPath.node.name.startsWith("$")) &&
+        !(idPath.isStringLiteral() && idPath.node.value.startsWith("$"))
+    ) {
+        err(Errors.RulesOfVasille, idPath, "Reactive variable name must start with $", internal);
+    }
 }
 
 export function checkNonReactiveName(idPath: NodePath<Identifier>, internal: Internal) {
-    if (isReactiveName(idPath.node.name, "any", internal)) {
-        err(Errors.RulesOfVasille, idPath, "Expected non-reactive variable name", internal);
+    if (idPath.node.name.startsWith("$")) {
+        err(Errors.RulesOfVasille, idPath, "Non-reactive variable name must not start with $", internal);
     }
 }
 
@@ -320,12 +324,10 @@ export function toKebabCase(name: string) {
 
 export function pathIsReactiveValue(
     path: NodePath<unknown>,
-    type: ReactiveType,
-    internal: Internal,
 ): path is NodePath<types.MemberExpression | types.OptionalMemberExpression | types.Identifier> {
     return (
-        (path.isIdentifier() && idIsIValue(path, type, internal)) ||
-        ((path.isMemberExpression() || path.isOptionalMemberExpression()) && memberIsIValue(path, type, internal))
+        (path.isIdentifier() && idIsIValue(path)) ||
+        ((path.isMemberExpression() || path.isOptionalMemberExpression()) && memberIsIValue(path.node))
     );
 }
 
@@ -337,58 +339,4 @@ export function removeExtension(name: string) {
         return name.slice(0, -4);
     }
     return name;
-}
-
-export function isReadableName(name: string, internal: Internal) {
-    return name.startsWith("r$") || (name.startsWith("$") && internal.legacyNaming);
-}
-
-export function isWritableName(name: string, internal: Internal) {
-    return name.startsWith("wr$") || (name.startsWith("$") && internal.legacyNaming);
-}
-
-export function reactivityTypeByName(name: string, internal: Internal) {
-    return internal.legacyNaming && name.startsWith("$")
-        ? "any"
-        : isWritableName(name, internal)
-          ? "writable"
-          : isReadableName(name, internal)
-            ? "readable"
-            : false;
-}
-
-export type ReactiveType = "readable" | "writable" | "any";
-
-export function isReactiveName(name: string, type: ReactiveType, internal: Internal) {
-    return (
-        (type !== "writable" && isReadableName(name, internal)) ||
-        (type !== "readable" && isWritableName(name, internal))
-    );
-}
-
-export function forceReactiveName(name: string, type: ReactiveType, path: NodePath<unknown>, internal: Internal) {
-    return (
-        (type !== "writable" &&
-            (isReadableName(name, internal) ||
-                (type === "readable" &&
-                    isWritableName(name, internal) &&
-                    err(
-                        Errors.RulesOfVasille,
-                        path,
-                        `Expected "readonly" reactivity mark, the "${name}" has "writable" mark`,
-                        internal,
-                        true,
-                    )))) ||
-        (type !== "readable" &&
-            (isWritableName(name, internal) ||
-                (type === "writable" &&
-                    isReadableName(name, internal) &&
-                    err(
-                        Errors.RulesOfVasille,
-                        path,
-                        `Expected "writable" reactivity mark, the name "${name}" has "readonly" mark`,
-                        internal,
-                        true,
-                    ))))
-    );
 }

@@ -2,7 +2,7 @@ import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { calledFn, calls, hintFunctions, isDiCall, unwrapFunctions } from "./call.js";
 import { ctx, Internal, StackedStates, V } from "./internal.js";
-import { checkNonReactiveName, err, Errors, forceReactiveName, pathIsReactiveValue, ReactiveType } from "./lib.js";
+import { checkNonReactiveName, err, Errors, pathIsReactiveValue } from "./lib.js";
 import { checkStyleUsage, ignoreParams, meshAllUnknown, meshExpression } from "./mesh.js";
 import { routerReplace } from "./router.js";
 import { stringify } from "./utils.js";
@@ -53,42 +53,33 @@ export function nodeIsMeshed(path: NodePath<types.Node | null | undefined>) {
     return (t.isMemberExpression(parent) || t.isOptionalMemberExpression(parent)) && parent.property === V;
 }
 
-function meshIdentifier(path: NodePath<types.Identifier>, type: ReactiveType, internal: Internal) {
-    if (idIsIValue(path, type, internal) && !nodeIsMeshed(path)) {
+function meshIdentifier(path: NodePath<types.Identifier>, internal: Internal) {
+    if (idIsIValue(path) && !nodeIsMeshed(path)) {
         path.replaceWith(t.memberExpression(path.node, V));
     }
 }
 
-export function idIsIValue(path: NodePath<types.Identifier>, type: ReactiveType, internal: Internal): boolean {
+export function idIsIValue(path: NodePath<types.Identifier>): boolean {
     const node = path.node;
 
     return (
-        forceReactiveName(node.name, type, path, internal) &&
+        node.name.startsWith("$") &&
         (!(t.isMemberExpression(path.parent) && !path.parent.computed) || path.parent.object === node)
     );
 }
 
-export function memberIsIValue(
-    path: NodePath<types.MemberExpression | types.OptionalMemberExpression>,
-    type: ReactiveType,
-    internal: Internal,
-) {
-    const node = path.node;
-
+export function memberIsIValue(node: types.MemberExpression | types.OptionalMemberExpression) {
     return (
-        (t.isIdentifier(node.property) &&
-            forceReactiveName(node.property.name, type, path, internal) &&
-            !node.computed) ||
-        (t.isStringLiteral(node.property) && forceReactiveName(node.property.value, type, path, internal))
+        (t.isIdentifier(node.property) && node.property.name.startsWith("$") && !node.computed) ||
+        (t.isStringLiteral(node.property) && node.property.value.startsWith("$"))
     );
 }
 
 export function memberIsIValueInExpr(
     path: NodePath<types.MemberExpression | types.OptionalMemberExpression>,
-    type: ReactiveType,
     search: Search,
 ) {
-    return hasBreakPoint(path, search.external) && memberIsIValue(path, type, search.external);
+    return hasBreakPoint(path, search.external) && memberIsIValue(path.node);
 }
 
 export function memberIsSure(path: NodePath<types.Expression | null | undefined>, internal: Internal) {
@@ -111,7 +102,7 @@ export function exprIsSure(path: NodePath<types.Expression | null | undefined>, 
 
     return (
         (!path.isMemberExpression() && !path.isCallExpression()) ||
-        (isTs && path.isMemberExpression() && !memberIsIValue(path, "any", internal)) ||
+        (isTs && path.isMemberExpression() && !memberIsIValue(path.node)) ||
         memberIsSure(path, internal) ||
         t.isMemberExpression(path.parent)
     );
@@ -122,7 +113,7 @@ function meshLValue(
     internal: Internal,
 ) {
     if (path.isIdentifier()) {
-        meshIdentifier(path, "writable", internal);
+        meshIdentifier(path, internal);
     } else if (path.isMemberExpression() || path.isOptionalMemberExpression()) {
         const object = path.get("object") as NodePath<unknown>;
 
@@ -160,12 +151,12 @@ export function checkNode(
     };
 
     if (path.isIdentifier()) {
-        if (idIsIValue(path, "any", internal)) {
+        if (idIsIValue(path)) {
             search.self = path.node;
         }
     }
     if (path.isMemberExpression() || path.isOptionalMemberExpression()) {
-        if (memberIsIValue(path, "any", internal) && hasBreakPoint(path, internal)) {
+        if (memberIsIValue(path.node) && hasBreakPoint(path, internal)) {
             search.self = path.node;
         }
     }
@@ -253,7 +244,7 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
         case "Identifier": {
             /* istanbul ignore else */
             if (expr && nodePath.isIdentifier()) {
-                if (idIsIValue(nodePath, "any", search.external)) {
+                if (idIsIValue(nodePath)) {
                     addExpression(nodePath, search);
                 }
             }
@@ -320,11 +311,7 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
             const left = path.get("left");
             const right = path.get("right");
 
-            if (
-                left.isMemberExpression() &&
-                hasBreakPoint(left, search.external) &&
-                !pathIsReactiveValue(left, "writable", search.external)
-            ) {
+            if (left.isMemberExpression() && hasBreakPoint(left, search.external) && !pathIsReactiveValue(left)) {
                 err(Errors.RulesOfVasille, left, "This assignment breaks the reactivity", search.external);
             }
             if (left.isMemberExpression() && !exprIsSure(left, search.external)) {
@@ -341,7 +328,7 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
 
             checkStyleUsage(path, search.external);
 
-            if (memberIsIValueInExpr(path, "any", search)) {
+            if (memberIsIValueInExpr(path, search)) {
                 const code = path.getSource().replace(/[\s\n]+/g, " ");
                 const name = (path.node.property as types.Identifier).name;
 
@@ -482,12 +469,8 @@ export function checkObject(path: NodePath<types.ObjectExpression>, search: Sear
             const valuePath = propPath.get("value");
 
             if (
-                (propPath.node.computed &&
-                    keyPath.isStringLiteral() &&
-                    forceReactiveName(keyPath.node.value, "readable", keyPath, search.external)) ||
-                (!propPath.node.computed &&
-                    keyPath.isIdentifier() &&
-                    forceReactiveName(keyPath.node.name, "readable", keyPath, search.external))
+                (propPath.node.computed && keyPath.isStringLiteral() && keyPath.node.value.startsWith("$")) ||
+                (!propPath.node.computed && keyPath.isIdentifier() && keyPath.node.name.startsWith("$"))
             ) {
                 err(
                     Errors.RulesOfVasille,

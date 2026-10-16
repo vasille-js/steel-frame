@@ -23,14 +23,9 @@ import {
     err,
     Errors,
     exprCall,
-    forceReactiveName,
-    isReactiveName,
-    isReadableName,
-    isWritableName,
     parseCalculateCall,
     pathIsReactiveValue,
     processModelCall,
-    reactivityTypeByName,
     ref,
     removeExtension,
     toKebabCase,
@@ -301,7 +296,7 @@ export function meshExpression(
             break;
         }
         case "Identifier": {
-            if (idIsIValue(nodePath as NodePath<types.Identifier>, "any", internal) && !nodeIsMeshed(nodePath)) {
+            if (idIsIValue(nodePath as NodePath<types.Identifier>) && !nodeIsMeshed(nodePath)) {
                 throwOnAutoUnwrap(nodePath, internal);
                 nodePath.replaceWith(t.memberExpression(expr, V));
             }
@@ -437,11 +432,7 @@ export function meshExpression(
             const left = path.get("left");
             const right = path.get("right");
 
-            if (
-                left.isMemberExpression() &&
-                hasBreakPoint(left, internal) &&
-                !pathIsReactiveValue(left, "writable", internal)
-            ) {
+            if (left.isMemberExpression() && hasBreakPoint(left, internal) && !pathIsReactiveValue(left)) {
                 err(Errors.RulesOfVasille, left, "This assignment breaks the reactivity", internal);
             }
 
@@ -460,18 +451,17 @@ export function meshExpression(
                     iterator = iterator.parentPath;
                 }
 
-                const expectedType = t.isIdentifier(property) && reactivityTypeByName(property.name, internal);
-
                 if (!(
                     inConstructor &&
-                    expectedType &&
+                    t.isIdentifier(property) &&
+                    property.name[0] === "$" &&
                     t.isThisExpression(left.node.object) &&
-                    ((right.isIdentifier() && idIsIValue(right, expectedType, internal)) ||
-                        (right.isMemberExpression() && memberIsIValue(right, expectedType, internal)))
+                    ((right.isIdentifier() && idIsIValue(right)) ||
+                        (right.isMemberExpression() && memberIsIValue(right.node)))
                 )) {
                     meshAssigment(path, left, right, property, internal);
                 }
-            } else if (internal.devLayer && pathIsReactiveValue(left, "writable", internal)) {
+            } else if (internal.devLayer && pathIsReactiveValue(left)) {
                 meshExpression(right, internal, canHasRef);
                 path.replaceWith(internal.updateIValue(path.node, left.node, right.node));
             } else {
@@ -492,12 +482,12 @@ export function meshExpression(
             meshExpression(object, internal, canHasRef);
             if (
                 t.isExpression(property) &&
-                (!propertyPath.isIdentifier() || (node.computed && idIsIValue(propertyPath, "any", internal)))
+                (!propertyPath.isIdentifier() || (node.computed && idIsIValue(propertyPath)))
             ) {
                 meshOrIgnoreExpression<types.PrivateName>(propertyPath, internal, true);
             }
 
-            if (memberIsIValue(path, "any", internal)) {
+            if (memberIsIValue(node)) {
                 /* istanbul ignore else */
                 if (!nodeIsMeshed(path)) {
                     throwOnAutoUnwrap(path, internal);
@@ -709,17 +699,14 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
                     t.isIdentifier(property.value.left) &&
                     property.value.left.name);
 
-            if (
-                originName &&
-                newName &&
-                reactivityTypeByName(originName, internal) !== reactivityTypeByName(newName, internal)
-            ) {
-                const correctName =
-                    originName.substring(0, originName.indexOf("$") + 1) + newName.substring(newName.indexOf("$") + 1);
+            if (originName && newName && originName.startsWith("$") !== newName.startsWith("$")) {
                 err(
                     Errors.RulesOfVasille,
                     path.get("value"),
-                    `Property "${originName}" can not be renamed to "${newName}": rename it to "${correctName}"`,
+                    `Property "${originName}" can not be renamed to "${newName}": ` +
+                        (originName.startsWith("$")
+                            ? `rename it to "$${newName}"`
+                            : `rename it to "${newName.substring(1)}"`),
                     internal,
                 );
             }
@@ -728,7 +715,7 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
 
             if (valuePath.isObjectPattern()) {
                 /* istanbul ignore else */
-                if (originName && isReactiveName(originName, "any", internal)) {
+                if (originName && originName.startsWith("$")) {
                     err(Errors.RulesOfVasille, path, "You can not destruct a reactive value", internal);
                 }
 
@@ -740,8 +727,8 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
                 meshExpression(right, internal, false);
 
                 if (
-                    (t.isIdentifier(property.key) && isReactiveName(property.key.name, "any", internal)) ||
-                    (t.isStringLiteral(property.key) && isReactiveName(property.key.value, "any", internal))
+                    (t.isIdentifier(property.key) && property.key.name.startsWith("$")) ||
+                    (t.isStringLiteral(property.key) && property.key.value.startsWith("$"))
                 ) {
                     right.replaceWith(internal.ref(right.node, property, undefined, false));
                 } else {
@@ -760,7 +747,7 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
                 if (t.isIdentifier(property.value)) {
                     internal.stack.set(property.value.name, {});
 
-                    if (isReactiveName(property.value.name, "any", internal)) {
+                    if (property.value.name.startsWith("$")) {
                         path.get("value").replaceWith(
                             t.assignmentPattern(property.value, internal.ref(null, property, undefined, false)),
                         );
@@ -781,7 +768,7 @@ export function reactiveArrayPattern(
     if (path.isArrayPattern()) {
         path.get("elements").forEach((element, index) => {
             if (index < 2) {
-                checkReactiveName(element, "readable", internal);
+                checkReactiveName(element, internal);
             } else {
                 /* istanbul ignore else */
                 if (element.isIdentifier()) {
@@ -838,7 +825,7 @@ function meshClassBody(path: NodePath<types.ClassBody>, internal: Internal) {
                 const refValue = value.node.arguments[0];
                 const pos = value.node.loc;
 
-                checkReactiveName(key, "writable", internal);
+                checkReactiveName(key, internal);
                 meshAllUnknown(value.get("arguments"), internal, true);
                 value.replaceWith(
                     ref(
@@ -893,27 +880,22 @@ function procedureProcessObjectExpression(
                 const name = stringify(keyPath.node);
                 let isRef = false;
 
-                if (isWritableName(name, internal) && !isReadableName(name, internal)) {
-                    err(Errors.RulesOfVasille, prop, "Writable field are not allowed in objects", internal);
-                }
-
                 if (processRefCall(valuePath, property.node, internal)) {
                     isRef = true;
                     state[name] = 1;
-                } else if (pathIsReactiveValue(valuePath, "any", internal)) {
+                } else if (pathIsReactiveValue(valuePath)) {
                     state[name] = 1;
-                } else if (internal.isComposing && !internal.isFunctionParsing && isReadableName(name, internal)) {
-                    forceReactiveName(name, "readable", keyPath, internal);
+                } else if (internal.isComposing && !internal.isFunctionParsing && name.startsWith("$")) {
                     meshValue(name);
                     valuePath.replaceWith(internal.ref(valuePath.node, property.node, undefined, false));
                     state[name] = 1;
                 }
 
-                if ((isRef || isReadableName(name, internal)) && !canHasRef) {
+                if ((isRef || name.startsWith("$")) && !canHasRef) {
                     err(Errors.RulesOfVasille, keyPath, "This object can not contain reactive fields", internal);
                 }
 
-                if ((state[name] === 1) !== isReadableName(name, internal)) {
+                if ((state[name] === 1) !== name.startsWith("$")) {
                     err(Errors.RulesOfVasille, keyPath, "Reactivity mismatch between field name and value", internal);
                 } else {
                     if (!state[name]) {
@@ -934,10 +916,10 @@ function procedureProcessObjectExpression(
             }
         } else if (prop.isObjectMethod()) {
             if (
-                (keyPath.isIdentifier() && isReactiveName(keyPath.node.name, "any", internal) && !prop.node.computed) ||
-                (keyPath.isStringLiteral() && isReactiveName(keyPath.node.value, "any", internal))
+                (keyPath.isIdentifier() && keyPath.node.name.startsWith("$") && !prop.node.computed) ||
+                (keyPath.isStringLiteral() && keyPath.node.value.startsWith("$"))
             ) {
-                err(Errors.RulesOfVasille, prop.get("key"), "Method name can not contain reactivity mark", internal);
+                err(Errors.RulesOfVasille, prop.get("key"), "Method name can not start with $", internal);
             }
             meshStatement(prop.get("body"), internal);
             internal.wrapFunctionBody(prop.node);
@@ -1180,7 +1162,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
                     const pos = initPath.node.loc;
 
                     meshAllUnknown(initPath.get("arguments"), internal, false);
-                    checkReactiveName(idPath, "writable", internal);
+                    checkReactiveName(idPath, internal);
                     initPath.replaceWith(
                         ref(refValue, internal, declaration.node, undefined, calls(initPath, ["safeState"], internal)),
                     );
@@ -1593,11 +1575,11 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                         );
 
                         meshInit = !isReactive;
-                        checkReactiveName(idPath, "readable", internal);
+                        checkReactiveName(idPath, internal);
                     }
                     // let y = ref(2)
                     else if (isFrom(refFunctions) && processRefCall(initPath, declaration.node, internal, idName())) {
-                        checkReactiveName(idPath, "writable", internal);
+                        checkReactiveName(idPath, internal);
                         meshInit = false;
                     }
                     // const arr = arrayModel()
@@ -1623,31 +1605,45 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                     // const $x = debounced(y, 1000);
                     else if ("debounced" === called) {
                         processDebounceRefCall(callPath, declaration.node, idName(), internal);
-                        checkReactiveName(idPath, "readable", internal);
+                        checkReactiveName(idPath, internal);
                         meshInit = false;
                     }
                     // const $x = field($y.z);
-                    else if ("field" === called && isWritableName(idPath.node.name, internal)) {
+                    else if ("field" === called) {
                         initPath.replaceWith(processFieldRefCall(callPath, internal, declaration, idName()));
-                        checkReactiveName(idPath, "writable", internal);
+                        checkReactiveName(idPath, internal);
                     }
                     // const x = { .. }
-                    else if (initPath.isObjectExpression() && !isReactiveName(idPath.node.name, "any", internal)) {
+                    else if (initPath.isObjectExpression() && !idPath.node.name.startsWith("$")) {
                         internal.stack.replace(idName(), processObjectExpression(initPath, internal, kind === "const"));
                         meshInit = false;
                     }
                     // const x = y[z]
-                    else if (
-                        (initPath.isOptionalMemberExpression() || initPath.isMemberExpression()) &&
-                        isWritableName(idPath.node.name, internal)
-                    ) {
+                    else if (initPath.isOptionalMemberExpression() || initPath.isMemberExpression()) {
                         const path = initPath as NodePath<t.MemberExpression | t.OptionalMemberExpression>;
-                        const split = toFieldRef(path, internal, declaration, idName());
+                        const split = kind === "let" && toFieldRef(path, internal, declaration, idName());
 
                         // let $x = $y.z;
                         // let $z = $y[$z];
                         if (split) {
                             initPath.replaceWith(split);
+                            checkReactiveName(idPath, internal);
+                            meshInit = false;
+                        }
+                        // const $x = $y.z;
+                        // const $x = y[$z];
+                        else if (
+                            kind === "const" &&
+                            exprCall(
+                                path,
+                                path.node,
+                                internal,
+                                { name: idName(), strong: true },
+                                declaration.node,
+                                false,
+                            )
+                        ) {
+                            checkReactiveName(idPath, internal);
                             meshInit = false;
                         }
                         // let $x = y.z;
@@ -1655,7 +1651,12 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                             meshExpression(path, internal, false);
                             meshInit = false;
 
-                            path.replaceWith(ref(path.node, internal, declaration.node, idName(), false));
+                            if (kind === "let" && t.isIdentifier(id) && id.name.startsWith("$")) {
+                                path.replaceWith(ref(path.node, internal, declaration.node, idName(), false));
+                            } else {
+                                checkNonReactiveName(idPath, internal);
+                                switchToConst = false;
+                            }
                         }
                     }
                     // let x = ..
@@ -1666,7 +1667,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                             meshExpression(initPath, internal, true);
                         }
 
-                        if (idPath.isIdentifier() && isWritableName(idPath.node.name, internal)) {
+                        if (idPath.isIdentifier() && idPath.node.name.startsWith("$")) {
                             declaration
                                 .get("init")
                                 .replaceWith(ref(declaration.node.init, internal, declaration.node, idName(), false));
@@ -1677,7 +1678,8 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                     }
                     // const x = ..
                     else {
-                        if (isReadableName(idPath.node.name, internal)) {
+                        if (idPath.node.name.startsWith("$")) {
+                            checkReactiveName(idPath, internal);
                             if (
                                 !exprCall(
                                     initPath,
@@ -1708,7 +1710,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                     }
                 }
                 // const { x, y } = $z;
-                else if (idPath.isObjectPattern() && initPath.isIdentifier() && idIsIValue(initPath, "any", internal)) {
+                else if (idPath.isObjectPattern() && initPath.isIdentifier() && idIsIValue(initPath)) {
                     for (const property of idPath.get("properties")) {
                         if (property.isRestElement()) {
                             err(
@@ -1724,20 +1726,17 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
 
                             /* istanbul ignore else */
                             if (t.isIdentifier(renamed)) {
-                                if (!isReactiveName(renamed.name, "any", internal)) {
+                                if (!renamed.name.startsWith("$")) {
                                     err(
                                         Errors.RulesOfVasille,
                                         property.get("value"),
-                                        "Reactive object destruction required renaming of fields. Example const { a: wr$a } = $obj;",
+                                        "Reactive object destruction required renaming of fields. Example const {a: $a} = $obj;",
                                         internal,
                                     );
                                 }
                                 if (
-                                    (item.computed &&
-                                        (!t.isStringLiteral(key) || !isReactiveName(key.value, "any", internal))) ||
-                                    (!item.computed &&
-                                        t.isIdentifier(key) &&
-                                        !isReactiveName(key.name, "any", internal))
+                                    (item.computed && (!t.isStringLiteral(key) || !key.value.startsWith("$"))) ||
+                                    (!item.computed && t.isIdentifier(key) && !key.name.startsWith("$"))
                                 ) {
                                     const newLine = t.variableDeclaration("const", [
                                         t.variableDeclarator(
