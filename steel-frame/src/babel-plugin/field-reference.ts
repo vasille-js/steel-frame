@@ -12,7 +12,7 @@ function unwrapTsConstructions(path: NodePath<types.Expression>): NodePath<types
 }
 
 export function hasBreakPoint(node: NodePath<types.Expression>, internal: Internal, has = false): boolean {
-    if (pathIsReactiveValue(node)) {
+    if (pathIsReactiveValue(node, "any", internal)) {
         if (has) {
             err(Errors.RulesOfVasille, node, "Nested reactivity is not supported", internal);
         }
@@ -39,7 +39,7 @@ export function splitByBreakPoint(
     internal: Internal,
     data: BreakpointParts = { props: [] },
 ): BreakpointParts {
-    if (pathIsReactiveValue(path)) {
+    if (pathIsReactiveValue(path, "any", internal)) {
         if (data.obj) {
             err(Errors.RulesOfVasille, path, "Nested breakpoints are not allowed", internal);
         }
@@ -80,7 +80,7 @@ export function toFieldRef(
         meshAllUnknown(
             split.props
                 .filter(item => typeof item !== "string")
-                .filter(item => !pathIsReactiveValue(item))
+                .filter(item => !pathIsReactiveValue(item, "any", internal))
                 .filter(item => !exprCall(item, item.node, internal, {}, item.node, false)),
             internal,
             false,
@@ -130,7 +130,7 @@ export function processDebounceRefCall(
     internal: Internal,
 ) {
     const args = path.get("arguments");
-    if (args.length === 2 && pathIsReactiveValue(args[0])) {
+    if (args.length === 2 && pathIsReactiveValue(args[0], "any", internal)) {
         meshAllUnknown([args[1]], internal, false);
         if (args[0].isMemberExpression()) {
             meshExpression(args[0].get("object"), internal, false);

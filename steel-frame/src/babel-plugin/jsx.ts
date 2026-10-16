@@ -2,7 +2,16 @@ import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { ctx, Internal, VariablesStatus } from "./internal.js";
 import { bodyHasJsx } from "./jsx-detect.js";
-import { checkNonReactiveName, checkReactiveName, err, Errors, exprCall, nodeIsUnsafe, toKebabCase } from "./lib.js";
+import {
+    checkNonReactiveName,
+    checkReactiveName,
+    err,
+    Errors,
+    exprCall,
+    isReactiveName,
+    nodeIsUnsafe,
+    toKebabCase,
+} from "./lib.js";
 import { compose, meshExpression, processRefCall } from "./mesh.js";
 import { nodeToStaticPosition } from "./transformer.js";
 import { memberIsIValue } from "./expression.js";
@@ -315,7 +324,7 @@ function transformJsxExpressionContainer(
         if (
             acceptFieldRef &&
             (expression.isMemberExpression() || expression.isOptionalMemberExpression()) &&
-            !memberIsIValue(expression.node) &&
+            !memberIsIValue(expression, "any", internal) &&
             (fieldRefExpression = toFieldRef(expression, internal, expression))
         ) {
             expression.replaceWith(fieldRefExpression);
@@ -770,7 +779,7 @@ function transformJsxElement(
             // <A prop=../>
             if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name)) {
                 const valuePath = attrPath.isJSXAttribute() && attrPath.get("value");
-                const needReactive = attr.name.name.startsWith("$");
+                const needReactive = isReactiveName(attr.name.name, "any", internal);
                 // <A prop=".."/>
                 if (valuePath && valuePath.isStringLiteral()) {
                     props.push(
@@ -792,7 +801,7 @@ function transformJsxElement(
                         !optionals?.has(attr.name.name);
 
                     const isSystem = internal.mapping.has(name.name);
-                    const requiresReactive = attr.name.name.startsWith("$");
+                    const requiresReactive = isReactiveName(attr.name.name, "any", internal);
                     // lixcode: don't alter conditions
                     const acceptPassive =
                         !requiresReactive ||
@@ -857,7 +866,7 @@ function transformJsxElement(
                 /* istanbul ignore else */
                 if (t.isJSXAttribute(attr) && t.isJSXNamespacedName(attr.name)) {
                     const fullName = `${attr.name.namespace.name}:${attr.name.name.name}`;
-                    const isReactive = fullName.startsWith("$");
+                    const isReactive = isReactiveName(fullName, "any", internal);
                     let value: types.Expression | undefined;
 
                     if (attr.name.name.name === "path") {
@@ -1091,7 +1100,7 @@ function precheckSlotParams(
                         internal,
                     );
                 } else {
-                    checkReactiveName(param, internal);
+                    checkReactiveName(param, "readable", internal);
                 }
             } else {
                 /* istanbul ignore else */
