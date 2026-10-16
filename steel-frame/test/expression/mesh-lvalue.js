@@ -4,6 +4,9 @@ const obj = {
     level2: 2
   })
 };
+let edit = {
+  b: 1
+};
 const C = compose(Vasille => {
   const $a = ref(2, Vasille);
   const $nested = obj.$nested;
@@ -12,6 +15,7 @@ const C = compose(Vasille => {
   }, [$a, $nested]);
   watch(Vasille, function update(Vasille_0, Vasille_1) {
     let rest;
+    edit.b = 2;
     [$a.V, $nested.V.level2, ...rest] = [Vasille_0.level2, Vasille_1];
   }, [$nested, $a]);
 });

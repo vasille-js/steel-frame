@@ -5,6 +5,7 @@ const obj = {
         level2: 2,
     }),
 };
+let edit = { b: 1 };
 
 const C = compose(() => {
     let $a = 2;
@@ -15,7 +16,7 @@ const C = compose(() => {
 
     watch(function update() {
         let rest;
-
+        edit.b = 2;
         [$a, $nested.level2, ...rest] = [$nested.level2, $a];
     });
 });

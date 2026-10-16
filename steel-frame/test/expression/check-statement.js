@@ -18,7 +18,8 @@ const C = compose(Vasille => {
     for (let i = Vasille_0; i < Vasille_0; i += Vasille_0) {
       Vasille_0 + 1;
     }
-    for (let a = 3; Vasille_0 < 4; $a.V++) {
+    let a;
+    for (a = 3; a < 4; a++) {
       Vasille_0 + 1;
     }
     label: if (Vasille_0 < 3) {

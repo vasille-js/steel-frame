@@ -227,3 +227,7 @@ it("breaks reactivity in watch", function () {
 it("breaks reactivity in function", function () {
     throwTest(__dirname, "reactivity-break-2", "This assignment breaks the reactivity");
 });
+
+it("effect with no dependencies", function () {
+    throwTest(__dirname, "no-deps-in-effect", "Effect must have at least one dependency. Move code to beforeMount");
+});

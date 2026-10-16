@@ -331,12 +331,8 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
             if (reactivityTypeOfNode(left, search.external)) {
                 err(Errors.RulesOfVasille, left, "Assigment are forbidden in live values and effects", search.external);
             }
-            if (left.isMemberExpression() && !exprIsSure(left, search.external)) {
-                meshAssigment(path, left, right, left.node.property, search.external);
-            } else {
-                meshLValue(left, search.external);
-                checkExpression(right, search);
-            }
+            meshLValue(left, search.external);
+            checkExpression(right, search);
             break;
         }
         case "MemberExpression":

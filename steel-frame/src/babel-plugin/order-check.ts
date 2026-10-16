@@ -10,7 +10,7 @@ interface OrderItem {
 
 const componentOrder = [
     { nodeType: ["VariableDeclaration"] },
-    { calls: ["watch"] },
+    { calls: ["watch", "effect"] },
     { calls: ["share"] },
     { nodeType: ["FunctionDeclaration"] },
     { calls: ["beforeMount"] },

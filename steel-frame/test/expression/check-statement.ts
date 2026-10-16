@@ -23,7 +23,8 @@ const C = compose(() => {
             $a + 1;
         }
 
-        for (let a = 3; $a < 4; $a++) {
+        let a: number;
+        for (a = 3; a < 4; a++) {
             $a + 1;
         }
 

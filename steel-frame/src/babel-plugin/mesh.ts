@@ -13,6 +13,7 @@ import {
     modelFunctions,
     refFunctions,
     unwrapFunctions,
+    watchFunctions,
 } from "./call.js";
 import { exprIsSure, idIsIValue, memberIsIValue, nodeIsMeshed } from "./expression.js";
 import { ctx, InterfaceData, Internal, V, VariablesStatus, VariableState } from "./internal.js";
@@ -1393,7 +1394,7 @@ export function composeExpression(path: NodePath<types.Expression | null | undef
     switch (expr && expr.type) {
         case "CallExpression":
         case "OptionalCallExpression": {
-            if (calls(path, ["watch"], internal)) {
+            if (calls(path, watchFunctions, internal)) {
                 parseCalculateCall(path, internal, path.node, undefined);
 
                 const args = (path.node as types.CallExpression).arguments;
@@ -1401,7 +1402,12 @@ export function composeExpression(path: NodePath<types.Expression | null | undef
                 /* istanbul ignore else */
                 if (args) {
                     if ((args[2] as types.ArrayExpression).elements.length <= 0) {
-                        path.replaceWith(t.callExpression(args[1] as types.Expression, []));
+                        err(
+                            Errors.RulesOfVasille,
+                            path,
+                            "Effect must have at least one dependency. Move code to beforeMount.",
+                            internal,
+                        );
                     }
                 }
             } else if (calls(path, ["beforeMount", "afterMount"], internal)) {

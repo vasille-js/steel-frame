@@ -6,7 +6,7 @@ import { findStyleInNode } from "./css-transformer.js";
 import * as fs from "node:fs";
 import path from "path";
 import { CompilationErrorReport, CompilationErrorReporter } from "./communication.js";
-import { calls } from "./call.js";
+import { bindFunctions, calls } from "./call.js";
 import { stringify } from "./utils.js";
 
 const imports = new Map([["steel-frame", "VasilleWeb"]]);
@@ -122,7 +122,7 @@ function handleImportDeclaration(
                 const imported = extractText(specifier.imported);
                 const local = specifier.local.name;
 
-                if (imported === "bind" || imported === "calculate" || imported === "watch") {
+                if ((bindFunctions as string[]).includes(imported)) {
                     ids.expr = local;
                 }
                 if (imported in ids) {
