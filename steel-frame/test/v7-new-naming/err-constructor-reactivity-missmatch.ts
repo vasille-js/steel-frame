@@ -1,14 +1,14 @@
 import { state } from "steel-frame";
 
 class C {
-    wr$1 = state(9);
-    wr$2: number;
-    r$3: number;
+    wr_1 = state(9);
+    wr_2: number;
+    r_3: number;
 
-    public constructor(props: { r$: number }) {
+    public constructor(props: { r_: number }) {
         // this pass
-        this.r$3 = props.r$;
+        this.r_3 = props.r_;
         // this fails
-        this.wr$2 = props.r$;
+        this.wr_2 = props.r_;
     }
 }

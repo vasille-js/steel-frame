@@ -1,5 +1,5 @@
 import { compose, state } from "steel-frame";
 
 const C = compose(() => {
-    let r$ = state(1);
+    let r_ = state(1);
 });

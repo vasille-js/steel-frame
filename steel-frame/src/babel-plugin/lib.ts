@@ -84,6 +84,7 @@ export function processCalculateCall(
             internal,
             area,
             name,
+            true,
         );
 
         call.params = [...exprData.found.values()].map(item => item.paramName);
@@ -153,6 +154,7 @@ export function exprCall(
     },
     area: types.Node,
     acceptsSafe: boolean,
+    allowFuncExpr = false,
 ): boolean {
     if (path.isTSAsExpression() || path.isTSSatisfiesExpression()) {
         return exprCall(
@@ -216,7 +218,7 @@ export function exprCall(
     }
 
     const unsafe = nodeIsUnsafe(path, internal);
-    const exprData = checkNode(path, internal, area, opts.name);
+    const exprData = checkNode(path, internal, area, opts.name, allowFuncExpr);
 
     if (exprData.self) {
         if (!opts.strong || (exprIsSure(path, internal) && !path.isOptionalMemberExpression())) {
@@ -343,11 +345,11 @@ export function removeExtension(name: string) {
 }
 
 export function isReadableName(name: string, internal: Internal) {
-    return name.startsWith("r$") || (internal.legacyNaming && name.startsWith("$"));
+    return name.startsWith("r_") || (internal.legacyNaming && name.startsWith("$"));
 }
 
 export function isWritableName(name: string, internal: Internal) {
-    return name.startsWith("wr$") || (internal.legacyNaming && name.startsWith("$"));
+    return name.startsWith("wr_") || (internal.legacyNaming && name.startsWith("$"));
 }
 
 export function reactivityTypeByName(name: string, internal: Internal) {

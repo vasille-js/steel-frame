@@ -1,26 +1,26 @@
 import { compose, debounced, live, ref, toFieldRef as VasilleToFieldRef, toDeepFieldRef as VasilleToDeepFieldRef } from "vasille-web";
 const C = compose(Vasille => {
-  const wr$1 = ref(1, Vasille);
-  const wr$2 = ref(2, Vasille);
-  const wr$3 = ref(3, Vasille);
-  const r$4 = live(Vasille, Vasille_0 => Vasille_0 + 1, [wr$3]);
-  const r$5 = live(Vasille, Vasille_0 => Vasille_0 + 1, [r$4]);
-  const wr$obj = ref({
+  const wr_1 = ref(1, Vasille);
+  const wr_2 = ref(2, Vasille);
+  const wr_3 = ref(3, Vasille);
+  const r_4 = live(Vasille, Vasille_0 => Vasille_0 + 1, [wr_3]);
+  const r_5 = live(Vasille, Vasille_0 => Vasille_0 + 1, [r_4]);
+  const wr_obj = ref({
     a: {
       b: 1
     }
   }, Vasille);
-  const wr$6 = VasilleToFieldRef(Vasille, wr$obj, "a");
-  const wr$7 = VasilleToFieldRef(Vasille, wr$obj.V, "a");
-  const wr$8 = VasilleToDeepFieldRef(Vasille, wr$obj.V, ["a", "b"]);
-  const r$9 = debounced(Vasille, wr$8, 100);
+  const wr_6 = VasilleToFieldRef(Vasille, wr_obj, "a");
+  const wr_7 = VasilleToFieldRef(Vasille, wr_obj.V, "a");
+  const wr_8 = VasilleToDeepFieldRef(Vasille, wr_obj.V, ["a", "b"]);
+  const r_9 = debounced(Vasille, wr_8, 100);
 });
 const D = compose(Vasille => {
-  const wr$ = ref(1, Vasille);
-  const r$ = live(Vasille, Vasille_0 => Vasille_0 + 1, [wr$]);
+  const wr_ = ref(1, Vasille);
+  const r_ = live(Vasille, Vasille_0 => Vasille_0 + 1, [wr_]);
   C({
-    "wr$1": wr$,
-    "r$2": wr$,
-    "r$3": r$
+    wr_1: wr_,
+    r_2: wr_,
+    r_3: r_
   }, Vasille);
 });

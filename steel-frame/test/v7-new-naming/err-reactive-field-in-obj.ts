@@ -1,12 +1,12 @@
 import { component } from "steel-frame";
 
 const C = component(() => {
-    let wr$ = 1;
-    const r$ = wr$ + 1;
+    let wr_ = 1;
+    const r_ = wr_ + 1;
     const obj = {
         // allowed
-        r$: r$,
+        r_: r_,
         // throw error
-        wr$: wr$,
+        wr_: wr_,
     };
 });

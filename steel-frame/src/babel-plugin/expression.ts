@@ -2,19 +2,10 @@ import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { calledFn, calls, hintFunctions, isDiCall, unwrapFunctions } from "./call.js";
 import { ctx, Internal, StackedStates, V, VariablesStatus } from "./internal.js";
-import {
-    checkNonReactiveName,
-    err,
-    Errors,
-    forceReactiveName,
-    pathIsReactiveValue,
-    ReactiveType,
-    reactivityTypeOfNode,
-} from "./lib.js";
+import { checkNonReactiveName, err, Errors, forceReactiveName, ReactiveType, reactivityTypeOfNode } from "./lib.js";
 import { checkStyleUsage, ignoreParams, meshAllUnknown, meshExpression } from "./mesh.js";
 import { routerReplace } from "./router.js";
 import { stringify } from "./utils.js";
-import { meshAssigment } from "./operators.js";
 import { hasBreakPoint } from "./field-reference.js";
 
 export interface Dependency {
@@ -158,6 +149,7 @@ export function checkNode(
     internal: Internal,
     area: types.Node,
     name?: string,
+    allowFnExpr = false,
 ): Search {
     const search: Search = {
         external: internal,
@@ -167,6 +159,9 @@ export function checkNode(
         stack: internal.stack,
     };
 
+    if (!allowFnExpr && (path.isFunctionExpression() || path.isArrowFunctionExpression())) {
+        err(Errors.RulesOfVasille, path, "Function expressions can not be used as live values", internal, null);
+    }
     if (path.isIdentifier()) {
         if (idIsIValue(path, "any", internal)) {
             search.self = path.node;
@@ -185,11 +180,11 @@ export function checkNode(
         return search;
     }
 
-    internal.stack.push(true);
+    internal.stack.push("bind");
 
     /* istanbul ignore else */
     if (path.isExpression()) {
-        checkExpression(path, search);
+        checkExpression(path, search, true);
     }
 
     internal.stack.pop();
@@ -241,7 +236,11 @@ export function checkOrIgnoreExpression<T extends types.Node>(
     }
 }
 
-export function checkExpression(nodePath: NodePath<types.Expression | null | undefined>, search: Search) {
+export function checkExpression(
+    nodePath: NodePath<types.Expression | null | undefined>,
+    search: Search,
+    allowOuterScope = false,
+) {
     const expr = nodePath.node;
 
     switch (expr && expr.type) {
@@ -259,22 +258,20 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
             break;
         }
         case "Identifier": {
-            /* istanbul ignore else */
-            if (expr && nodePath.isIdentifier()) {
-                const id = expr as types.Identifier;
+            const id = expr as types.Identifier;
+            const idPath = nodePath as NodePath<types.Identifier>;
 
-                if (search.stack.get(id.name) === VariablesStatus.Function) {
-                    err(
-                        Errors.RulesOfVasille,
-                        nodePath,
-                        `Local function "${id.name}" is not allowed to be used in variable declaration. ` +
-                            "Move it outside of composition function",
-                        search.external,
-                        null,
-                    );
-                } else if (idIsIValue(nodePath, "any", search.external)) {
-                    addExpression(nodePath, search);
-                }
+            if (search.stack.get(id.name) === VariablesStatus.Function) {
+                err(
+                    Errors.RulesOfVasille,
+                    nodePath,
+                    `Local function "${id.name}" is not allowed to be used in variable declaration. ` +
+                        "Move it outside of composition function",
+                    search.external,
+                );
+            }
+            if (idIsIValue(idPath, "any", search.external)) {
+                addExpression(idPath, search);
             }
             break;
         }
@@ -309,6 +306,28 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
             } else if (!search.external.stateOnly && isDiCall(path, search.external)) {
                 meshAllUnknown(path.get("arguments"), search.external, false);
                 path.node.arguments.unshift(ctx);
+            } else if (calls(path, ["bypassWriteRestriction"], search.external)) {
+                const [arg1, arg2] = path.get("arguments");
+                if (
+                    arg1 &&
+                    arg2 &&
+                    arg1.isExpression() &&
+                    reactivityTypeOfNode(arg1, search.external) === "writable" &&
+                    arg2.isExpression()
+                ) {
+                    checkExpression(arg2, search);
+                    path.replaceWith(search.external.updateIValue(path.node, arg1.node, arg2.node));
+                } else {
+                    err(
+                        Errors.RulesOfVasille,
+                        path,
+                        "The bypassWriteRestriction hint expected " +
+                            "a writable reactive value as first argument and " +
+                            "an expression as second argument",
+                        search.external,
+                        null,
+                    );
+                }
             } else {
                 const hint = calledFn(path, hintFunctions, search.external);
 
@@ -467,12 +486,13 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
             checkObject(path, search);
             break;
         }
-        case "FunctionExpression": {
-            checkFunction(nodePath as NodePath<types.FunctionExpression>, search);
-            break;
-        }
+        case "FunctionExpression":
         case "ArrowFunctionExpression": {
-            checkFunction(nodePath as NodePath<types.ArrowFunctionExpression>, search);
+            checkFunction(
+                nodePath as NodePath<types.FunctionExpression | types.ArrowFunctionExpression>,
+                search,
+                allowOuterScope,
+            );
             break;
         }
         case "JSXFragment": {
@@ -697,12 +717,11 @@ export function checkFunction(
         types.ArrowFunctionExpression | types.FunctionExpression | types.FunctionDeclaration | types.ObjectMethod
     >,
     search: Search,
+    allowFuncExpr?: boolean,
 ) {
     const node = path.node;
-
-    for (const param of path.get("params")) {
-        ignoreLocals(param, search);
-    }
+    const needIsolation =
+        !allowFuncExpr && search.external.functionOuterScopeForbidden && !search.external.stack.isCheckingScope();
 
     if (path.isFunctionDeclaration() && path.node.id) {
         const idPath = path.get("id");
@@ -713,8 +732,13 @@ export function checkFunction(
             checkNonReactiveName(idPath, search.external);
         }
     }
+
+    search.stack.push(needIsolation && "function");
+
+    for (const param of path.get("params")) {
+        ignoreLocals(param, search);
+    }
     if (t.isFunctionExpression(node) && node.id) {
-        search.stack.push();
         search.stack.set(node.id.name, {});
     }
 
@@ -726,7 +750,5 @@ export function checkFunction(
         checkStatement(bodyPath, search);
     }
 
-    if (t.isFunctionExpression(node) && node.id) {
-        search.stack.pop();
-    }
+    search.stack.pop();
 }

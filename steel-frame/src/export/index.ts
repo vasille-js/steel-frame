@@ -113,6 +113,12 @@ export declare function watch(f: () => void): void;
 /** Runs the function each time when a dependency is changed */
 export declare function effect(f: () => void): void;
 
+/**
+ * Bypass write restriction, update a reactive state in effects
+ * @deprecated report cases when you need it, we will fix
+ * */
+export declare function bypassWriteRestriction<T>(reactive: T, value: T): T;
+
 /** Returns an array model of the array */
 export declare function arrayModel<T>(v?: T[]): ArrayModel<T>;
 
@@ -123,8 +129,7 @@ export declare function setModel<T>(v?: T[]): SetModel<T>;
 export declare function mapModel<K, T>(v?: [K, T][]): MapModel<K, T>;
 
 /** Awaits async data in a sync component */
-export declare function awaited<T>(target: Promise<T>): [unknown, T | undefined, () => void];
-export declare function awaited<T>(target: () => Promise<T>): [unknown, T | undefined, () => void];
+export declare function awaited<T>(target: (signal?: AbortSignal) => Promise<T>): [unknown, T | undefined, () => void];
 
 /** Returns an abort signal to cancel requests/timers when context is destroyed */
 export declare function abortSignal(): AbortSignal | undefined;

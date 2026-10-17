@@ -1,7 +1,7 @@
 import { beforeMount, compose } from "steel-frame";
 
-const C = compose((props: { r$: number }) => {
+const C = compose((props: { r_: number }) => {
     beforeMount(() => {
-        props.r$ = 1;
+        props.r_ = 1;
     });
 });

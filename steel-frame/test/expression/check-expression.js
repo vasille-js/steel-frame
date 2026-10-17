@@ -37,15 +37,15 @@ const C = compose(Vasille => {
       a: Vasille_0,
       [Vasille_1]: Vasille_1,
       getA() {
-        return Vasille_0;
+        return 23;
       },
       ...{
         s: Vasille_2
       }
     };
     function* generator(i) {
-      yield i + Vasille_0;
-      yield i + 10 + Vasille_0;
+      yield i;
+      yield i + 10;
     }
 
     // @ts-ignore

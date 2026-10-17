@@ -8,9 +8,7 @@ const C = compose(Vasille => {
   const $b = safeState(() => throwNow(), Vasille);
   const $c = safeState(() => 2 + throwNow(), Vasille);
   const $d = safeLive(Vasille, Vasille_0 => (Vasille_0 ?? 2) + throwNow(), [$b]);
-  const $e = safeState(() => () => {
-    return throwNow();
-  }, Vasille);
+  const $e = safeState(() => throwNow(), Vasille);
   A({
     "$a": VasilleRef(safeInit(() => throwNow()), Vasille)
   }, Vasille);

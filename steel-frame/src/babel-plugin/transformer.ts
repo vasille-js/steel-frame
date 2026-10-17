@@ -35,6 +35,7 @@ const ignoreMembers = new Set([
     "ForEach",
     "toFieldRef",
     "field",
+    "bypassWriteRestriction",
 ]);
 const filePathId = t.identifier("VasilleFilePath");
 
@@ -420,14 +421,10 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
             ]);
         },
         safe: (arg: types.FunctionExpression | types.ArrowFunctionExpression) => call("safe", [arg]),
-        updateIValue(
-            assign: types.AssignmentExpression,
-            left: types.Expression,
-            right: types.Expression,
-        ): types.Expression {
+        updateIValue(area: types.Node, left: types.Expression, right: types.Expression): types.Expression {
             return t.callExpression(t.memberExpression(left, t.identifier("up")), [
                 right,
-                getExecutionPosition(assign),
+                ...(internal.devLayer ? [getExecutionPosition(area)] : []),
             ]);
         },
         wrapFunctionBody(

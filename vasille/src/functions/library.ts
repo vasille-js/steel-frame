@@ -2,28 +2,29 @@ import { IValue, Reactive } from "../classes/index.js";
 import { ref } from "./internal.js";
 
 export function awaited<T>(
-    target: (signal: AbortSignal) => Promise<T>,
+    target: ((signal: AbortSignal) => Promise<T>) | IValue<(signal: AbortSignal) => Promise<T>, unknown>,
     ctx: Reactive,
     createRef = ref,
-): [IValue<unknown, unknown>, IValue<unknown, unknown>, () => void, (reason?: unknown) => void] {
+): [IValue<unknown, unknown>, IValue<unknown, unknown>, () => void] {
     const err = createRef<unknown>(undefined);
     const value = createRef<unknown>(undefined);
-    const controller = new AbortController();
-    let running = false;
+    let controller: AbortController | undefined;
+    let lastResultKey = 0;
 
     function run() {
-        if (running) {
-            return;
-        }
+        let resultKey = ++lastResultKey;
 
+        controller?.abort();
+        controller = new AbortController();
+
+        const fn = target instanceof IValue ? target.V : target;
         let current: Promise<T> | undefined;
 
-        running = true;
         err.V = undefined;
         value.V = undefined;
 
         try {
-            current = target(controller.signal);
+            current = fn(controller.signal);
         } catch (e) {
             current = undefined;
             err.V = e;
@@ -31,25 +32,41 @@ export function awaited<T>(
 
         if (current instanceof Promise) {
             current
-                .then(result => (value.V = result))
-                .catch(e => (err.V = e))
-                .finally(() => (running = false));
+                .then(result => {
+                    if (resultKey === lastResultKey) {
+                        value.V = result;
+                    }
+                })
+                .catch(e => {
+                    if (resultKey === lastResultKey) {
+                        err.V = e;
+                    }
+                })
+                .finally(() => {
+                    if (resultKey === lastResultKey) {
+                        controller?.abort();
+                        controller = undefined;
+                    }
+                });
         } else {
             value.V = current;
-            running = false;
+            controller = undefined;
         }
     }
-    function abort(reason?: unknown) {
-        controller.abort(reason);
-    }
 
+    if (target instanceof IValue) {
+        target.on(run);
+    }
     ctx.runOnDestroy(() => {
-        abort("context destroyed");
+        if (target instanceof IValue) {
+            target.off(run);
+        }
+        controller?.abort();
     });
 
     run();
 
-    return [err, value, run, abort];
+    return [err, value, run];
 }
 
 export function abortSignal(ctx: Reactive): AbortSignal {

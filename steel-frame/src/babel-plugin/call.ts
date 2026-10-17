@@ -56,6 +56,7 @@ export type FnNames =
     | "abortSignal"
     | "showPrompt"
     | "createModel"
+    | "bypassWriteRestriction"
     | "context";
 
 export const dynamicModulesFunctions = [
@@ -126,6 +127,7 @@ export const hintFunctions: FnNames[] = [
     ...unwrapFunctions,
     "debounced",
     "field",
+    "bypassWriteRestriction",
 ];
 
 export const safeFunctions: FnNames[] = ["safeLive", "safeState", "safeInit"];

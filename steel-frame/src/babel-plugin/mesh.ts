@@ -15,7 +15,7 @@ import {
     unwrapFunctions,
     watchFunctions,
 } from "./call.js";
-import { exprIsSure, idIsIValue, memberIsIValue, nodeIsMeshed } from "./expression.js";
+import { checkExpression, exprIsSure, idIsIValue, memberIsIValue, nodeIsMeshed } from "./expression.js";
 import { ctx, InterfaceData, Internal, V, VariablesStatus, VariableState } from "./internal.js";
 import { ConditionCollection, processConditions, transformJsx } from "./jsx.js";
 import {
@@ -49,6 +49,7 @@ import path from "path";
 import module from "node:module";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { abortFunction } from "./abort.js";
 
 /**
  * Resolve a re-export source path to a steel-file-path-like identifier.
@@ -304,7 +305,31 @@ export function meshExpression(
             break;
         }
         case "Identifier": {
-            if (idIsIValue(nodePath as NodePath<types.Identifier>, "any", internal) && !nodeIsMeshed(nodePath)) {
+            const idPath = nodePath as NodePath<types.Identifier>;
+            const id = idPath.node;
+
+            if (
+                internal.stack.isCheckingScope() &&
+                internal.stack.get(id.name, "function") !== internal.stack.get(id.name)
+            ) {
+                err(
+                    Errors.RulesOfVasille,
+                    nodePath,
+                    "Function expression in reactive variable declaration must not capture outer scope. " +
+                        `Captured variable is "${id.name}".`,
+                    internal,
+                );
+            }
+            if (internal.functionOuterScopeForbidden && internal.stack.get(id.name) === VariablesStatus.Function) {
+                err(
+                    Errors.RulesOfVasille,
+                    nodePath,
+                    `Local function "${id.name}" is not allowed to be used in variable declaration. ` +
+                        "Move it outside of composition function",
+                    internal,
+                );
+            }
+            if (idIsIValue(idPath, "any", internal) && !nodeIsMeshed(nodePath)) {
                 throwOnAutoUnwrap(nodePath, internal);
                 nodePath.replaceWith(t.memberExpression(expr, V));
             }
@@ -589,12 +614,9 @@ export function meshExpression(
             processObjectExpression(nodePath as NodePath<types.ObjectExpression>, internal, canHasRef);
             break;
         }
-        case "FunctionExpression": {
-            meshFunction(nodePath as NodePath<types.FunctionExpression>, internal);
-            break;
-        }
+        case "FunctionExpression":
         case "ArrowFunctionExpression": {
-            meshFunction(nodePath as NodePath<types.ArrowFunctionExpression>, internal);
+            meshFunction(nodePath as NodePath<types.FunctionExpression | types.ArrowFunctionExpression>, internal);
             break;
         }
         case "ClassExpression": {
@@ -1340,6 +1362,7 @@ export function meshFunction(
     internal: Internal,
 ) {
     const throws = internal.autoUnwrapThrows;
+    const needIsolation = internal.functionOuterScopeForbidden && !internal.stack.isCheckingScope();
 
     if (path.isFunctionDeclaration() && path.node.id) {
         const idPath = path.get("id");
@@ -1354,7 +1377,7 @@ export function meshFunction(
         }
     }
 
-    internal.stack.push();
+    internal.stack.push(needIsolation && "function");
     internal.autoUnwrapThrows = false;
 
     if (path.isFunctionExpression() && path.node.id) {
@@ -1492,6 +1515,8 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
             const kind = _path.node.kind;
             let switchToConst = true;
 
+            internal.functionOuterScopeForbidden = true;
+
             for (const declaration of _path.get("declarations")) {
                 const idPath = declaration.get("id");
                 const initPath = declaration.get("init");
@@ -1521,10 +1546,27 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
 
                 // const [x, y] = await(...)
                 if (calls(initPath, asyncFunctions, internal)) {
-                    const callPath = declaration.get("init") as NodePath<types.CallExpression>;
+                    const callPath = initPath;
+                    const firstArg = callPath.get("arguments")[0];
 
                     reactiveArrayPattern(declaration.get("id"), internal);
-                    meshAllUnknown(callPath.get("arguments"), internal, false);
+                    if (
+                        firstArg &&
+                        (firstArg.isFunctionExpression() || firstArg.isArrowFunctionExpression()) &&
+                        (!firstArg.node.params[0] || t.isIdentifier(firstArg.node.params[0]))
+                    ) {
+                        const param = firstArg.node.params[0] ?? t.identifier("VasilleAbortSignal");
+
+                        const abortCheck = t.callExpression(
+                            t.memberExpression(param, t.identifier("throwIfAborted")),
+                            [],
+                        );
+
+                        if (abortFunction(firstArg, abortCheck) && !firstArg.node.params[0]) {
+                            firstArg.node.params[0] = param;
+                        }
+                        exprCall(firstArg, firstArg.node, internal, {}, callPath.node, false, true);
+                    }
 
                     /* istanbul ignore else */
                     if (internal.devLayer) {
@@ -1739,7 +1781,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                                     err(
                                         Errors.RulesOfVasille,
                                         property.get("value"),
-                                        "Reactive object destruction required renaming of fields. Example const { a: wr$a } = $obj;",
+                                        "Reactive object destruction required renaming of fields. Example const { a: wr_a } = $obj;",
                                         internal,
                                     );
                                 }
@@ -1789,6 +1831,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
             if (switchToConst && kind === "let") {
                 _path.node.kind = "const";
             }
+            internal.functionOuterScopeForbidden = false;
             break;
         }
         default:

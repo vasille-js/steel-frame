@@ -1,6 +1,8 @@
 import { compose } from "steel-frame";
 
+const c = () => 3;
+
 const C = compose(() => {
-  const compose = () => 3;
-  const sum = compose() + 2;
+    const compose = c;
+    const sum = compose() + 2;
 });

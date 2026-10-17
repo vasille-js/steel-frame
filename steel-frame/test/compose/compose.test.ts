@@ -36,31 +36,3 @@ it("view test", function () {
 it("screen test", function () {
     runTest(__dirname, "screen");
 });
-
-it("declared function in bind error", function () {
-    throwTest(__dirname, "declared-function", 'Local function "foo" is not allowed to be used in variable declaration');
-});
-
-it("declared function in calculate error", function () {
-    throwTest(
-        __dirname,
-        "declared-function-calculate",
-        'Local function "foo" is not allowed to be used in variable declaration',
-    );
-});
-
-it("declared function in effect error", function () {
-    throwTest(
-        __dirname,
-        "declared-function-effect",
-        'Local function "foo" is not allowed to be used in variable declaration',
-    );
-});
-
-it("declared function not in live value", function () {
-    runTest(__dirname, "declared-function");
-});
-
-it("declared function called in regular expression", function () {
-    runTest(__dirname, "declared-function-call");
-});
