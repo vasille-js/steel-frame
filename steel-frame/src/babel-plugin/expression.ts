@@ -1,7 +1,7 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { calledFn, calls, hintFunctions, isDiCall, unwrapFunctions } from "./call.js";
-import { ctx, Internal, StackedStates, V } from "./internal.js";
+import { ctx, Internal, StackedStates, V, VariablesStatus } from "./internal.js";
 import {
     checkNonReactiveName,
     err,
@@ -261,7 +261,18 @@ export function checkExpression(nodePath: NodePath<types.Expression | null | und
         case "Identifier": {
             /* istanbul ignore else */
             if (expr && nodePath.isIdentifier()) {
-                if (idIsIValue(nodePath, "any", search.external)) {
+                const id = expr as types.Identifier;
+
+                if (search.stack.get(id.name) === VariablesStatus.Function) {
+                    err(
+                        Errors.RulesOfVasille,
+                        nodePath,
+                        `Local function "${id.name}" is not allowed to be used in variable declaration. ` +
+                            "Move it outside of composition function",
+                        search.external,
+                        null,
+                    );
+                } else if (idIsIValue(nodePath, "any", search.external)) {
                     addExpression(nodePath, search);
                 }
             }

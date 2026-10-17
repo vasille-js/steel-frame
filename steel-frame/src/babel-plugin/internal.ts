@@ -5,6 +5,7 @@ import { removeExtension } from "./lib.js";
 export enum VariablesStatus {
     StyleSheet = 2,
     ArrayModel = 3,
+    Function = 4,
 }
 
 export type VariableState = Record<string, 1 | object> | VariablesStatus;

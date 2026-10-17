@@ -1816,6 +1816,14 @@ export function compose(
         internal.stack.set(node.id.name, {});
     }
 
+    if (body.isBlockStatement()) {
+        for (const statement of body.node.body) {
+            if (t.isFunctionDeclaration(statement) && statement.id) {
+                internal.stack.set(statement.id.name, VariablesStatus.Function);
+            }
+        }
+    }
+
     if (params.length > 1 && !isInternalSlot) {
         err(Errors.IncorrectArguments, path.get("params")[1], "Extra parameters are not allowed", internal);
     }

@@ -76,7 +76,7 @@ export const asyncFunctions = ["awaited"] as const satisfies FnNames[];
 
 export const inlineBindFunctions = ["bind", "live", "safeLive"] as const satisfies FnNames[];
 
-export const watchFunctions = ["watch", "effect"] as const satisfies FnNames;
+export const watchFunctions = ["watch", "effect"] as const satisfies FnNames[];
 
 export const bindFunctions = [
     ...inlineBindFunctions,
