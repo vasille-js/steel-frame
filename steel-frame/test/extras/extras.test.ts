@@ -57,7 +57,7 @@ it("throw test", function () {
                                 "IncompatibleContext: JSX fragment is not allowed here",
                             );
                         },
-                        legacyNaming: true,
+                        v4Naming: true,
                     },
                 ],
                 ["@babel/plugin-transform-typescript", { isTSX: true }],

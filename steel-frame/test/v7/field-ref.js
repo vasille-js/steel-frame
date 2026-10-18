@@ -17,8 +17,8 @@ const C = compose(Vasille => {
   const $ref7 = VasilleToFieldRef(Vasille, $obj.V, a);
   const $ref8 = VasilleToDeepFieldRef(Vasille, $obj.V, ["b", a]);
   A({
-    "$a1": VasilleToFieldRef(Vasille, $obj, "a"),
-    "$a2": VasilleToDeepFieldRef(Vasille, $obj, ["b", "a"])
+    "$a1": bind(Vasille, Vasille_0 => Vasille_0.a, [$obj]),
+    "$a2": bind(Vasille, Vasille_0 => Vasille_0.b.a, [$obj])
   }, Vasille);
   A({
     "$a1": VasilleToFieldRef(Vasille, $obj, "a"),

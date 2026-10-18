@@ -1,7 +1,7 @@
 import { page, styleSheet } from "steel-frame";
 
 export default page(async () => {
-    <div class={styles.div}>Test</div>;
+    <div class={[styles.div]}>Test</div>;
 });
 
 const styles = styleSheet({

@@ -26,8 +26,21 @@ it("debounce dev", function () {
     runTest(__dirname, "debounce-dev", { devLayer: true });
 });
 
-it("field ref", function () {
+it("field ref v4 naming", function () {
     runJsxTest(__dirname, "field-ref");
+});
+
+it("field ref v7 naming", function () {
+    runJsxTest(__dirname, "field-ref-v7-naming");
+});
+
+it("field ref v7 naming to r_ property error", function () {
+    throwTest(
+        __dirname,
+        "field-ref-v7-naming",
+        '"field" hint composes a writable reactive value, but property "r_a" is readonly',
+        true,
+    );
 });
 
 it("object destruction", function () {

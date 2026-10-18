@@ -156,7 +156,7 @@ export function ArrayViewFn<
     V = T extends (infer R)[] ? R : never,
 >(
     props: {
-        $of: IValue<V[], unknown>;
+        r_of: IValue<V[], unknown>;
         key: (value: V) => number | string;
         slot: (
             ctx: Fragment<Node, Element, TagOptions>,
@@ -170,7 +170,7 @@ export function ArrayViewFn<
         new ArrayViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
             ctx.runner,
             ctx.sDeep + 1,
-            props.$of,
+            props.r_of,
             props.key,
             props.slot,
             ref,
@@ -228,12 +228,12 @@ export function SetModelView<Node, Element, TagOptions extends object, V>(
 }
 
 export interface WatchOptions<Node, Element, TagOptions extends object, T, Extra = unknown> {
-    $model: IValue<T, Extra>;
+    r_model: IValue<T, Extra>;
     slot?: (ctx: Fragment<Node, Element, TagOptions>, value: T) => void;
 }
 
 export function WatchFn<Node, Element, TagOptions extends object, T>(
-    { $model, slot: _slot }: WatchOptions<Node, Element, TagOptions, T>,
+    { r_model, slot: _slot }: WatchOptions<Node, Element, TagOptions, T>,
     ctx: Fragment<Node, Element, TagOptions>,
     defaultSlot?: (ctx: Fragment<Node, Element, TagOptions>) => void,
 ) {
@@ -241,7 +241,7 @@ export function WatchFn<Node, Element, TagOptions extends object, T>(
 
     /* istanbul ignore else */
     if (slot) {
-        ctx.child(new WatchNode({ model: $model, slot: safe(slot) }, ctx.runner, ctx.sDeep + 1));
+        ctx.child(new WatchNode({ model: r_model, slot: safe(slot) }, ctx.runner, ctx.sDeep + 1));
     }
 }
 
@@ -287,14 +287,14 @@ export function Delay<
 }
 
 export interface ZombieOptions<Extra = unknown> {
-    $time: IValue<number, Extra>;
+    r_time: IValue<number, Extra>;
     trigger(): void;
 }
 
 export function ZombieFn<Node, Element, TagOptions extends object>(
-    { $time, trigger }: ZombieOptions,
+    { r_time, trigger }: ZombieOptions,
     ctx: Fragment<Node, Element, TagOptions>,
     defaultSlot?: (ctx: Fragment<Node, Element, TagOptions>) => void,
 ) {
-    ctx.child(new ZombieNode<Node, Element, TagOptions>(ctx.runner, $time, trigger), defaultSlot);
+    ctx.child(new ZombieNode<Node, Element, TagOptions>(ctx.runner, r_time, trigger), defaultSlot);
 }

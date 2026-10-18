@@ -26,7 +26,7 @@ export interface Options {
     routes: unknown;
     appData: unknown;
     typeIdentifiersMapping: unknown;
-    legacyNaming: unknown;
+    v4Naming: unknown;
 }
 
 export default function (): Babel.PluginObj<{
@@ -57,7 +57,7 @@ export default function (): Babel.PluginObj<{
                         params.opts.typeIdentifiersMapping instanceof Map
                             ? params.opts.typeIdentifiersMapping
                             : undefined,
-                    legacyNaming: !!params.opts.legacyNaming,
+                    v4Naming: !!params.opts.v4Naming,
                 });
             },
         },

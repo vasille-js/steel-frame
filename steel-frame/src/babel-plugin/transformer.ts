@@ -209,7 +209,7 @@ export interface TransformerOptions {
     routes: string[][] | undefined;
     appData: AppData | undefined;
     typeIdentifiersMapping: Map<string, string> | undefined;
-    legacyNaming: boolean;
+    v4Naming: boolean;
 }
 
 export function nodeToStaticPosition(node: types.Node) {
@@ -303,7 +303,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
         usedStylesProps: new Set(),
         packageName: packageJson.name,
         isWrapper: relativePath === "/src/router/Wrapper.tsx",
-        legacyNaming: opts.legacyNaming,
+        v4Naming: opts.v4Naming,
         ref(arg, area, name, safe) {
             const fnName = safe ? "safeState" : "ref";
             const fixedArg = arg ? (safe ? t.arrowFunctionExpression([], arg) : arg) : t.buildUndefinedNode();
@@ -481,7 +481,9 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
                 if (opts.throwAtFirstError) {
                     throw e;
                 }
-                console.error(e);
+                process.stderr.write(`in ${filename}:${pos?.start.line}:${pos?.start.column}\n`);
+                process.stderr.write(e.message);
+                process.stderr.write(`\n\n`);
             } else {
                 console.warn(message);
             }

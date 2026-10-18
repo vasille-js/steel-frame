@@ -1,6 +1,6 @@
 import { AppNode, ArrayModel, MapModel, SetModel, ScreenProps } from "vasille";
 import type { VasilleSlot } from "vasille-web/jsx-runtime";
-import { ElementStyleProps, WebRouter, WebTagOptions, CssStyleInjector, StyleSheetProps } from "vasille-web/types";
+import { WebRouter, WebTagOptions, CssStyleInjector, StyleSheetProps } from "vasille-web/types";
 
 export { safe } from "vasille";
 /** Set a handler for component errors */
@@ -11,12 +11,12 @@ declare interface Params {
 }
 
 declare type Composed<In extends object, Out> = (
-    $: (Required<In> extends Params ? In & { "vasille:slot"?: VasilleSlot } : In) & {
+    props: (Required<In> extends Params ? In & { "vasille:slot"?: VasilleSlot } : In) & {
         callback?(data: Out): void;
     },
 ) => void;
 declare type ComposedNoCallback<In extends object, Out> = (
-    $: Required<In> extends Params ? In & { "vasille:slot"?: VasilleSlot } : In,
+    props: Required<In> extends Params ? In & { "vasille:slot"?: VasilleSlot } : In,
 ) => void;
 
 /**
@@ -36,22 +36,29 @@ export declare function compose<In extends object>(renderer: (input: In) => void
 export declare function component<In extends object, Out extends NonNullable<unknown>>(
     renderer: (input: In) => Out,
 ): Composed<In, Out>;
+/** Composes a component (v4), which can receive external reactive values via props */
 export declare function component<In extends object>(renderer: (input: In) => void): ComposedNoCallback<In, void>;
 
 /** Composes a view, which can receive external reactive values via props */
 export declare function view<Out extends NonNullable<unknown>>(
     renderer: () => Out,
 ): Composed<NonNullable<unknown>, Out>;
+/** Composes a view, which can receive external reactive values via props */
 export declare function view<In extends object, Out extends NonNullable<unknown>>(
     renderer: (input: In) => Out,
 ): Composed<In, Out>;
+/** Composes a view, which can receive external reactive values via props */
 export declare function view(renderer: () => void): ComposedNoCallback<NonNullable<unknown>, void>;
+/** Composes a view, which can receive external reactive values via props */
 export declare function view<In extends object>(renderer: (input: In) => void): ComposedNoCallback<In, void>;
 
 /** A Vasille.JS App screen */
 type Screen<Route extends string> = (input: ScreenProps<Route>) => Promise<void>;
 
-/** Composes a screen, the router navigates between screens */
+/**
+ * Composes a screen, the router navigates between screens
+ * @deprecated use `page` instead
+ * */
 export declare function screen<Route extends string>(renderer: Screen<Route>): Screen<Route>;
 
 /** Composes a page, the file-based router navigates between pages (used for tests only) */
@@ -71,10 +78,15 @@ export declare function unwrap<T>(v: T): T;
  * @deprecated use `state` instead
  * */
 export declare function ref<T>(v: T): T;
+/**
+ * Pack value into a reactive reference
+ * @deprecated use `state` instead
+ * */
 export declare function ref<T>(): T | undefined;
 
 /** Reactive value constructor */
 export declare function state<T>(v: T): T;
+/** Reactive value constructor */
 export declare function state<T>(): T | undefined;
 
 /** Pack value into a reactive reference, returns undefined when initialization fails */
@@ -139,6 +151,7 @@ export declare function safeInit<T>(value: T): T | undefined;
 
 /** Mounts a slot parameter of the component */
 export declare function Slot(options: { model?: () => void; slot?: () => void }): void;
+/** Mounts a slot parameter of the component */
 export declare function Slot<Props extends object>(
     options: {
         model?: (props: Props) => void;
@@ -149,18 +162,38 @@ export declare function Slot<Props extends object>(
 
 /** Renders content conditionally */
 export declare function If<T>(props: {
+    r_condition: T;
+    slot?: (value: Exclude<T, false | 0 | "" | null | undefined>) => void;
+    "vasille:slot"?: VasilleSlot;
+}): void;
+/** Renders content conditionally */
+export declare function If(props: { r_condition: unknown; "vasille:slot"?: VasilleSlot }): void;
+
+/** @deprecated use `If` with `r_condition` instead */
+export declare function If<T>(props: {
     $condition: T;
     slot?: (value: Exclude<T, false | 0 | "" | null | undefined>) => void;
     "vasille:slot"?: VasilleSlot;
 }): void;
+/** @deprecated use `If` with `r_condition` instead */
 export declare function If(props: { $condition: unknown; "vasille:slot"?: VasilleSlot }): void;
 
 /** Renders content conditionally, use strict after `<If/>` */
+export declare function ElseIf<T>(props: {
+    r_condition: T;
+    slot?: (value: Exclude<T, false | 0 | "" | null | undefined>) => void;
+    "vasille:slot"?: VasilleSlot;
+}): void;
+/** Renders content conditionally, use strict after `<If/>` */
+export declare function ElseIf(props: { r_condition: unknown; "vasille:slot"?: VasilleSlot }): void;
+
+/** @deprecated use `ElseIf` with `r_condition` instead */
 export declare function ElseIf<T>(props: {
     $condition: T;
     slot?: (value: Exclude<T, false | 0 | "" | null | undefined>) => void;
     "vasille:slot"?: VasilleSlot;
 }): void;
+/** @deprecated use `ElseIf` with `r_condition` instead */
 export declare function ElseIf(props: { $condition: unknown; "vasille:slot"?: VasilleSlot }): void;
 
 /** Renders content conditionally, use strict after `<If/>` or `<ElseIf/>` */
@@ -185,19 +218,26 @@ export declare function For<K, T>(props: {
 
 /** Renders content of an `array`, updates are tracked via a diff algorithm */
 export declare function ArrayView<T>(props: {
+    r_of: ReadonlyArray<T>;
+    key: (v: T) => string | number;
+    slot: (r_value: T, r_index: number) => void;
+}): void;
+
+/** @deprecated use `ArrayView` instead */
+export declare function ArrayView<T>(props: {
     $of: ReadonlyArray<T>;
     key: (v: T) => string | number;
-    slot: ($value: T, $index: number) => void;
+    slot: (r_value: T, r_index: number) => void;
 }): void;
 
 /** Renders content of an `array model`, which can be updated via `push`, `pull`, ... */
 export declare function ArrayModelView<T>(props: {
     of: ReadonlyArray<T>;
-    slot: (value: T, $index: number) => void;
+    slot: (value: T, r_index: number) => void;
 }): void;
 
 /** Renders content of a `map model`, which can be updated via `set`, `delete`, ... */
-export declare function MapModelView<K, T>(props: { of: ReadonlyMap<K, T>; slot: ($value: T, key: K) => void }): void;
+export declare function MapModelView<K, T>(props: { of: ReadonlyMap<K, T>; slot: (r_value: T, key: K) => void }): void;
 
 /** Renders content of a `set model`, which can be updated via `add`, `delete`, ... */
 export declare function SetModelView<T>(props: { of: ReadonlySet<T>; slot: (value: T) => void }): void;
@@ -206,21 +246,21 @@ export declare function SetModelView<T>(props: { of: ReadonlySet<T>; slot: (valu
 export declare function Iterate<
     T extends { [Symbol.iterator](): IteratorObject<unknown, unknown, unknown> },
     K = T extends { [Symbol.iterator](): IteratorObject<infer R, unknown, unknown> } ? R : never,
->(props: { value: T; slot: (item: K) => void });
+>(props: { value: T; slot: (item: K) => void }): void;
 
 /** Will be translated to value.forEach(slot) */
 export declare function ForEach<T>(props: {
     value: ReadonlyArray<T>;
     slot: (item: T, index: number, value: T[]) => void;
-});
+}): void;
 export declare function ForEach<T>(props: {
     value: ReadonlySet<T>;
     slot: (item: T, key: T, set: ReadonlySet<T>) => void;
-});
+}): void;
 export declare function ForEach<K, T>(props: {
     value: ReadonlyMap<K, T>;
     slot: (item: T, key: K, map: ReadonlyMap<K, T>) => void;
-});
+}): void;
 
 /** Renders content in a non-blocking way via queue */
 export declare function QueuedRender(props: {
@@ -230,10 +270,13 @@ export declare function QueuedRender(props: {
 }): void;
 
 /** Refresh the content each time, when the reactive model is updated */
-export declare function Watch<T>(props: { $model: T; slot?: (value: T) => void; "vasille:slot"?: VasilleSlot }): void;
+export declare function Watch<T>(props: { r_model: T; slot?: (value: T) => void; "vasille:slot"?: VasilleSlot }): void;
 
 /** Render content after a while */
 export declare function Delay(props: { time?: number; slot?: () => void; "vasille:slot"?: VasilleSlot }): void;
+
+/** Keep DOM alive for `r_time` ms after destruction, use `trigger` to run some code when timer starts */
+export declare function Zombie(props: { trigger?: () => void; r_time: number; "vasille:slot"?: VasilleSlot }): void;
 
 type ReadonlyState<T> =
     T extends Map<infer K, infer V>
@@ -266,23 +309,23 @@ export declare function createModel<Input extends object, Return extends object>
 /** Applies the value to the theme `name` */
 export declare function theme<T>(name: string, value: T): T;
 /** Applies the value to the dark theme */
-export declare function dark<T>($: T): T;
+export declare function dark<T>(value: T): T;
 /** Applies the value to the light theme */
-export declare function light<T>($: T): T;
+export declare function light<T>(value: T): T;
 /** Applies the value to mobile devices */
-export declare function mobile<T>($: T): T;
+export declare function mobile<T>(value: T): T;
 /** Applies the value to tablet devices */
-export declare function tablet<T>($: T): T;
+export declare function tablet<T>(value: T): T;
 /** Applies the value to laptop devices */
-export declare function laptop<T>($: T): T;
+export declare function laptop<T>(value: T): T;
 /** Applies the value when the user prefers the dark theme */
-export declare function prefersDark<T>($: T): T;
+export declare function prefersDark<T>(value: T): T;
 /** Applies the value when the user prefers the light theme */
-export declare function prefersLight<T>($: T): T;
+export declare function prefersLight<T>(value: T): T;
 /** `dark` + `prefersDark` */
-export declare function allDark<T>($: T): T;
+export declare function allDark<T>(value: T): T;
 /** `light` + `prefersLight` */
-export declare function allLight<T>($: T): T;
+export declare function allLight<T>(value: T): T;
 
 export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth } from "vasille-web";
 
@@ -303,8 +346,8 @@ export declare const styleSheet: <
 /** Mounts a Vasille.JS component to a page */
 export declare function mount<T>(
     element: Element,
-    component: ($: T) => void,
-    $: T,
+    component: (props: T) => void,
+    props: T,
 ): AppNode<Node, Element, WebTagOptions>;
 
 interface RouterInitialization<Routes extends string> {
@@ -321,7 +364,10 @@ interface RouterInitialization<Routes extends string> {
     loadingOverlay?(props: object): void;
 }
 
-/** Starts a route app */
+/**
+ * Starts a route app
+ * @deprecated user `src/pages` folder instead
+ * */
 export declare function routerApp<Routes extends string>(
     init: RouterInitialization<Routes>,
     element?: Element,

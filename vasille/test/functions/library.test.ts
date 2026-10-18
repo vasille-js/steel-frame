@@ -110,8 +110,8 @@ it("awaited with aborts", function (done) {
             setTimeout(() => {
                 expect(counterState.V).toBeUndefined();
                 expect(counterError.V).toBe(9);
-                expect(finished).toEqual([50, 10, 9, 9, 100, 250, 500]);
                 frag.destroy(frag.sDeep);
+                expect(finished).toEqual([50, 10, 9, 9, 100, 250, 500]);
                 done();
             }, 500);
         }, 11);

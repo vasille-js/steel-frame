@@ -202,7 +202,7 @@ export interface Internal {
     strictFolders: boolean;
     stylesConnected: boolean;
     replaceWeb: string;
-    legacyNaming: boolean;
+    v4Naming: boolean;
     routes?: string[][];
     headTag?: boolean;
     bodyTag?: boolean;

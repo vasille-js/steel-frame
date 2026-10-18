@@ -727,7 +727,8 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
                 reactivityTypeByName(originName, internal) !== reactivityTypeByName(newName, internal)
             ) {
                 const correctName =
-                    originName.substring(0, originName.indexOf("$") + 1) + newName.substring(newName.indexOf("$") + 1);
+                    originName.substring(0, originName.search(/[_$]/) + 1) +
+                    newName.substring(newName.search(/[_$]/) + 1);
                 err(
                     Errors.RulesOfVasille,
                     path.get("value"),

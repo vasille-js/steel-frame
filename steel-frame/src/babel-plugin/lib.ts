@@ -345,15 +345,15 @@ export function removeExtension(name: string) {
 }
 
 export function isReadableName(name: string, internal: Internal) {
-    return name.startsWith("r_") || (internal.legacyNaming && name.startsWith("$"));
+    return name.startsWith("r_") || (internal.v4Naming && name.startsWith("$"));
 }
 
 export function isWritableName(name: string, internal: Internal) {
-    return name.startsWith("wr_") || (internal.legacyNaming && name.startsWith("$"));
+    return name.startsWith("wr_") || (internal.v4Naming && name.startsWith("$"));
 }
 
 export function reactivityTypeByName(name: string, internal: Internal) {
-    return internal.legacyNaming && name.startsWith("$")
+    return internal.v4Naming && name.startsWith("$")
         ? "any"
         : isWritableName(name, internal)
           ? "writable"
