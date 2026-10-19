@@ -4,8 +4,8 @@ const IndexScreen = screen<"/index">(async () => {
   <div>index</div>;
 });
 
-const UserScreen = screen<"/user/(id)">(async ({ params }) => {
-  <div>user:{params.id}</div>;
+const UserScreen = screen<"/user/(id)">(async (props) => {
+  <div>user:{props.params.id}</div>;
 });
 
 function throwNow(): number {
@@ -22,31 +22,35 @@ const FallbackView = view(() => {
 });
 
 const ErrorView = view((props: { error: unknown }) => {
-  <div class="error">{props.error}</div>;
+  <div class="error">{props.error as string}</div>;
 });
 
 export let rvComponent1: ((v: unknown) => void) | null = null;
 export let rvComponent2: ((v: unknown) => void) | null = null;
 export let rvComponent3: ((v: unknown) => void) | null = null;
 
+const promise1 = new Promise(resolve => {
+  rvComponent1 = resolve;
+});
+const promise2 = new Promise(resolve => {
+  rvComponent2 = resolve;
+});
+const promise3 = new Promise(resolve => {
+  rvComponent3 = resolve;
+});
+
 const C1Screen = screen<"/">(async () => {
-  const r = await new Promise(resolve => {
-    rvComponent1 = resolve;
-  });
+  const r = await promise1;
   <div>component 1</div>;
 });
 
 const C2Screen = screen<"/page2">(async () => {
-  const r = await new Promise(resolve => {
-    rvComponent2 = resolve;
-  });
+  const r = await promise2;
   <div>component 2</div>;
 });
 
 const C3Screen = screen<"/page3">(async () => {
-  const r = await new Promise(resolve => {
-    rvComponent3 = resolve;
-  });
+  const r = await promise3;
   <div>component 3</div>;
 });
 

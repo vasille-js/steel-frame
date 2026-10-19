@@ -271,6 +271,8 @@ export declare function QueuedRender(props: {
 
 /** Refresh the content each time, when the reactive model is updated */
 export declare function Watch<T>(props: { r_model: T; slot?: (value: T) => void; "vasille:slot"?: VasilleSlot }): void;
+/** @deprecated use `Watch` with `r_model` instead */
+export declare function Watch<T>(props: { $model: T; slot?: (value: T) => void; "vasille:slot"?: VasilleSlot }): void;
 
 /** Render content after a while */
 export declare function Delay(props: { time?: number; slot?: () => void; "vasille:slot"?: VasilleSlot }): void;

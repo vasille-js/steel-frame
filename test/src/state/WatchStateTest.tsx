@@ -1,13 +1,11 @@
-import { beforeMount, component, view, watch } from "steel-frame";
-
-export let control: { setValue(value: string): void } | undefined = undefined;
+import { beforeMount, bypassWriteRestriction, component, view, watch } from "steel-frame";
 
 export const WatchStateTest = component(() => {
-  let $name = "Vasille";
+  let wr_name = "Vasille";
   let $external = "test";
 
   watch(() => {
-    $name = "+" + $external;
+    bypassWriteRestriction(wr_name, "+" + $external)
   });
 
   beforeMount(() => {
@@ -18,5 +16,7 @@ export const WatchStateTest = component(() => {
     };
   });
 
-  <div>Hello {$name}!</div>;
+  <div>Hello {wr_name}!</div>;
 });
+
+export let control: { setValue(value: string): void } | undefined = undefined;

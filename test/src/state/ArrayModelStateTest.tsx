@@ -1,14 +1,7 @@
-import { For, beforeMount, component } from "steel-frame";
-
-export let control:
-  | {
-      addValue(value: string): void;
-      replaceValue(index: number, value: string): void;
-    }
-  | undefined = undefined;
+import { For, beforeMount, component, arrayModel } from "steel-frame";
 
 export const ArrayModelStateTest = component(() => {
-  const model = ["x"];
+  const model = arrayModel(["x"]);
 
   beforeMount(() => {
     control = {
@@ -16,7 +9,7 @@ export const ArrayModelStateTest = component(() => {
         model.push(value);
       },
       replaceValue(index: number, value: string) {
-        model[index] = value;
+        model.replace(index, value);
       },
     };
   });
@@ -28,3 +21,10 @@ export const ArrayModelStateTest = component(() => {
     }}
   />;
 });
+
+export let control:
+  | {
+      addValue(value: string): void;
+      replaceValue(index: number, value: string): void;
+    }
+  | undefined = undefined;

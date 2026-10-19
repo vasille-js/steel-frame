@@ -1,5 +1,5 @@
 import { routerApp } from "steel-frame";
-import { Router } from "vasille-router/web-router";
+import { WebRouter } from "vasille-web/types";
 import { x } from "../../src/routing/router";
 import { page } from "../page";
 
@@ -18,7 +18,7 @@ it("routing test", function (done) {
     },
     body,
   );
-  const router = (app.runner as any).router as Router<string>;
+  const router = (app.runner as any).router as WebRouter<string>;
 
   setTimeout(function () {
     expect(body.children.length).toBe(1);

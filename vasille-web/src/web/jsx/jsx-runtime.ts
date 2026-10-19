@@ -24,7 +24,7 @@ export type VasilleSlot = VasilleChild | VasilleChild[] | void[];
 
 type HtmlInput<K extends keyof HTMLElementTagNameMap & keyof HtmlTagMap> = {
     callback?: (node: HTMLElementTagNameMap[K]) => void | HTMLElementTagNameMap[K] | (() => void);
-    class?: ClassItem[] | string;
+    class?: ClassItem[] | string | CssStyleInjector;
     style?: ElementStyleProps | string;
     "vasille:slot"?: VasilleSlot;
 } & Partial<HtmlTagMap[K]["attrs"]> &

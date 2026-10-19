@@ -6,6 +6,35 @@ interface SubProps {
   slot2?: (props: { $x: number }) => void;
 }
 
+export const SlotTest = component(() => {
+  <div>
+    <SubComponent />
+  </div>;
+  <div>
+    <SubComponent>
+      <div>child</div>
+    </SubComponent>
+  </div>;
+  <div>
+    <SubComponent
+      slot1={(props) => {
+        const { $x } = props;
+        beforeMount(() => xes.push($x));
+        <div>child{$x}</div>;
+      }}
+    />
+  </div>;
+  <div>
+    <SubComponent
+      slot2={(props) => {
+        const { $x } = props;
+        beforeMount(() => xes.push($x));
+        <div>child{$x}</div>;
+      }}
+    />
+  </div>;
+});
+
 export let control:
   | {
       setX(x: number): void;
@@ -14,7 +43,8 @@ export let control:
 
 export const xes: number[] = [];
 
-const SubComponent = component(({ slot, slot1, slot2 }: SubProps) => {
+const SubComponent = component((props: SubProps) => {
+  const { slot, slot1, slot2 } = props;
   let $x = 0;
 
   beforeMount(() => {
@@ -32,31 +62,4 @@ const SubComponent = component(({ slot, slot1, slot2 }: SubProps) => {
     <div>slot 1 default</div>
   </Slot>;
   <Slot model={slot2} $x={3} />;
-});
-
-export const SlotTest = component(() => {
-  <div>
-    <SubComponent />
-  </div>;
-  <div>
-    <SubComponent>
-      <div>child</div>
-    </SubComponent>
-  </div>;
-  <div>
-    <SubComponent
-      slot1={({ $x }) => {
-        beforeMount(() => xes.push($x));
-        <div>child{$x}</div>;
-      }}
-    />
-  </div>;
-  <div>
-    <SubComponent
-      slot2={({ $x }) => {
-        beforeMount(() => xes.push($x));
-        <div>child{$x}</div>;
-      }}
-    />
-  </div>;
 });

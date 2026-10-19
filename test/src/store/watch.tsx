@@ -1,15 +1,15 @@
-import { component, store, view, watch } from "steel-frame";
+import { bypassWriteRestriction, component, store, view, watch } from "steel-frame";
 
 const modelStore = store(() => {
-  let $name = "Vasille";
+  let wr_name = "Vasille";
   let $external = "test";
 
   watch(() => {
-    $name = "+" + $external;
+    bypassWriteRestriction(wr_name, "+" + $external);
   });
 
   return {
-    $name,
+    $name: wr_name,
     $external,
     setValue(value: string) {
       $external = value;

@@ -8,12 +8,26 @@ interface Props {
   $number: number;
 }
 
-const HybridComponent = component(({ model, $number }: Models & Props) => {
+export const HybridTest = component(() => {
+  let $number = 10;
+
+  beforeMount(() => {
+    control.setInnerValue = (value: number) => {
+      $number = value;
+    };
+  });
+
+  <HybridComponent model={{ $value: $value }} $number={$number} />;
+});
+
+const HybridComponent = component((props: Models & Props) => {
+  const { model, $number } = props;
+  const { $value } = model;
   <div>
-    {model.$value}+{$number}
+    {$value}+{$number}
   </div>;
   <div>
-    {model.$value + 2}+{$number + 2}
+    {$value + 2}+{$number + 2}
   </div>;
 });
 
@@ -27,15 +41,3 @@ export const control: {
     $value = x;
   },
 };
-
-export const HybridTest = component(() => {
-  let $number = 10;
-
-  beforeMount(() => {
-    control.setInnerValue = (value: number) => {
-      $number = value;
-    };
-  });
-
-  <HybridComponent model={{ $value: $value }} $number={$number} />;
-});

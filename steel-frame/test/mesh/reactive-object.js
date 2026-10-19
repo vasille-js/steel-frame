@@ -21,9 +21,9 @@ const sStore = store(Vasille => {
 });
 const s = sStore;
 const Component = compose(Vasille => {
-  const $a = VasilleEnsure(s, "$a");
-  const $b = VasilleEnsure(s, "$b");
-  const $ob = VasilleEnsure(s.o, "$b");
+  const $a = VasilleEnsure(Vasille, s, "$a");
+  const $b = VasilleEnsure(Vasille, s, "$b");
+  const $ob = VasilleEnsure(Vasille, s.o, "$b");
   const $bc1 = watch(Vasille, Vasille_0 => Vasille_0.c, [$ob]);
   const $bc2 = watch(Vasille, Vasille_0 => Vasille_0?.c, [$ob]);
   watch(Vasille, (Vasille_0, Vasille_1, Vasille_2) => {

@@ -1,5 +1,9 @@
 import { component, ref, view } from "steel-frame";
 
+export const ReactiveObjectTest = component(() => {
+  <div>Hello {data.$text}!</div>;
+});
+
 const data = { $text: ref("test") };
 
 export const control = {
@@ -7,7 +11,3 @@ export const control = {
     data.$text = value;
   },
 };
-
-export const ReactiveObjectTest = component(() => {
-  <div>Hello {data.$text}!</div>;
-});

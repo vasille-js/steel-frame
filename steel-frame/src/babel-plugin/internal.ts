@@ -1,6 +1,7 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { removeExtension } from "./lib.js";
+import { meshExpression, meshStatement } from "./mesh.js";
 
 export enum VariablesStatus {
     StyleSheet = 2,
@@ -203,6 +204,8 @@ export interface Internal {
     stylesConnected: boolean;
     replaceWeb: string;
     v4Naming: boolean;
+    declaredComponents: Map<string, NodePath<types.Statement>>;
+    meshedStatements: Set<NodePath<types.Statement>>;
     routes?: string[][];
     headTag?: boolean;
     bodyTag?: boolean;

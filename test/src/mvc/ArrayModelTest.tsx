@@ -1,4 +1,13 @@
-import { arrayModel, component, For, view } from "steel-frame";
+import { arrayModel, ArrayModelView, component } from "steel-frame";
+
+export const ArrayModelTest = component(() => {
+  <ArrayModelView
+    of={model}
+    slot={value => {
+      <div>Hello {value}!</div>;
+    }}
+  />;
+});
 
 const model = arrayModel(["x"]);
 
@@ -7,15 +16,6 @@ export const control = {
     model.push(value);
   },
   replaceValue(index: number, value: string) {
-    model[index] = value;
+    model.replace(index, value);
   },
 };
-
-export const ArrayModelTest = component(() => {
-  <For
-    of={model}
-    slot={value => {
-      <div>Hello {value}!</div>;
-    }}
-  />;
-});

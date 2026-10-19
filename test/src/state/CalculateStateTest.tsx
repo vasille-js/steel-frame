@@ -1,7 +1,5 @@
 import { calculate, beforeMount, component } from "steel-frame";
 
-export let control: { setValue(value: string): void } | undefined = undefined;
-
 export const CalculateStateTest = component(() => {
   let $r = "test";
   const $text = calculate(() => {
@@ -18,3 +16,5 @@ export const CalculateStateTest = component(() => {
 
   <div>Hello {$text}!</div>;
 });
+
+export let control: { setValue(value: string): void } | undefined = undefined;

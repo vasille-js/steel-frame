@@ -1,7 +1,7 @@
-import { store, view, For, component } from "steel-frame";
+import { store, view, For, component, setModel, SetModelView } from "steel-frame";
 
 const modelStore = store(() => {
-  const s = new Set(["m"]);
+  const s = setModel(["m"]);
 
   return {
     s,
@@ -15,7 +15,7 @@ const modelStore = store(() => {
 });
 
 const Component = component(() => {
-  <For
+  <SetModelView
     of={modelStore.s}
     slot={value => {
       <div>Hello {value}!</div>;

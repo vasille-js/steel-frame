@@ -2,6 +2,7 @@ import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { AppData, ctx, Internal, StackedStates, VariablesStatus } from "./internal.js";
 import { meshStatement, resolveSourceFilePath } from "./mesh.js";
+import { checkFileOrder, collectComponents } from "./order-check.js";
 import { findStyleInNode } from "./css-transformer.js";
 import * as fs from "node:fs";
 import path from "path";
@@ -304,6 +305,8 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
         packageName: packageJson.name,
         isWrapper: relativePath === "/src/router/Wrapper.tsx",
         v4Naming: opts.v4Naming,
+        declaredComponents: new Map(),
+        meshedStatements: new Set(),
         ref(arg, area, name, safe) {
             const fnName = safe ? "safeState" : "ref";
             const fixedArg = arg ? (safe ? t.arrowFunctionExpression([], arg) : arg) : t.buildUndefinedNode();
@@ -392,7 +395,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
                 return call("ensure", [object, property, getCtx(), nodeToStaticPosition(area)]);
             }
 
-            return call("ensure", [object, property]);
+            return call("ensure", [getCtx(), object, property]);
         },
         set(obj, field, value, area) {
             if (opts.devLayer) {
@@ -512,7 +515,9 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
         }
     }
 
-    for (const statementPath of path.get("body")) {
+    const statements = path.get("body");
+
+    for (const statementPath of statements) {
         if (statementPath.isImportDeclaration()) {
             handleImportDeclaration(statementPath, internal, ids);
         }
@@ -527,7 +532,10 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
         }
     }
 
-    for (const statementPath of path.get("body")) {
+    collectComponents(statements, internal);
+    checkFileOrder(path, internal);
+
+    for (const statementPath of statements) {
         if (!statementPath.isImportDeclaration()) {
             handleStatement(statementPath, internal);
         }

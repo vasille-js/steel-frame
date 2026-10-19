@@ -1,7 +1,7 @@
-import { store, view, For, component } from "steel-frame";
+import { store, For, component, mapModel, MapModelView } from "steel-frame";
 
 const modelStore = store(() => {
-  const map = new Map([[0, "a"]]);
+  const map = mapModel([[0, "a"]]);
 
   return {
     map,
@@ -12,10 +12,10 @@ const modelStore = store(() => {
 });
 
 const Component = component(() => {
-  <For
+  <MapModelView
     of={modelStore.map}
-    slot={value => {
-      <div>Hello {value}!</div>;
+    slot={r_value => {
+      <div>Hello {r_value}!</div>;
     }}
   />;
 });

@@ -1,7 +1,5 @@
 import { view, ref, beforeMount, component } from "steel-frame";
 
-export let control: { setValue(value: string): void } | undefined = undefined;
-
 export const RefStateTest = component(() => {
   let $r = ref("test");
 
@@ -15,3 +13,5 @@ export const RefStateTest = component(() => {
 
   <div>Hello {$r}!</div>;
 });
+
+export let control: { setValue(value: string): void } | undefined = undefined;

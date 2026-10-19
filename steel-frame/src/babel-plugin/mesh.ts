@@ -156,6 +156,20 @@ export function meshComposeCall(
         return err(Errors.IncorrectArguments, path, "Invalid arguments number", internal);
     }
 
+    path.traverse({
+        JSXOpeningElement(path) {
+            const name = path.node.name;
+
+            if (
+                t.isJSXIdentifier(name) &&
+                name.name[0].toUpperCase() === name.name[0] &&
+                internal.declaredComponents.has(name.name)
+            ) {
+                meshStatement(internal.declaredComponents.get(name.name)!, internal);
+            }
+        },
+    });
+
     if (name || t.isExportDeclaration(path.parent)) {
         const tracking = (internal.componentTracking = internal.appData?.registerComponent(
             internal,
@@ -981,6 +995,13 @@ export function processObjectExpression(
 
 export function meshStatement(path: NodePath<types.Statement | null | undefined>, internal: Internal) {
     const statement = path.node;
+
+    if (path.isStatement()) {
+        if (internal.meshedStatements.has(path)) {
+            return;
+        }
+        internal.meshedStatements.add(path);
+    }
 
     switch (statement && statement.type) {
         case "BlockStatement":

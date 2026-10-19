@@ -1,7 +1,5 @@
 import { beforeMount, component } from "steel-frame";
 
-export let control: { setValue(value: string): void } | undefined = undefined;
-
 export const BindStateTest = component(() => {
   let $r = "test";
   const $text = "+" + $r;
@@ -16,3 +14,5 @@ export const BindStateTest = component(() => {
 
   <div>Hello {$text}!</div>;
 });
+
+export let control: { setValue(value: string): void } | undefined = undefined;

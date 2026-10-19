@@ -1,5 +1,10 @@
 import { awaited, beforeMount, component, view, watch } from "steel-frame";
 
+export const AwaitedTest = component(() => {
+  <C1 />;
+  <C2 />;
+});
+
 export const reloads: (() => void)[] = [];
 export const c1states: [unknown, unknown][] = [];
 export const c2states: [unknown, unknown][] = [];
@@ -49,9 +54,4 @@ const C2 = component(() => {
       reload();
     });
   });
-});
-
-export const AwaitedTest = component(() => {
-  <C1 />;
-  <C2 />;
 });

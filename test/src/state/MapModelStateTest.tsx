@@ -1,13 +1,7 @@
-import { view, For, component, beforeMount } from "steel-frame";
-
-export let control:
-  | {
-      setValue(key: number, value: string): void;
-    }
-  | undefined = undefined;
+import { view, For, component, beforeMount, mapModel, MapModelView } from "steel-frame";
 
 export const MapModelStateTest = component(() => {
-  const model = new Map([[0, "a"]]);
+  const model = mapModel([[0, "a"]]);
 
   beforeMount(() => {
     control = {
@@ -17,10 +11,16 @@ export const MapModelStateTest = component(() => {
     };
   });
 
-  <For
+  <MapModelView
     of={model}
-    slot={value => {
-      <div>Hello {value}!</div>;
+    slot={r_value => {
+      <div>Hello {r_value}!</div>;
     }}
   />;
 });
+
+export let control:
+  | {
+      setValue(key: number, value: string): void;
+    }
+  | undefined = undefined;

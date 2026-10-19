@@ -21,6 +21,6 @@ it("MVC map model", function () {
   control?.setValue(1, "z");
   expect(body.children.length).toBe(3);
   expect(body.children[0].innerHTML).toBe("Hello a!");
-  expect(body.children[1].innerHTML).toBe("Hello c!");
-  expect(body.children[2].innerHTML).toBe("Hello z!");
+  expect(body.children[1].innerHTML).toBe("Hello z!");
+  expect(body.children[2].innerHTML).toBe("Hello c!");
 });

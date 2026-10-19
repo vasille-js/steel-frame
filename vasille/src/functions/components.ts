@@ -16,6 +16,7 @@ import {
     WatchNode,
     ZombieNode,
 } from "../classes/index.js";
+import { Watch } from "./index.js";
 import { ref } from "./internal.js";
 
 export interface SlotOptions<Node, Element, TagOptions extends object, T extends object> {
@@ -106,8 +107,16 @@ export function For<
                 ctx.runner,
                 ctx.sDeep + 1,
                 model,
-                (ctx, value, key) => {
-                    slot(ctx, value.V, key);
+                (ctx, iValue, key) => {
+                    Watch(
+                        {
+                            r_model: iValue,
+                            slot(ctx, value) {
+                                slot(ctx, value, key);
+                            },
+                        },
+                        ctx,
+                    );
                 },
                 ref,
                 frag,

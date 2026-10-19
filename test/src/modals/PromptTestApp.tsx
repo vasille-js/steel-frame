@@ -1,4 +1,16 @@
-import { beforeMount, component, prompt } from "steel-frame";
+import { beforeMount, component, prompt, showPrompt } from "steel-frame";
+
+export const PromptTestApp = component(() => {
+  beforeMount(() => {
+    control = {
+      prompt(): Promise<string> {
+        return showPrompt(promptName, {});
+      },
+    };
+  });
+
+  <div class="app"></div>;
+});
 
 let _resolve: ((v: string) => void) | null = null;
 let _reject: ((v: unknown) => void) | null = null;
@@ -11,7 +23,8 @@ export function rejectPrompt(error: string) {
   _reject?.(error);
 }
 
-const promptName = prompt<string>(({ reject, resolve }) => {
+const promptName = prompt<string>((props) => {
+  const { reject, resolve } = props;
   beforeMount(() => {
     _resolve = resolve;
     _reject = reject;
@@ -23,15 +36,3 @@ const promptName = prompt<string>(({ reject, resolve }) => {
 export let control: {
   prompt(): Promise<string>;
 } | null = null;
-
-export const PromptTestApp = component(() => {
-  beforeMount(() => {
-    control = {
-      prompt(): Promise<string> {
-        return promptName({});
-      },
-    };
-  });
-
-  <div class="app"></div>;
-});
