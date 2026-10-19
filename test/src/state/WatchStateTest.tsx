@@ -5,7 +5,7 @@ export const WatchStateTest = component(() => {
   let $external = "test";
 
   watch(() => {
-    bypassWriteRestriction(wr_name, "+" + $external)
+    bypassWriteRestriction(wr_name, "+" + $external);
   });
 
   beforeMount(() => {

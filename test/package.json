@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "typecheck": "tsc",
-    "prettier": "prettier src test/**/*.ts* --write",
+    "prettier": "prettier src test/**/*.ts* test/*.ts --write",
     "dev": "vasille-web dev",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "test-coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage"

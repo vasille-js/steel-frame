@@ -4,7 +4,7 @@ const IndexScreen = screen<"/index">(async () => {
   <div>index</div>;
 });
 
-const UserScreen = screen<"/user/(id)">(async (props) => {
+const UserScreen = screen<"/user/(id)">(async props => {
   <div>user:{props.params.id}</div>;
 });
 

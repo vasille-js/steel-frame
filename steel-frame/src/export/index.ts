@@ -10,7 +10,7 @@ declare interface Params {
     slot(...args: unknown[]): unknown;
 }
 
-declare type Composed<In extends object, Out> = (
+export declare type Composed<In extends object, Out> = (
     props: (Required<In> extends Params ? In & { "vasille:slot"?: VasilleSlot } : In) & {
         callback?(data: Out): void;
     },
@@ -141,7 +141,7 @@ export declare function setModel<T>(v?: T[]): SetModel<T>;
 export declare function mapModel<K, T>(v?: [K, T][]): MapModel<K, T>;
 
 /** Awaits async data in a sync component */
-export declare function awaited<T>(target: (signal?: AbortSignal) => Promise<T>): [unknown, T | undefined, () => void];
+export declare function awaited<T>(target: (signal?: AbortSignal) => Promise<T>): [unknown, T | undefined];
 
 /** Returns an abort signal to cancel requests/timers when context is destroyed */
 export declare function abortSignal(): AbortSignal | undefined;

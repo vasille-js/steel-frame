@@ -1,13 +1,16 @@
-import {JSDOM} from "jsdom"
+import { JSDOM } from "jsdom";
 
-export const page = new JSDOM(`
+export const page = new JSDOM(
+  `
         <html>
             <head>
             </head>
             <body>
             </body>
         </html>
-    `, {url: "https://localhost:8080"});
+    `,
+  { url: "https://localhost:8080" },
+);
 
 // @ts-ignore
 global.window = page.window;

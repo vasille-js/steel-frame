@@ -23,7 +23,7 @@ export function rejectPrompt(error: string) {
   _reject?.(error);
 }
 
-const promptName = prompt<string>((props) => {
+const promptName = prompt<string>(props => {
   const { reject, resolve } = props;
   beforeMount(() => {
     _resolve = resolve;

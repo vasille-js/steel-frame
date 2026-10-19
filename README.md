@@ -137,7 +137,7 @@ We respect semantic versioning:
 - Add `debounced` and `field` functions, which extend the reativity system.
 - Add `Zombie` component, it keeps HTML elements alive some time after destruction.
 - Add `abortSignal` to cancel fetch requests and timers when component is destroyed.
-- Renamed `ref` to `state`, `bind` to `live`, depracated `calculate`. **[backward compatible]**
+- Renamed `ref` to `state`, `bind` to `live`, `watch` to `effect`, depracated `calculate`.
 - Add `safeState`, `safeLive`, `safeInit` functions, they make the JSX much safer.
 - `callback` handler can return cleanup function.
 - Navigation paths are now checked in compile time, missing paths are reported.
@@ -146,6 +146,11 @@ We respect semantic versioning:
 - Reactive members are forbidden in live expressions. **[API change]**
 - Reactive values are not unwrapped automatically, need `unwrap` call. **[API change]**
 - Reactivity breaking is now reported in compile time. **[API change]**
+- Writing to reactive states from effects is restricted,
+  workaround with `bypassWriteRestriction`. **[API change]**
+- New reactivity marks `r_` & `wr_` insted of `$`,
+  workaround with `v4-naming` compilation flag. **[API change]**
+- Component files have strict structure (imports, export, helpers, CSS). **[API change]**
 
 ### 6.0 RC (never released)
 

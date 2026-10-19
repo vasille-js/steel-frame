@@ -17,7 +17,7 @@ export const SlotTest = component(() => {
   </div>;
   <div>
     <SubComponent
-      slot1={(props) => {
+      slot1={props => {
         const { $x } = props;
         beforeMount(() => xes.push($x));
         <div>child{$x}</div>;
@@ -26,7 +26,7 @@ export const SlotTest = component(() => {
   </div>;
   <div>
     <SubComponent
-      slot2={(props) => {
+      slot2={props => {
         const { $x } = props;
         beforeMount(() => xes.push($x));
         <div>child{$x}</div>;
