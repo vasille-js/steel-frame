@@ -1,10 +1,10 @@
-# SolidFrame v7 Framework Documentation
+# Steel Frame v7 Framework Documentation
 
-The SolidFrame project aims to create a framework that functions intuitively with just HTML, CSS, and JavaScript -- no special knowledge required.
+The Steel Frame project aims to create a framework that functions intuitively with just HTML, CSS, and JavaScript -- no special knowledge required.
 
 ## Table of Contents
 
-- [SolidFrame v7 Framework Documentation](#solidframe-v7-framework-documentation)
+- [Steel Frame v7 Framework Documentation](#steel-frame-v7-framework-documentation)
   - [Table of Contents](#table-of-contents)
   - [Components](#components)
   - [Reactive Assignments](#reactive-assignments)
@@ -53,7 +53,8 @@ export const MyComponent = component<Props>((props) => {
 
 ## Reactive Assignments
 
-Assignments to local variables with names starting with `wr_` are reactive.
+Assignments to local variables with names starting with `wr_`
+reactivity mark are reactive.
 Changing their value triggers UI updates everywhere they're used.
 
 ```typescript jsx
@@ -69,7 +70,8 @@ export const MyComponent = component(() => {
 
 ## Reactive Inline Expressions
 
-Inline expressions marked as readonly reactive value via `r_` prefix are automatically updated.
+Inline expressions marked as readonly reactive value
+via `r_` reactivity mark are automatically updated.
 
 ```typescript jsx
 export const MyComponent = component(() => {
@@ -98,7 +100,7 @@ export const MyComponent = component(() => {
   // extract the field
   let wr_a1 = wr_obj.a;
   // extracting a field in readonly mode is also possible
-  const r_a2 = wr_obj.a;
+  const r_b = wr_obj.b;
 
   function update() {
     // this line will update the entire object
@@ -185,15 +187,17 @@ export const MyApp = component(() => {
 
 ## Properties
 
-Component input values become props.
+Component input values become properties.
+Property naming are very important:
+a property will be reactive/writable acordly to its reactivity mark.
 
 ```typescript jsx
 interface Props {
   count: number;
 }
 
-const MyComponent = component(({ count }: Props) => {
-  <div>{count}</div>;
+const MyComponent = component<Props>((props) => {
+  <div>{props.count}</div>;
 });
 
 export const MyApp = component(() => {
@@ -225,9 +229,9 @@ interface Props {
   slot?: (p: { name: string; count: number }) => void;
 }
 
-const MyComponent = component(({ slot }: Props) => {
+const MyComponent = component((props: Props) => {
   <div>
-    <Slot model={slot} name="Name" count={1}>
+    <Slot model={props.slot} name="Name" count={1}>
       Default content
     </Slot>
   </div>

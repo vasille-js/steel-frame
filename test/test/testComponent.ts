@@ -1,6 +1,5 @@
 import { JSDOM } from "jsdom";
 import { Composed } from "steel-frame";
-import { mount } from "vasille-web";
 import { AppNode, Fragment } from "../../vasille/src";
 import { WebRunner } from "../../vasille-web/src/web/runner/runner";
 
