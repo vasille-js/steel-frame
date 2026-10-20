@@ -1,8 +1,20 @@
 # Compiler hints in Steel Frame v7
 
+This document describes the compiler hints available in Steel Frame v7. Compiler hints are special functions that
+provide type information and behavioral guidance to the Steel Frame compiler during the transformation process. They
+enable reactive programming patterns while maintaining type safety and optimal performance.
+
+## Naming Conventions
+
+Steel Frame uses prefixes to indicate the reactivity of variables:
+
+- `wr_` - Writable reactive values (can be read and modified)
+- `r_` - Readonly reactive values (automatically computed, cannot be directly modified)
+
 ## Table of Contents
 
 - [Compiler hints in Steel Frame v7](#compiler-hints-in-steel-frame-v7)
+  - [Naming Conventions](#naming-conventions)
   - [Table of Contents](#table-of-contents)
   - [`state<T>(v: T): T`](#statetv-t-t)
   - [`live<T>(v: T): T`](#livetv-t-t)
@@ -51,14 +63,16 @@ const C = component(() => {
 
 ## `safeInit<T>(v: T): T`
 
-`safeInit` safely initialize a non reactive value and return `undefined` if error encounter.
+`safeInit` safely initializes a non-reactive value with error handling. If an error occurs during initialization, it
+returns `undefined` instead of throwing. This is useful for initializing constants or non-reactive variables that might
+fail during computation (e.g., parsing configuration, accessing localStorage).
 
 ## `effect(fn: () => void): void`
 
 `effect` run the `fn` funtion each time when any of dependecies are update.
-It can not update writable reactive values. Use `live` if one value depends by another.
+It cannot update writable reactive values. Use `live` if one value depends on another.
 
-Example:
+**Example:**
 
 ```typescript jsx
 const C = component(() => {
@@ -76,7 +90,7 @@ const C = component(() => {
 When the field value is updated, it will update the entire object.
 Expect `wr_` reactivity mark.
 
-Example:
+**Example:**
 
 ```typescript jsx
 const C = component(() => {
@@ -91,7 +105,7 @@ const C = component(() => {
 
 Use `signal` to abort the current `fetch`es when a new request is sent.
 
-Example:
+**Example:**
 
 ```typescript jsx
 const C = component(() => {
@@ -112,7 +126,7 @@ const C = component(() => {
 It contains a stale value for an interval greater or equal to `delay`ms.
 Expect `r_` reactivity mark.
 
-Example:
+**Example:**
 
 ```typescript jsx
 const C = component(() => {
@@ -128,11 +142,11 @@ const C = component(() => {
 
 ## `bypassWriteRestriction<T>(writable: T, value: T): T`
 
-`bypassWriteRestriction` bypasses the write into writable reastriction inside effects.
+`bypassWriteRestriction` bypasses the write operation into writable reastriction inside effects.
 The first argument must be a writable reactive value.
-Usage of it is not recomanded, but it takes time for Steel Frame to beacome a mature framework which doesn't neet it.
+Usage of it is not recommended, but it takes time for Steel Frame to become a mature framework which doesn't need it.
 
-Example:
+**Example:**
 
 ```typescript jsx
 const C = component(() => {
