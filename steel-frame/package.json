@@ -1,6 +1,6 @@
 {
     "name": "steel-frame",
-    "version": "7.0.0",
+    "version": "7.0.1",
     "description": "SteelFrame: Build Fault-Tolerant Web Applications Effortlessly.",
     "main": "build/cli/run.js",
     "types": "./index.d.ts",
@@ -39,7 +39,7 @@
     "type": "module",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/vasille-js/vasille-js.git"
+        "url": "git+https://github.com/vasille-js/steel-frame.git"
     },
     "keywords": [
         "frontend",
@@ -51,9 +51,9 @@
     "author": "lixcode",
     "license": "LGPL-2.1-only",
     "bugs": {
-        "url": "https://github.com/vasille-js/vasille-js/issues"
+        "url": "https://github.com/vasille-js/steel-frame/issues"
     },
-    "homepage": "https://github.com/vasille-js/vasille-js#readme",
+    "homepage": "https://github.com/vasille-js/steel-frame#readme",
     "dependencies": {
         "@inquirer/select": "^5.2.6",
         "csstype": "^3.1.3",

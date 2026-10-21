@@ -140,8 +140,8 @@ export const MyComponent = component(() => {
   let wr_a = 1;
   let wr_b = 3;
 
-  watch(() => {
-    console.log($a, $b); // Runs each time when wr_a or wr_b is updated
+  effect(() => {
+    console.log(wr_a, wr_b); // Runs each time when wr_a or wr_b is updated
   });
 });
 ```
