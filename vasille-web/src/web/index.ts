@@ -6,6 +6,7 @@ export {
     view as compose,
     ensure,
     ref,
+    ref as state,
     expr,
     expr as bind,
     expr as calculate,

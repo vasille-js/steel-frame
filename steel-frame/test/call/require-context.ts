@@ -6,6 +6,7 @@ const promise0 = () =>
     });
 
 const C = DX.compose(() => {
+    // @ts-expect-error
     const [$err, $result, retry] = DX.awaited(() => promise0());
 
     DX.beforeMount(() => console.log($err, $result, retry));

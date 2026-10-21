@@ -55,6 +55,7 @@ export const component = devView;
 export const compose = devView;
 export const ensure = devEnsure;
 export const ref = devRef;
+export const state = devRef;
 export const expr = devExpr;
 export const bind = devExpr;
 export const calculate = devExpr;

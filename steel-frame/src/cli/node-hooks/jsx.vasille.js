@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import { commonExtensions, resolveFile } from "../lib/resolve.js";
 import * as babel from "@babel/core";
-import vasillePlugin from "babel-plugin-vasille";
+import vasillePlugin from "../../babel-plugin/index.js";
 import pluginJsxSyntax from "@babel/plugin-syntax-jsx";
 import pluginTypescript from "@babel/plugin-transform-typescript";
 import path from "node:path";
@@ -51,7 +51,7 @@ export async function load(url, context, nextLoad) {
         plugins.push([
             vasillePlugin,
             {
-                replaceWeb: "vasille-ssg",
+                replaceWeb: "vasille-web/ssg",
                 headTag: true,
                 bodyTag: true,
             },

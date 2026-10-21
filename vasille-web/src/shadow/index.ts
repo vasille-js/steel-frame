@@ -54,6 +54,7 @@ export {
     Model,
     safeState,
     live,
+    state,
 } from "../web/index.js";
 
 export { shadow as compose, shadow as component } from "./lib.js";

@@ -5,6 +5,7 @@ export { safe } from "vasille";
 export {
     ensure,
     ref,
+    ref as state,
     expr,
     expr as bind,
     expr as calculate,

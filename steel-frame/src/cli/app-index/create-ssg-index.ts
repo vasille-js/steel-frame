@@ -9,7 +9,7 @@ export async function createSsgIndex(routerDir: string, pagesDir: string, mode: 
         indexJs.push(`import page${index} from "${path.filePath}";`);
     });
 
-    indexJs.push('import { routerApp } from "vasille-ssg";');
+    indexJs.push('import { routerApp } from "vasille-web/ssg";');
     indexJs.push("export const router = routerApp({");
     indexJs.push("  routes: {");
 

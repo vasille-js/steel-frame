@@ -74,7 +74,7 @@ it("has object fields", function () {
 });
 
 it("has deep fields", function () {
-  const control = testComponent(
+  const [control] = testComponent(
     component(() => {
       let wr_obj = { a: { b: 1 } };
       let wr_a = wr_obj.a;
