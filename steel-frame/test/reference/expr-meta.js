@@ -7,7 +7,7 @@ const C = compose(Vasille => {
     return Vasille_0 + b + Vasille_1;
   }, [$a, $c]);
   const $e = bind(Vasille, Vasille_0 => Vasille_0 + b, [$a]);
-  let f = (() => $a.V + b)();
+  let f = $a.V + b;
   const $g = ref(void 0, Vasille);
   const $h = ref(3, Vasille);
   const $j = ref(4, Vasille);

@@ -1,6 +1,6 @@
 {
     "name": "steel-frame",
-    "version": "7.0.0-rc.3",
+    "version": "7.0.0",
     "description": "SteelFrame: Build Fault-Tolerant Web Applications Effortlessly.",
     "main": "build/cli/run.js",
     "types": "./index.d.ts",
@@ -29,7 +29,7 @@
     },
     "scripts": {
         "prepack": "cp -f ../README.md ./README.md",
-        "prettier": "prettier src fake-types --write",
+        "prettier": "prettier src --write",
         "prebuild": "rm -rf build",
         "build": "tsc --build tsconfig.json",
         "tsc-tests": "tsc --build test/tsconfig.json",
@@ -49,7 +49,7 @@
         "safe"
     ],
     "author": "lixcode",
-    "license": "MIT",
+    "license": "LGPL-2.1-only",
     "bugs": {
         "url": "https://github.com/vasille-js/vasille-js/issues"
     },
@@ -58,8 +58,7 @@
         "@inquirer/select": "^5.2.6",
         "csstype": "^3.1.3",
         "esbuild": "^0.28.2",
-        "vasille": "file:../vasille",
-        "vasille-web": "file:../vasille-web",
+        "vasille-web": "7.0.0",
         "vite": "^8.3.4",
         "vite-plugin-babel": "^1.7.3",
         "vite-plugin-inspect": "^12.1.0",
@@ -73,6 +72,7 @@
         "@types/ws": "^8.18.2",
         "babel-jest": "^30.5.2",
         "prettier": "^3.6.2",
+        "steel-frame": "file:.",
         "ts-jest": "^29.4.14",
         "typescript": "^5.9.3"
     }

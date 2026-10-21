@@ -29,6 +29,8 @@ export class ArrayModel<T> extends Array<T> {
     public readonly rDeep: number;
     public readonly $length: ReadOnlyReference<number, unknown>;
 
+    [k: number]: never;
+
     /**
      * @param data {Array} input data
      * @param ctx lifetime context of model
@@ -126,9 +128,13 @@ export class ArrayModel<T> extends Array<T> {
         return this.run(() => super.unshift(...items));
     }
 
+    public get(at: number): T | undefined {
+        return (this as unknown as { [k: number]: T })[at];
+    }
+
     public replace(at: number, with_: T): this {
         this.listener.emit(at, 1, [with_]);
-        this[at] = with_;
+        (this as unknown as { [k: number]: T })[at] = with_;
         return this;
     }
 

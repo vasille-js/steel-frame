@@ -5,7 +5,7 @@ const C = compose(Vasille => {
   const sm = setModel(Vasille, $arr.V);
   const mm = mapModel(Vasille, [[1, 2], [3, 4]]);
   ArrayView({
-    "$of": $arr,
+    r_of: $arr,
     key: item => item,
     slot: (Vasille, $item, $index) => {
       Vasille.tag("div", {}, Vasille => {

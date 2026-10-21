@@ -101,7 +101,7 @@ it("router with wrapper", function (done) {
                 },
             },
         },
-        wrapper(
+        Wrapper(
             data: { slot(data: object, ctx: Fragment<Node, Element, WebTagOptions>): void },
             ctx: Fragment<Node, Element, WebTagOptions>,
         ) {

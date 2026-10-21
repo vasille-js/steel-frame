@@ -2,7 +2,7 @@ import { IValue, ref } from "vasille";
 
 const promises: Promise<unknown>[] = [];
 
-export function awaited<T>(target: () => Promise<T>): [IValue<unknown, unknown>, IValue<unknown, unknown>, () => void] {
+export function awaited<T>(target: () => Promise<T>): [IValue<unknown, unknown>, IValue<unknown, unknown>] {
     const value = ref<unknown>(undefined);
     const err = ref<unknown>(undefined);
     let current: Promise<T> | undefined;
@@ -20,7 +20,7 @@ export function awaited<T>(target: () => Promise<T>): [IValue<unknown, unknown>,
         value.V = current;
     }
 
-    return [err, value, () => void 0];
+    return [err, value];
 }
 
 export async function waitForAsyncData() {

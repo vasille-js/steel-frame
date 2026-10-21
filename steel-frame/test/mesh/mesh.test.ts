@@ -70,11 +70,11 @@ it("store reactive value name error", function () {
 });
 
 it("store not reactive value name error", function () {
-    throwTest(__dirname, "store-not-reactive-value", "Method name can not start with $");
+    throwTest(__dirname, "store-not-reactive-value", "Method name can not contain reactivity mark");
 });
 
 it("store not reactive value name error 2", function () {
-    throwTest(__dirname, "store-not-reactive-value-2", "Method name can not start with $");
+    throwTest(__dirname, "store-not-reactive-value-2", "Method name can not contain reactivity mark");
 });
 
 it("jsx fragment error", function () {
@@ -114,31 +114,31 @@ it("run on destroy error", function () {
 });
 
 it("param name starts with $", function () {
-    throwTest(__dirname, "param-name", "Non-reactive variable name must not start with $");
+    throwTest(__dirname, "param-name", "Unexpected reactivity mark in variable name");
 });
 
 it("param name in array destruction starts with $", function () {
-    throwTest(__dirname, "param-name-destruction", "Non-reactive variable name must not start with $");
+    throwTest(__dirname, "param-name-destruction", "Unexpected reactivity mark in variable name");
 });
 
 it("param name of rest element starts with $", function () {
-    throwTest(__dirname, "param-name-rest", "Non-reactive variable name must not start with $");
+    throwTest(__dirname, "param-name-rest", "Unexpected reactivity mark in variable name");
 });
 
 it("param name with default value starts with $", function () {
-    throwTest(__dirname, "param-name-with-default-value", "Non-reactive variable name must not start with $");
+    throwTest(__dirname, "param-name-with-default-value", "Unexpected reactivity mark in variable name");
 });
 
 it("function name starts with $", function () {
-    throwTest(__dirname, "function-name", "Non-reactive variable name must not start with $");
+    throwTest(__dirname, "function-name", "Unexpected reactivity mark in variable name");
 });
 
 it("class name starts with $", function () {
-    throwTest(__dirname, "class-name", "Non-reactive variable name must not start with $");
+    throwTest(__dirname, "class-name", "Unexpected reactivity mark in variable name");
 });
 
 it("class expression name starts with $", function () {
-    throwTest(__dirname, "class-name-expression", "Non-reactive variable name must not start with $");
+    throwTest(__dirname, "class-name-expression", "Unexpected reactivity mark in variable name");
 });
 
 it("prompt called outside of context", function () {

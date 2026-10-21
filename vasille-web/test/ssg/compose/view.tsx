@@ -4,17 +4,6 @@ interface Props {
     slot?(): void;
 }
 
-const promptError = prompt(() => {});
-
-export let controller: { promptError(): void } | null = null;
-
-const DivView = view((props: Props) => {
-    const { slot } = props;
-    <div class="view">
-        <Slot slot={slot} />
-    </div>;
-});
-
 export default page(async () => {
     beforeMount(() => {
         controller = {
@@ -28,6 +17,17 @@ export default page(async () => {
     <DivView>
         <span>Hello</span>
     </DivView>;
+});
+
+const promptError = prompt(() => {});
+
+export let controller: { promptError(): void } | null = null;
+
+const DivView = view((props: Props) => {
+    const { slot } = props;
+    <div class="view">
+        <Slot slot={slot} />
+    </div>;
 });
 
 export function runViewDirectly() {

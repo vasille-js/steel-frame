@@ -5,8 +5,8 @@ class Class {
   };
   compose() {
     return compose(Vasille => {
-      const $prop1 = VasilleEnsure(this.#obj, "$prop");
-      const $prop2 = VasilleEnsure(this.#obj, "$prop");
+      const $prop1 = VasilleEnsure(Vasille, this.#obj, "$prop");
+      const $prop2 = VasilleEnsure(Vasille, this.#obj, "$prop");
       watch(Vasille, (Vasille_0, Vasille_1) => {
         let x = [Vasille_0, Vasille_1];
       }, [$prop1, $prop2]);

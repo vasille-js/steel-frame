@@ -14,6 +14,7 @@ module.exports = {
                             replaceWeb: "vasille-ssg",
                             headTag: true,
                             bodyTag: true,
+                            v4Naming: true,
                         },
                     ],
                     ["@babel/plugin-transform-typescript", { isTSX: true }],

@@ -15,15 +15,15 @@ but it hasn't changed what it cost to be wrong, `Steel Frame` do it.
 - [Steel Frame](#steel-frame)
   - [Table of content](#table-of-content)
   - [Installation](#installation)
-  - [How to use SteelFramekit](#how-to-use-steelframekit)
+  - [How to use Steel Frame](#how-to-use-steel-frame)
     - [Full documentation:](#full-documentation)
     - [Examples](#examples)
-  - [How SAFE is SteelFrameKit](#how-safe-is-steelframekit)
-  - [How INTUITIVE is SteelFrameKit](#how-intuitive-is-steelframekit)
-  - [How POWERFUL is SteelFrameKit](#how-powerful-is-steelframekit)
+  - [How SAFE is Steel Frame](#how-safe-is-steel-frame)
+  - [How INTUITIVE is Steel Frame](#how-intuitive-is-steel-frame)
+  - [How POWERFUL is Steel Frame](#how-powerful-is-steel-frame)
   - [Road map](#road-map)
   - [Change log](#change-log)
-    - [7.0 RC (WIP)](#70-rc-wip)
+    - [7.0](#70)
     - [6.0 RC (never released)](#60-rc-never-released)
     - [5.0 - 5.1](#50---51)
     - [4.0 - 4.3](#40---43)
@@ -40,7 +40,7 @@ but it hasn't changed what it cost to be wrong, `Steel Frame` do it.
 npm install steel-frame --save
 ```
 
-## How to use SteelFramekit
+## How to use Steel Frame
 
 Create an app from a template
 
@@ -50,8 +50,9 @@ $ npm create steel-frame
 
 ### Full documentation:
 
-- [Learn `SteelFrameKit` in 5 minutes](https://github.com/vasille-js/vasille-js/blob/v5/doc/V4-API.md)
+- [Learn `Steel Frame` in 5 minutes](https://github.com/vasille-js/vasille-js/blob/v5/doc/V7-API.md)
 - [Router Documentation](https://github.com/vasille-js/vasille-js/blob/v5/doc/Router-API.md)
+- [Compiler Hints](https://github.com/vasille-js/vasille-js/blob/v5/doc/CompilerHints.md)
 - [Composition functions](https://github.com/vasille-js/vasille-js/blob/v5/doc/Compositions.md)
 - [Dependency injection](https://github.com/vasille-js/vasille-js/blob/v5/doc/Context.md)
 
@@ -62,7 +63,7 @@ $ npm create steel-frame
 
 <hr>
 
-## How SAFE is SteelFrameKit
+## How SAFE is Steel Frame
 
 The safe of your application is ensured by
 
@@ -70,7 +71,7 @@ The safe of your application is ensured by
   Each function, each branch is working as designed.
 - OOP, DRY, KISS and SOLID principles are applied.
 - `strong typing` makes your code safe.
-  All entities of `SteelFrameKit` core library are strongly typed, including:
+  All entities of `Steel Frame` core library are strongly typed, including:
   - data fields & properties.
   - computed properties (function parameters and result).
   - methods.
@@ -80,7 +81,7 @@ The safe of your application is ensured by
   - references to children.
 - No asynchronous code, when the line of code is executed, the DOM and reactive things are already synced.
 
-## How INTUITIVE is SteelFrameKit
+## How INTUITIVE is Steel Frame
 
 There is the "Hello World":
 
@@ -94,7 +95,7 @@ const App = compose(() => {
 mount(document.body, App, {});
 ```
 
-## How POWERFUL is SteelFrameKit
+## How POWERFUL is Steel Frame
 
 All of these are supported:
 
@@ -132,12 +133,12 @@ We respect semantic versioning:
 - A minor version is increased when we add functionality.
 - Patch version is increased when we fix bugs.
 
-### 7.0 RC (WIP)
+### 7.0
 
 - Add `debounced` and `field` functions, which extend the reativity system.
 - Add `Zombie` component, it keeps HTML elements alive some time after destruction.
 - Add `abortSignal` to cancel fetch requests and timers when component is destroyed.
-- Renamed `ref` to `state`, `bind` to `live`, depracated `calculate`. **[backward compatible]**
+- Renamed `ref` to `state`, `bind` to `live`, `watch` to `effect`, depracated `calculate`.
 - Add `safeState`, `safeLive`, `safeInit` functions, they make the JSX much safer.
 - `callback` handler can return cleanup function.
 - Navigation paths are now checked in compile time, missing paths are reported.
@@ -146,6 +147,11 @@ We respect semantic versioning:
 - Reactive members are forbidden in live expressions. **[API change]**
 - Reactive values are not unwrapped automatically, need `unwrap` call. **[API change]**
 - Reactivity breaking is now reported in compile time. **[API change]**
+- Writing to reactive states from effects is restricted,
+  workaround with `bypassWriteRestriction`. **[API change]**
+- New reactivity marks `r_` & `wr_` insted of `$`,
+  workaround with `v4-naming` compilation flag. **[API change]**
+- Component files have strict structure (imports, export, helpers, CSS). **[API change]**
 
 ### 6.0 RC (never released)
 

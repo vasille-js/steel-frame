@@ -9,16 +9,20 @@ import {
     setLaptopMaxWidth,
     setMobileMaxWidth,
     setTabletMaxWidth,
+    beforeMount,
 } from "steel-frame";
-
-setMobileMaxWidth(200);
-setTabletMaxWidth(400);
-setLaptopMaxWidth(800);
 
 export default page(async () => {
     function getClassName() {
         return "test";
     }
+
+    beforeMount(() => {
+        setMobileMaxWidth(200);
+        setTabletMaxWidth(400);
+        setLaptopMaxWidth(800);
+    });
+
     <div class={[styles.div, getClassName()]}>Styled</div>;
 });
 

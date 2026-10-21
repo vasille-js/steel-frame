@@ -1,7 +1,5 @@
 import { page, ref } from "steel-frame";
 
-const bottom = "2px";
-
 export default page(async () => {
     let $state = "block";
     let $margin = ref([1, 2]);
@@ -17,3 +15,5 @@ export default page(async () => {
         }}
     />;
 });
+
+const bottom = "2px";

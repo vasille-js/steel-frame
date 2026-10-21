@@ -58,7 +58,7 @@ it("restricted hints error", function () {
 });
 
 it("function name starts with $", function () {
-    throwTest(__dirname, "function-name", "Non-reactive variable name must not start with $");
+    throwTest(__dirname, "function-name", "Unexpected reactivity mark in variable name");
 });
 
 it("has nested observable in object", function () {

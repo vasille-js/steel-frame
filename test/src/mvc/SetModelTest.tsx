@@ -1,4 +1,13 @@
-import { view, For, setModel, component } from "steel-frame";
+import { setModel, component, SetModelView } from "steel-frame";
+
+export const SetModelTest = component(() => {
+  <SetModelView
+    of={model}
+    slot={value => {
+      <div>Hello {value}!</div>;
+    }}
+  />;
+});
 
 const model = setModel(["m"]);
 
@@ -10,12 +19,3 @@ export const control = {
     model.delete(value);
   },
 };
-
-export const SetModelTest = component(() => {
-  <For
-    of={model}
-    slot={value => {
-      <div>Hello {value}!</div>;
-    }}
-  />;
-});

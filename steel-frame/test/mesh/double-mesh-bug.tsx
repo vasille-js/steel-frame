@@ -1,17 +1,17 @@
 import { component } from "steel-frame";
 
-const Accordion = component(() => {
-  let $bodyHeight = 0;
-  const o = { $bodyHeight: 0 };
-  const resizeObserver = new ResizeObserver(entries => {
-    o.$bodyHeight = $bodyHeight = entries[0].contentRect.height;
-  });
+function getHandler(o: { $bodyHeight: number }) {
+    return (entries: ResizeObserverEntry[]) => (o.$bodyHeight = entries[0].contentRect.height);
+}
 
-  <div
-    callback={div => {
-      resizeObserver.observe(div);
-    }}
-  >
-    Test div
-  </div>;
+const Accordion = component(() => {
+    const o = { $bodyHeight: 0 };
+    const resizeObserver = new ResizeObserver(getHandler(o));
+
+    <div
+        callback={div => {
+            resizeObserver.observe(div);
+        }}>
+        Test div
+    </div>;
 });

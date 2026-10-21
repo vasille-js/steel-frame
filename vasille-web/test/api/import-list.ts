@@ -4,8 +4,10 @@ import { existsSync } from "fs";
 
 const importList = new Set([
     "ref",
+    "state",
     "safeState",
     "expr",
+    "live",
     "safeLive",
     "setModel",
     "mapModel",

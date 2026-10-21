@@ -4,12 +4,6 @@ interface EndProps extends Props {
   $model: number;
 }
 
-const EndComponent = component(({ $root, $model }: EndProps) => {
-  <div>
-    {$root} to {$model}
-  </div>;
-});
-
 interface Models {
   model: { $value: number };
 }
@@ -17,17 +11,6 @@ interface Models {
 interface Props {
   $root: number;
 }
-
-const HybridComponent = component(({ model, $root }: Models & Props) => {
-  <EndComponent $model={model.$value} $root={$root} />;
-});
-
-export let control:
-  | {
-      setModelValue(value: number): void;
-      setRootValue(value: number): void;
-    }
-  | undefined = undefined;
 
 export const InterpolationTest = component(() => {
   let $root = 10;
@@ -46,3 +29,22 @@ export const InterpolationTest = component(() => {
 
   <HybridComponent model={{ $value: $model }} $root={$root} />;
 });
+
+const EndComponent = component((props: EndProps) => {
+  const { $model, $root } = props;
+  <div>
+    {$root} to {$model}
+  </div>;
+});
+
+const HybridComponent = component((props: Models & Props) => {
+  const { model, $root } = props;
+  <EndComponent $model={model.$value} $root={$root} />;
+});
+
+export let control:
+  | {
+      setModelValue(value: number): void;
+      setRootValue(value: number): void;
+    }
+  | undefined = undefined;

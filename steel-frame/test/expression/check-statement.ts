@@ -1,54 +1,55 @@
 import { calculate, compose } from "steel-frame";
 
 const C = compose(() => {
-  let $a = 1;
-  const o = { b: 1 };
+    let $a = 1;
+    const o = { b: 1 };
 
-  const $c = calculate(() => {
-    o.b++;
+    const $c = calculate(() => {
+        o.b++;
 
-    do {
-      $a++;
-    } while ($a < 1);
+        do {
+            $a + 1;
+        } while ($a < 1);
 
-    for (const i in [0, 1]) {
-      $a++;
-    }
+        for (const i in [0, 1]) {
+            $a + 1;
+        }
 
-    for (const i of [0, 1]) {
-      $a++;
-    }
+        for (const i of [0, 1]) {
+            $a + 1;
+        }
 
-    for (let i = $a; i < $a; i += $a) {
-      $a++;
-    }
+        for (let i = $a; i < $a; i += $a) {
+            $a + 1;
+        }
 
-    for ($a = 3; $a < 4; $a++) {
-      $a++;
-    }
+        let a: number;
+        for (a = 3; a < 4; a++) {
+            $a + 1;
+        }
 
-    label: if ($a < 3) {
-      $a++;
-    }
+        label: if ($a < 3) {
+            $a + 1;
+        }
 
-    switch ($a) {
-      case $a:
-        $a++;
-        break;
-    }
+        switch ($a) {
+            case $a:
+                $a + 1;
+                break;
+        }
 
-    try {
-      throw $a;
-    } catch (e) {
-      $a++;
-    } finally {
-      $a++;
-    }
+        try {
+            throw $a;
+        } catch (e) {
+            $a + 1;
+        } finally {
+            $a + 1;
+        }
 
-    while ($a < 1) {
-      $a++;
-    }
+        while ($a < 1) {
+            $a + 1;
+        }
 
-    return 0;
-  });
+        return 0;
+    });
 });

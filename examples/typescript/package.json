@@ -4,16 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "web",
+    "dev": "web dev",
     "build": "web build"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "vasille-ssg": "file:../../ssg",
-    "vasille-web": "file:../../web",
-    "vasille-web-cli": "file:../../web-cli"
+    "typescript": "^5.9.3"
   },
   "dependencies": {
-    "steel-frame": "file:../../steel-frame"
+    "steel-frame": "file:../../steel-frame",
+    "vasille": "file:../../vasille",
+    "vasille-web": "file:../../vasille-web"
   }
 }

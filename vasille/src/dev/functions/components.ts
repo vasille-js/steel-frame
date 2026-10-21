@@ -209,7 +209,7 @@ export function DevSetModelView<Node, Element, TagOptions extends object, V>(
 }
 
 export function DevWatch<Node, Element, TagOptions extends object, T>(
-    { $model, slot: _slot }: WatchOptions<Node, Element, TagOptions, T, ExecutionPosition>,
+    { r_model, slot: _slot }: WatchOptions<Node, Element, TagOptions, T, ExecutionPosition>,
     ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
     defaultSlot: (ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>) => void | undefined,
     usage: StaticPosition,
@@ -218,7 +218,7 @@ export function DevWatch<Node, Element, TagOptions extends object, T>(
 
     /* istanbul ignore else */
     if (slot) {
-        ctx.child(new DevWatchNode({ model: $model, slot: safe(slot) }, ctx.runner, usage));
+        ctx.child(new DevWatchNode({ model: r_model, slot: safe(slot) }, ctx.runner, usage));
     }
 }
 
@@ -242,10 +242,10 @@ export function DevDelay<Node, Element, TagOptions extends object>(
 }
 
 export function DevZombie<Node, Element, TagOptions extends object>(
-    { $time, trigger }: ZombieOptions<ExecutionPosition>,
+    { r_time, trigger }: ZombieOptions<ExecutionPosition>,
     ctx: DevFragment<Node, Element, TagOptions>,
     defaultSlot: ((ctx: DevZombieNode<Node, Element, TagOptions>) => void) | undefined,
     usage: StaticPosition,
 ) {
-    ctx.child(new DevZombieNode<Node, Element, TagOptions>(usage, ctx.runner, $time, trigger), defaultSlot);
+    ctx.child(new DevZombieNode<Node, Element, TagOptions>(usage, ctx.runner, r_time, trigger), defaultSlot);
 }

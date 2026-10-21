@@ -3,7 +3,7 @@ const C = compose(Vasille => {
   const $var = VasilleRef(0, Vasille);
   const abort = abortSignal(Vasille);
   Watch({
-    "$model": $var,
+    r_model: $var,
     slot: (Vasille, ms) => {
       VasilleSafe(() => {
         window.addEventListener("resize", () => {}, {

@@ -7,37 +7,38 @@ const C = compose(Vasille => {
   const $c = calculate(Vasille, Vasille_0 => {
     o.b++;
     do {
-      $a.V++;
+      Vasille_0 + 1;
     } while (Vasille_0 < 1);
     for (const i in [0, 1]) {
-      $a.V++;
+      Vasille_0 + 1;
     }
     for (const i of [0, 1]) {
-      $a.V++;
+      Vasille_0 + 1;
     }
     for (let i = Vasille_0; i < Vasille_0; i += Vasille_0) {
-      $a.V++;
+      Vasille_0 + 1;
     }
-    for ($a.V = 3; Vasille_0 < 4; $a.V++) {
-      $a.V++;
+    let a;
+    for (a = 3; a < 4; a++) {
+      Vasille_0 + 1;
     }
     label: if (Vasille_0 < 3) {
-      $a.V++;
+      Vasille_0 + 1;
     }
     switch (Vasille_0) {
       case Vasille_0:
-        $a.V++;
+        Vasille_0 + 1;
         break;
     }
     try {
       throw Vasille_0;
     } catch (e) {
-      $a.V++;
+      Vasille_0 + 1;
     } finally {
-      $a.V++;
+      Vasille_0 + 1;
     }
     while (Vasille_0 < 1) {
-      $a.V++;
+      Vasille_0 + 1;
     }
     return 0;
   }, [$a]);

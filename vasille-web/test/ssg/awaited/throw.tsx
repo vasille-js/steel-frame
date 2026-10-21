@@ -8,6 +8,6 @@ export default page(async () => {
             }),
     );
 
-    <If $condition={$err}>{$err}</If>;
+    <If $condition={$err}>{$err as any}</If>;
     <>{$data}</>;
 });

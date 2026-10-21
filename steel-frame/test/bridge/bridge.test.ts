@@ -70,5 +70,5 @@ it("beforeMount arg error", function () {
 });
 
 it("non reactive module var name check error", function () {
-    throwTest(__dirname, "non-reactive-module-var", "Non-reactive variable name must not start with $");
+    throwTest(__dirname, "non-reactive-module-var", "Unexpected reactivity mark in variable name");
 });

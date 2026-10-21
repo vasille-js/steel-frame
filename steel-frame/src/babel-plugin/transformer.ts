@@ -2,11 +2,12 @@ import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { AppData, ctx, Internal, StackedStates, VariablesStatus } from "./internal.js";
 import { meshStatement, resolveSourceFilePath } from "./mesh.js";
+import { checkFileOrder, collectComponents } from "./order-check.js";
 import { findStyleInNode } from "./css-transformer.js";
 import * as fs from "node:fs";
 import path from "path";
 import { CompilationErrorReport, CompilationErrorReporter } from "./communication.js";
-import { calls } from "./call.js";
+import { bindFunctions, calls } from "./call.js";
 import { stringify } from "./utils.js";
 
 const imports = new Map([["steel-frame", "VasilleWeb"]]);
@@ -35,6 +36,7 @@ const ignoreMembers = new Set([
     "ForEach",
     "toFieldRef",
     "field",
+    "bypassWriteRestriction",
 ]);
 const filePathId = t.identifier("VasilleFilePath");
 
@@ -122,7 +124,7 @@ function handleImportDeclaration(
                 const imported = extractText(specifier.imported);
                 const local = specifier.local.name;
 
-                if (imported === "bind" || imported === "calculate" || imported === "watch") {
+                if ((bindFunctions as string[]).includes(imported)) {
                     ids.expr = local;
                 }
                 if (imported in ids) {
@@ -208,6 +210,7 @@ export interface TransformerOptions {
     routes: string[][] | undefined;
     appData: AppData | undefined;
     typeIdentifiersMapping: Map<string, string> | undefined;
+    v4Naming: boolean;
 }
 
 export function nodeToStaticPosition(node: types.Node) {
@@ -301,6 +304,9 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
         usedStylesProps: new Set(),
         packageName: packageJson.name,
         isWrapper: relativePath === "/src/router/Wrapper.tsx",
+        v4Naming: opts.v4Naming,
+        declaredComponents: new Map(),
+        meshedStatements: new Set(),
         ref(arg, area, name, safe) {
             const fnName = safe ? "safeState" : "ref";
             const fixedArg = arg ? (safe ? t.arrowFunctionExpression([], arg) : arg) : t.buildUndefinedNode();
@@ -389,7 +395,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
                 return call("ensure", [object, property, getCtx(), nodeToStaticPosition(area)]);
             }
 
-            return call("ensure", [object, property]);
+            return call("ensure", [getCtx(), object, property]);
         },
         set(obj, field, value, area) {
             if (opts.devLayer) {
@@ -418,14 +424,10 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
             ]);
         },
         safe: (arg: types.FunctionExpression | types.ArrowFunctionExpression) => call("safe", [arg]),
-        updateIValue(
-            assign: types.AssignmentExpression,
-            left: types.Expression,
-            right: types.Expression,
-        ): types.Expression {
+        updateIValue(area: types.Node, left: types.Expression, right: types.Expression): types.Expression {
             return t.callExpression(t.memberExpression(left, t.identifier("up")), [
                 right,
-                getExecutionPosition(assign),
+                ...(internal.devLayer ? [getExecutionPosition(area)] : []),
             ]);
         },
         wrapFunctionBody(
@@ -482,7 +484,9 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
                 if (opts.throwAtFirstError) {
                     throw e;
                 }
-                console.error(e);
+                process.stderr.write(`in ${filename}:${pos?.start.line}:${pos?.start.column}\n`);
+                process.stderr.write(e.message);
+                process.stderr.write(`\n\n`);
             } else {
                 console.warn(message);
             }
@@ -511,7 +515,9 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
         }
     }
 
-    for (const statementPath of path.get("body")) {
+    const statements = path.get("body");
+
+    for (const statementPath of statements) {
         if (statementPath.isImportDeclaration()) {
             handleImportDeclaration(statementPath, internal, ids);
         }
@@ -526,7 +532,10 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
         }
     }
 
-    for (const statementPath of path.get("body")) {
+    collectComponents(statements, internal);
+    checkFileOrder(path, internal);
+
+    for (const statementPath of statements) {
         if (!statementPath.isImportDeclaration()) {
             handleStatement(statementPath, internal);
         }

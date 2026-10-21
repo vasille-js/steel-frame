@@ -153,7 +153,7 @@ it("Watch", function () {
         counter++;
     }
 
-    Watch({ $model: ref }, node, slot);
+    Watch({ r_model: ref }, node, slot);
 
     expect(counter).toBe(1);
     ref.V = 2;
@@ -224,7 +224,7 @@ it("ArrayView", function () {
 
     ArrayView(
         {
-            $of: ref([{ id: 0, value: 1 }]),
+            r_of: ref([{ id: 0, value: 1 }]),
             key: i => i.id,
             slot(f: Fragment<Node, Element, object>, value) {
                 f.text(value.V.value);

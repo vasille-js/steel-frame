@@ -1,4 +1,4 @@
-import { runTest } from "../run-test.js";
+import { runTest, throwTest } from "../run-test.js";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 

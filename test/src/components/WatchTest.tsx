@@ -1,14 +1,5 @@
 import { beforeMount, component, ref, view, Watch } from "steel-frame";
 
-let $state = ref("test");
-
-export const strings: string[] = [];
-export const control = {
-  setValue(value: string) {
-    $state = value;
-  },
-};
-
 export const WatchTest = component(() => {
   <Watch
     $model={$state}
@@ -20,3 +11,12 @@ export const WatchTest = component(() => {
     }}
   />;
 });
+
+let $state = ref("test");
+
+export const strings: string[] = [];
+export const control = {
+  setValue(value: string) {
+    $state = value;
+  },
+};

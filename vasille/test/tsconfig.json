@@ -1,16 +1,16 @@
 {
-  "include": ["./**/*"],
+    "include": ["./**/*"],
 
-  "compilerOptions": {
-    "allowJs": true,
-    "declaration": false,
-    "noEmit": true,
-    "rootDir": "..",
-    "target": "ES2022",
-    "module": "Node16",
-    "moduleResolution": "Node16",
-    "strictNullChecks": true,
-    "isolatedModules": true,
-    "types": ["jest"]
-  }
+    "compilerOptions": {
+        "allowJs": true,
+        "declaration": false,
+        "noEmit": true,
+        "rootDir": "..",
+        "target": "ES2022",
+        "module": "Node16",
+        "moduleResolution": "Node16",
+        "strictNullChecks": true,
+        "isolatedModules": true,
+        "types": ["jest"]
+    }
 }

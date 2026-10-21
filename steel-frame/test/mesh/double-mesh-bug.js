@@ -1,12 +1,12 @@
-import { component, ref as VasilleRef } from "vasille-web";
+import { component, set as VasilleSet, ref as VasilleRef } from "vasille-web";
+function getHandler(o) {
+  return entries => VasilleSet(null, o, "$bodyHeight", entries[0].contentRect.height);
+}
 const Accordion = component(Vasille => {
-  const $bodyHeight = VasilleRef(0, Vasille);
   const o = {
     $bodyHeight: VasilleRef(0, Vasille)
   };
-  const resizeObserver = new ResizeObserver(entries => {
-    o.$bodyHeight.V = $bodyHeight.V = entries[0].contentRect.height;
-  });
+  const resizeObserver = new ResizeObserver(getHandler(o));
   Vasille.tag("div", {
     k: div => {
       resizeObserver.observe(div);

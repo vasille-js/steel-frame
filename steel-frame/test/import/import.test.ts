@@ -1,4 +1,4 @@
-import { runTest } from "../run-test.js";
+import { runTest, throwTest } from "../run-test.js";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
@@ -26,5 +26,9 @@ it("override by function", function () {
 });
 
 it("override by function expression", function () {
-    runTest(__dirname, "override-by-fn-expr");
+    throwTest(
+        __dirname,
+        "override-by-fn-expr",
+        'Local function "compose" is not allowed to be used in variable declaration',
+    );
 });

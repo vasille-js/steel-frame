@@ -13,8 +13,9 @@ Components have input data (props) and output data which is returned to parent.
 To create a component ypu can use `component` or `compose` function.
 
 Example of a minimal component:
+
 ```typescript jsx
-import {component} from "vasille-web";
+import {component} from "steel-frame";
 
 const MyComponent = component(() => {
   <div>Hello worls</div>;
@@ -22,8 +23,9 @@ const MyComponent = component(() => {
 ```
 
 Example of component with props:
+
 ```typescript jsx
-import {component} from "vasille-web";
+import {component} from "steel-frame";
 
 interface Props {
   $name: string;
@@ -35,22 +37,23 @@ const MyComponent = component(({$name}: Props) => {
 ```
 
 Example of component which return something:
+
 ```typescript jsx
 const CreateCanvas = component(() => {
   let canvas: HTMLCanvasElement|null = null;
-  
+
   <canvas callback={element => canvas = element}/>
 });
 
 const UseCanvas = compoent(() => {
-  
+
   <CreateCanvas callback={canvas => {
     if (!canvsas) {
       return;
     }
-    
+
     const ctx = canvas.getContext("2d");
-    
+
     // draw code ..
   }}/>;
 });
@@ -65,10 +68,11 @@ larger, like a list of items or a profile page.
 
 Screens and pages are created by Vasille router.
 A screen or page has the next props:
-* `path` contains the full path.
-* `params` contains the url params extracted from the path.
-* `query` contains parsed search params.
-* `hash` contains the URL hash value starting with `#`.
+
+- `path` contains the full path.
+- `params` contains the url params extracted from the path.
+- `query` contains parsed search params.
+- `hash` contains the URL hash value starting with `#`.
 
 ## Client side only helpers
 
@@ -83,7 +87,7 @@ In stores, you can use same reactive states, expressions and watches.
 const userStore = store(() => {
     let $name = name;
     let $nickname = nickname;
-    
+
     return {
         $name,
         $nickname,
@@ -103,19 +107,19 @@ The parameter can be omitted and the result can be immediately called.
 
 ```typescript
 const auth = store(() => {
-    const storageKey = "token";
-    let $token = localStorage.getItem(storageKey);
-    
-    watch(() => {
-        localStorage.setItem(storageKey, $token);
-    });
-    
-    return {
-        $token,
-        updateToken(token: string) {
-            $token = token;
-        }
-    }
+  const storageKey = "token";
+  let $token = localStorage.getItem(storageKey);
+
+  watch(() => {
+    localStorage.setItem(storageKey, $token);
+  });
+
+  return {
+    $token,
+    updateToken(token: string) {
+      $token = token;
+    },
+  };
 });
 ```
 
@@ -125,6 +129,7 @@ You can ues `model` function to create linked reactive data without defining a c
 It is like an component by without JSX.
 
 Usage example:
+
 ```typescript jsx
 
 interface ModelProps {
@@ -133,7 +138,7 @@ interface ModelProps {
 
 const userModel = model(({name}: ModelProps) => {
   let $name = name;
-  
+
   return {
     $name,
     updateName(name: string) {
@@ -144,9 +149,9 @@ const userModel = model(({name}: ModelProps) => {
 
 const MyComponent = component(() => {
   const model = userModel({name: "Initial name"});
-  
+
   <button onclick={() => model.updateName("New name")}>Click me, {name}!</button>;
-  
+
   onDestroy(() => {
     model.destroy();
   });
@@ -166,39 +171,18 @@ but it is not used in JSX code, but directly in event handlers and these type of
 can be used to return data to caller.
 
 Example of usage:
+
 ```typescript jsx
 const promptName = prompt(({resolve, reject}: PromptProps<string>) => {
   let name = "";
-  
+
   <input oninput={ev => name = ev.target.value }/>
   <button onclick={() => resolve(name)}>Send</button>
 });
 
 const MyComponent = component(() => {
   let $name = "No name";
-  
+
   <button onclick={async () => $name = await promptName({})}>Update name</button>;
 })
-```
-
-## Server side only
-
-### Service
-
-A service is information provider component, you can use await in it to wait for data.
-Reactive states are restricted here and can not be used on server side.
-
-Example of service:
-```typescript jsx
-interface Props {
-  name: string;
-}
-
-const MyService = service(async ({name}: Props) => {
-  const item = await db.items.findOne({name});
-  
-  <div>
-    <button>{item.type}</button>
-  </div>;
-});
 ```

@@ -26,8 +26,21 @@ it("debounce dev", function () {
     runTest(__dirname, "debounce-dev", { devLayer: true });
 });
 
-it("field ref", function () {
+it("field ref v4 naming", function () {
     runJsxTest(__dirname, "field-ref");
+});
+
+it("field ref v7 naming", function () {
+    runJsxTest(__dirname, "field-ref-v7-naming");
+});
+
+it("field ref v7 naming to r_ property error", function () {
+    throwTest(
+        __dirname,
+        "field-ref-v7-naming",
+        '"field" hint composes a writable reactive value, but property "r_a" is readonly',
+        true,
+    );
 });
 
 it("object destruction", function () {
@@ -79,11 +92,11 @@ it("field ref no breakpoint", function () {
 });
 
 it("field ref double breakpoint", function () {
-    throwTest(__dirname, "field-ref-double-breakpoint", "Nested breakpoints are not allowed");
+    throwTest(__dirname, "field-ref-double-breakpoint", "Nested reactivity is not supported");
 });
 
 it("field ref has double breakpoint", function () {
-    throwTest(__dirname, "field-ref-has-double-breakpoint", "Nested breakpoints are not allowed");
+    throwTest(__dirname, "field-ref-has-double-breakpoint", "Nested reactivity is not supported");
 });
 
 it("field ref with private name", function () {
@@ -156,7 +169,7 @@ it("dependency reexport check", function () {
 });
 
 it("static live value", function () {
-    throwTest(__dirname, "static-live-value", "Computed expression has static value. Make it non reactive");
+    throwTest(__dirname, "static-live-value", "Unexpected reactivity mark in variable name");
 });
 
 it("rest element in reactive destruction", function () {
@@ -221,9 +234,93 @@ it("restricted member access in expression", function () {
 });
 
 it("breaks reactivity in watch", function () {
-    throwTest(__dirname, "reactivity-break", "This assignment breaks the reactivity");
+    throwTest(__dirname, "reactivity-break", "Assigment are forbidden in live values and effects");
 });
 
 it("breaks reactivity in function", function () {
     throwTest(__dirname, "reactivity-break-2", "This assignment breaks the reactivity");
+});
+
+it("effect with no dependencies", function () {
+    throwTest(__dirname, "no-deps-in-effect", "Effect must have at least one dependency. Move code to beforeMount");
+});
+
+it("discards await", function () {
+    runTest(__dirname, "discard-awaited");
+});
+
+it("catches dependency in await", function () {
+    runTest(__dirname, "await-with-dependency");
+});
+
+it("has no await in awaited", function () {
+    runTest(__dirname, "discard-less-awaited");
+});
+
+it("let with function expression", function () {
+    runTest(__dirname, "let-with-function-expression");
+});
+
+it("bypass write restriction", function () {
+    runTest(__dirname, "bypass-write-restriction");
+});
+
+it("bypass to readonly error", function () {
+    throwTest(
+        __dirname,
+        "bypass-to-readonly",
+        "The bypassWriteRestriction hint expected a writable reactive value as first argument and an expression as second argument",
+    );
+});
+
+it("declared function in bind error", function () {
+    throwTest(__dirname, "declared-function", 'Local function "foo" is not allowed to be used in variable declaration');
+});
+
+it("declared function in calculate error", function () {
+    throwTest(
+        __dirname,
+        "declared-function-calculate",
+        'Local function "foo" is not allowed to be used in variable declaration',
+    );
+});
+
+it("declared function in effect error", function () {
+    throwTest(
+        __dirname,
+        "declared-function-effect",
+        'Local function "foo" is not allowed to be used in variable declaration',
+    );
+});
+
+it("declared function not in varaible declaration", function () {
+    runTest(__dirname, "declared-function");
+});
+
+it("declared function called in regular variable declaration", function () {
+    throwTest(
+        __dirname,
+        "declared-function-call",
+        'Local function "foo" is not allowed to be used in variable declaration',
+    );
+});
+
+it("function expression in variable declaration", function () {
+    throwTest(
+        __dirname,
+        "function-expr-in-var-declaration",
+        "Function expression in reactive variable declaration must not capture outer scope",
+    );
+});
+
+it("function expression in state declaration", function () {
+    throwTest(
+        __dirname,
+        "function-expr-in-state-declaration",
+        "Function expression in reactive variable declaration must not capture outer scope",
+    );
+});
+
+it("function expression in live declaration", function () {
+    throwTest(__dirname, "function-expr-in-live-declaration", "Function expressions can not be used as live values");
 });

@@ -48,7 +48,7 @@ it("throw test", function () {
                                 "IncompatibleContext: JSX fragment is not allowed here",
                             );
                             expect(errors.reports[4].message).toBe(
-                                "RulesOfVasille: Reactive variable name must start with $",
+                                "RulesOfVasille: Expected writable reactivity mark in variable name",
                             );
                             expect(errors.reports[5].message).toBe(
                                 "IncompatibleContext: JSX element is not allowed here",
@@ -57,6 +57,7 @@ it("throw test", function () {
                                 "IncompatibleContext: JSX fragment is not allowed here",
                             );
                         },
+                        v4Naming: true,
                     },
                 ],
                 ["@babel/plugin-transform-typescript", { isTSX: true }],

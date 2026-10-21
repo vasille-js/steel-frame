@@ -2,7 +2,19 @@ import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { ctx, Internal, VariablesStatus } from "./internal.js";
 import { bodyHasJsx } from "./jsx-detect.js";
-import { checkNonReactiveName, checkReactiveName, err, Errors, exprCall, nodeIsUnsafe, toKebabCase } from "./lib.js";
+import {
+    checkNonReactiveName,
+    checkReactiveName,
+    err,
+    Errors,
+    exprCall,
+    isReactiveName,
+    isReadableName,
+    isWritableName,
+    nodeIsUnsafe,
+    reactivityTypeOfNode,
+    toKebabCase,
+} from "./lib.js";
 import { compose, meshExpression, processRefCall } from "./mesh.js";
 import { nodeToStaticPosition } from "./transformer.js";
 import { memberIsIValue } from "./expression.js";
@@ -271,7 +283,6 @@ function transformJsxExpressionContainer(
         | "acceptsRaw"
         | "skipParamsCheck"
         | "acceptsSafe"
-        | "acceptFieldRef"
         | false
         | undefined
     )[],
@@ -282,7 +293,6 @@ function transformJsxExpressionContainer(
     const acceptsRaw = options.includes("acceptsRaw");
     const skipParamsCheck = options.includes("skipParamsCheck");
     const acceptsSafe = options.includes("acceptsSafe");
-    const acceptFieldRef = options.includes("acceptFieldRef");
     const expression = path.get("expression");
     const loc = expression.node.loc;
 
@@ -311,22 +321,9 @@ function transformJsxExpressionContainer(
     if (expression.isExpression()) {
         let fieldRefExpression: types.Expression | null | undefined;
 
-        // $x.y
-        if (
-            acceptFieldRef &&
-            (expression.isMemberExpression() || expression.isOptionalMemberExpression()) &&
-            !memberIsIValue(expression.node) &&
-            (fieldRefExpression = toFieldRef(expression, internal, expression))
-        ) {
-            expression.replaceWith(fieldRefExpression);
-        }
         // ref/safeRef call
-        else if (acceptsReactive && processRefCall(expression, expression.node, internal)) {
+        if (acceptsReactive && processRefCall(expression, expression.node, internal)) {
             // processRefCall already replace the expression
-        }
-        // fieldRef($x.y)
-        else if (acceptFieldRef && calls(expression, ["field"], internal)) {
-            expression.replaceWith(processFieldRefCall(expression, internal, expression));
         }
         // any other expression
         else if (acceptsReactive) {
@@ -370,8 +367,7 @@ function transformJsxExpressionContainer(
     return expression.node as types.Expression;
 }
 
-function idToProp(id: types.JSXIdentifier, value: types.Expression, from?: number) {
-    let str = id.name;
+function idToProp(attr: types.Node, str: string, value: types.Expression, from?: number) {
     let expr: types.Expression;
 
     if (from) {
@@ -384,7 +380,7 @@ function idToProp(id: types.JSXIdentifier, value: types.Expression, from?: numbe
         expr = t.stringLiteral(str);
     }
 
-    expr.loc = id.loc;
+    expr.loc = attr.loc;
 
     return t.objectProperty(expr, value);
 }
@@ -493,10 +489,10 @@ function transformJsxElement(
                             /* istanbul ignore else */
                             if (expressionPath.isExpression()) {
                                 meshExpression(expressionPath, internal, false);
-                                events.push(idToProp(name, expressionPath.node, 2));
+                                events.push(idToProp(attr, name.name, expressionPath.node, 2));
                             }
                         } else if (valuePath.isStringLiteral()) {
-                            attrs.push(idToProp(name, valuePath.node));
+                            attrs.push(idToProp(attr, name.name, valuePath.node));
                         } else {
                             err(Errors.TokenNotSupported, attrPath, "Expected event handler", internal);
                         }
@@ -670,11 +666,11 @@ function transformJsxElement(
                             ) {
                                 expressionPath.replaceWith(internal.safeInit(expressionPath.node));
                             }
-                            attrs.push(idToProp(name, expressionPath.node));
+                            attrs.push(idToProp(attr, name.name, expressionPath.node));
                         } else if (t.isStringLiteral(attr.value)) {
-                            attrs.push(idToProp(name, attr.value));
+                            attrs.push(idToProp(attr, name.name, attr.value));
                         } else {
-                            attrs.push(idToProp(name, t.booleanLiteral(true)));
+                            attrs.push(idToProp(attr, name.name, t.booleanLiteral(true)));
                         }
                     }
                 }
@@ -693,18 +689,18 @@ function transformJsxElement(
                                     expressionPath.node,
                                     true,
                                 );
-                                bind.push(idToProp(name.name, expressionPath.node));
+                                bind.push(idToProp(attr, name.name.name, expressionPath.node));
                                 pushed = true;
                             }
                         } else {
                             /* istanbul ignore else */
                             if (t.isStringLiteral(attr.value)) {
-                                bind.push(idToProp(name.name, attr.value));
+                                bind.push(idToProp(attr, name.name.name, attr.value));
                                 pushed = true;
                             }
                         }
                         if (!pushed) {
-                            bind.push(idToProp(name.name, t.booleanLiteral(true)));
+                            bind.push(idToProp(attr, name.name.name, t.booleanLiteral(true)));
                         }
                     } else {
                         err(Errors.ParserError, attrPath, 'Only "property" namespace is supported', internal);
@@ -759,6 +755,7 @@ function transformJsxElement(
         let run: types.FunctionExpression | types.ArrowFunctionExpression | undefined;
         const mapped = internal.mapping.get(name.name);
         const optionals = internal.appData?.getComponentOptionalProps(name.name, internal);
+        const isInternal = !!mapped;
 
         if (!mapped) {
             internal.componentTracking?.push(name.name);
@@ -769,61 +766,113 @@ function transformJsxElement(
 
             // <A prop=../>
             if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name)) {
+                const attrName =
+                    isInternal && mapped !== "Slot" && attr.name.name.startsWith("$")
+                        ? "r_" + attr.name.name.substring(1)
+                        : attr.name.name;
                 const valuePath = attrPath.isJSXAttribute() && attrPath.get("value");
-                const needReactive = attr.name.name.startsWith("$");
+                const needReactive = isReactiveName(attrName, internal);
                 // <A prop=".."/>
                 if (valuePath && valuePath.isStringLiteral()) {
                     props.push(
                         idToProp(
-                            attr.name,
+                            attr,
+                            attrName,
                             needReactive ? internal.ref(valuePath.node, attr, undefined, false) : valuePath.node,
                         ),
                     );
-                    attrs.set(attr.name.name, valuePath);
+                    attrs.set(attrName, valuePath);
                 }
                 // <A prop={..}/>
                 else if (valuePath && valuePath.isJSXExpressionContainer()) {
                     const propertyValueExpr = valuePath.get("expression");
+                    const callsField =
+                        propertyValueExpr.isCallExpression() && calls(propertyValueExpr, ["field"], internal);
+                    const nameIsWritable =
+                        isWritableName(attrName, internal) && (!isReadableName(attrName, internal) || callsField);
+                    let valueIsWritable =
+                        nameIsWritable &&
+                        valuePath.isJSXExpressionContainer() &&
+                        reactivityTypeOfNode(valuePath.get("expression"), internal) === "writable";
+
+                    if (nameIsWritable !== valueIsWritable) {
+                        let fieldRef: types.Expression | null | undefined;
+
+                        // attr={field(wr_x.y)}
+                        if (callsField) {
+                            propertyValueExpr.replaceWith(processFieldRefCall(propertyValueExpr, internal, attrPath));
+                            valueIsWritable = true;
+                        }
+                        // attr={wr_x.y}
+                        else if (
+                            (propertyValueExpr.isOptionalMemberExpression() ||
+                                propertyValueExpr.isMemberExpression()) &&
+                            (fieldRef = toFieldRef(propertyValueExpr, internal, attrPath))
+                        ) {
+                            propertyValueExpr.replaceWith(fieldRef);
+                            valueIsWritable = true;
+                        }
+                        // sorry. but is not writable
+                        else {
+                            err(
+                                Errors.RulesOfVasille,
+                                attrPath,
+                                "Reactive writable property requires writable value",
+                                internal,
+                            );
+                        }
+                    }
+                    if (!nameIsWritable && callsField) {
+                        err(
+                            Errors.RulesOfVasille,
+                            attrPath,
+                            '"field" hint composes a writable reactive value, ' +
+                                `but property "${attrName}" is readonly`,
+                            internal,
+                        );
+                    }
 
                     isNotSafe ||=
                         nodeIsUnsafe(valuePath, internal) &&
                         !propertyValueExpr.isFunctionExpression() &&
                         !propertyValueExpr.isArrowFunctionExpression() &&
-                        !optionals?.has(attr.name.name);
+                        !optionals?.has(attrName) &&
+                        !valueIsWritable;
 
-                    const isSystem = internal.mapping.has(name.name);
-                    const requiresReactive = attr.name.name.startsWith("$");
+                    const requiresReactive = isReactiveName(attrName, internal);
                     // lixcode: don't alter conditions
                     const acceptPassive =
-                        !requiresReactive ||
-                        ((mapped === "If" || mapped === "ElseIf") && attr.name.name === "$condition");
+                        !requiresReactive || ((mapped === "If" || mapped === "ElseIf") && attrName === "r_condition");
                     const prechecked =
                         !!mapped &&
                         mapped in strongSlotMap &&
-                        attr.name.name === "slot" &&
+                        attrName === "slot" &&
                         precheckSlotParams(mapped, valuePath.get("expression"), internal);
-                    const value = transformJsxExpressionContainer(valuePath, internal, [
-                        (!isSystem || attr.name.name === "slot") && "acceptSlots",
-                        isSystem && attr.name.name === "slot" && "isInternalSlot",
-                        requiresReactive && "acceptsReactive",
-                        acceptPassive && "acceptsRaw",
-                        prechecked && "skipParamsCheck",
-                        requiresReactive && "acceptFieldRef",
-                        optionals?.has(attr.name.name) && "acceptsSafe",
-                    ]);
+
+                    const value = valueIsWritable
+                        ? (propertyValueExpr.node as types.Expression)
+                        : transformJsxExpressionContainer(valuePath, internal, [
+                              (!isInternal || attrName === "slot") && "acceptSlots",
+                              isInternal && attrName === "slot" && "isInternalSlot",
+                              requiresReactive && "acceptsReactive",
+                              acceptPassive && "acceptsRaw",
+                              prechecked && "skipParamsCheck",
+                              optionals?.has(attrName) && "acceptsSafe",
+                          ]);
                     const exprPath = valuePath.get("expression");
 
-                    props.push(idToProp(attr.name, value));
+                    props.push(idToProp(attr, attrName, value));
                     /* istanbul ignore else */
                     if (exprPath.isExpression()) {
-                        attrs.set(attr.name.name, exprPath);
+                        attrs.set(attrName, exprPath);
                     }
                 } else {
                     /* istanbul ignore else */
                     if (!attr.value) {
                         props.push(
                             idToProp(
-                                attr.name,
+                                attr,
+                                attrName,
                                 needReactive
                                     ? internal.ref(t.booleanLiteral(true), attr, undefined, false)
                                     : t.booleanLiteral(true),
@@ -857,7 +906,7 @@ function transformJsxElement(
                 /* istanbul ignore else */
                 if (t.isJSXAttribute(attr) && t.isJSXNamespacedName(attr.name)) {
                     const fullName = `${attr.name.namespace.name}:${attr.name.name.name}`;
-                    const isReactive = fullName.startsWith("$");
+                    const isReactive = isReactiveName(fullName, internal);
                     let value: types.Expression | undefined;
 
                     if (attr.name.name.name === "path") {
@@ -892,8 +941,6 @@ function transformJsxElement(
             }
         }
 
-        const isInternal = internal.mapping.has(name.name);
-
         const statements = transformJsxArray(path.get("children"), internal);
 
         if (statements.length > 0) {
@@ -916,7 +963,7 @@ function transformJsxElement(
         };
 
         if (mapped === "If" || mapped === "ElseIf" || mapped === "Else") {
-            const condition = attrs.get("$condition");
+            const condition = attrs.get("r_condition");
             const slot =
                 run ??
                 props.filter(filter).find(prop => {
@@ -1091,7 +1138,7 @@ function precheckSlotParams(
                         internal,
                     );
                 } else {
-                    checkReactiveName(param, internal);
+                    checkReactiveName(param, "readable", internal);
                 }
             } else {
                 /* istanbul ignore else */

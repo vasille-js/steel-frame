@@ -46,7 +46,7 @@ it("tag reorder test", function () {
     root.child(new Fragment<Node, Element, WebTagOptions>(runner, 1), ctx => {
         ArrayView(
             {
-                $of: arr,
+                r_of: arr,
                 key: i => i,
                 slot: (ctx, item) => {
                     ctx.tag("div", {}, ctx => {
@@ -86,7 +86,7 @@ it("text reorder test", function () {
     root.child(new Fragment<Node, Element, WebTagOptions>(runner, 1), ctx => {
         ArrayView(
             {
-                $of: arr,
+                r_of: arr,
                 key: i => i,
                 slot: (ctx, item) => {
                     ctx.text(item);

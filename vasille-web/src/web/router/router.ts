@@ -21,7 +21,7 @@ export interface WebRouterInitialization<Routes extends string> extends RouterIn
 > {
     loadingScreen?(props: object, node: Fragment<Node, Element, WebTagOptions>): void;
     loadingOverlay?(props: object, node: Fragment<Node, Element, WebTagOptions>): void;
-    wrapper?(
+    Wrapper?(
         data: { slot(data: object, ctx: Fragment<Node, Element, WebTagOptions>): void },
         ctx: Fragment<Node, Element, WebTagOptions>,
     ): void;
@@ -64,8 +64,8 @@ export class WebRouter<Routes extends string> extends Router<
 
         let routerNode = node;
 
-        if (init.wrapper) {
-            init.wrapper(
+        if (init.Wrapper) {
+            init.Wrapper(
                 {
                     slot(_data: object, ctx: Fragment<Node, Element, WebTagOptions>) {
                         routerNode = ctx;

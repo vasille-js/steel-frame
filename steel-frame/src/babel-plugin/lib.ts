@@ -6,6 +6,7 @@ import { Internal, ctx } from "./internal.js";
 import { bindFunctions, calledFn, calls, hintFunctions, safeFunctions } from "./call.js";
 import { meshAllUnknown } from "./mesh.js";
 import { nodeToStaticPosition } from "./transformer.js";
+import { hasBreakPoint } from "./field-reference.js";
 
 export enum Errors {
     IncorrectArguments = 1,
@@ -83,6 +84,7 @@ export function processCalculateCall(
             internal,
             area,
             name,
+            true,
         );
 
         call.params = [...exprData.found.values()].map(item => item.paramName);
@@ -152,6 +154,7 @@ export function exprCall(
     },
     area: types.Node,
     acceptsSafe: boolean,
+    allowFuncExpr = false,
 ): boolean {
     if (path.isTSAsExpression() || path.isTSSatisfiesExpression()) {
         return exprCall(
@@ -215,7 +218,7 @@ export function exprCall(
     }
 
     const unsafe = nodeIsUnsafe(path, internal);
-    const exprData = checkNode(path, internal, area, opts.name);
+    const exprData = checkNode(path, internal, area, opts.name, allowFuncExpr);
 
     if (exprData.self) {
         if (!opts.strong || (exprIsSure(path, internal) && !path.isOptionalMemberExpression())) {
@@ -290,18 +293,18 @@ export function processModelCall(
     );
 }
 
-export function checkReactiveName(idPath: NodePath<unknown>, internal: Internal) {
-    if (
-        !(idPath.isIdentifier() && idPath.node.name.startsWith("$")) &&
-        !(idPath.isStringLiteral() && idPath.node.value.startsWith("$"))
-    ) {
-        err(Errors.RulesOfVasille, idPath, "Reactive variable name must start with $", internal);
+export function checkReactiveName(idPath: NodePath<unknown>, type: ReactiveType, internal: Internal) {
+    if (!(
+        (idPath.isIdentifier() && forceReactiveName(idPath.node.name, type, idPath, internal)) ||
+        (idPath.isStringLiteral() && forceReactiveName(idPath.node.value, type, idPath, internal))
+    )) {
+        err(Errors.RulesOfVasille, idPath, `Expected ${type} reactivity mark in variable name`, internal);
     }
 }
 
 export function checkNonReactiveName(idPath: NodePath<Identifier>, internal: Internal) {
-    if (idPath.node.name.startsWith("$")) {
-        err(Errors.RulesOfVasille, idPath, "Non-reactive variable name must not start with $", internal);
+    if (isReactiveName(idPath.node.name, internal)) {
+        err(Errors.RulesOfVasille, idPath, "Unexpected reactivity mark in variable name", internal);
     }
 }
 
@@ -324,11 +327,11 @@ export function toKebabCase(name: string) {
 
 export function pathIsReactiveValue(
     path: NodePath<unknown>,
+    _type: "any",
+    internal: Internal,
+    checkForBreakpoints = true,
 ): path is NodePath<types.MemberExpression | types.OptionalMemberExpression | types.Identifier> {
-    return (
-        (path.isIdentifier() && idIsIValue(path)) ||
-        ((path.isMemberExpression() || path.isOptionalMemberExpression()) && memberIsIValue(path.node))
-    );
+    return reactivityTypeOfNode(path, internal, checkForBreakpoints) !== false;
 }
 
 export function removeExtension(name: string) {
@@ -339,4 +342,91 @@ export function removeExtension(name: string) {
         return name.slice(0, -4);
     }
     return name;
+}
+
+export function isReadableName(name: string, internal: Internal) {
+    return name.startsWith("r_") || (internal.v4Naming && name.startsWith("$"));
+}
+
+export function isWritableName(name: string, internal: Internal) {
+    return name.startsWith("wr_") || (internal.v4Naming && name.startsWith("$"));
+}
+
+export function reactivityTypeByName(name: string, internal: Internal) {
+    return internal.v4Naming && name.startsWith("$")
+        ? "any"
+        : isWritableName(name, internal)
+          ? "writable"
+          : isReadableName(name, internal)
+            ? "readable"
+            : false;
+}
+
+export function reactivityTypeOfNode(
+    node: NodePath<unknown>,
+    internal: Internal,
+    checkForBreakpoints = true,
+): ReactiveType | false {
+    return (
+        (node.isIdentifier() && reactivityTypeByName(node.node.name, internal)) ||
+        ((node.isMemberExpression() || node.isOptionalMemberExpression()) &&
+            ((!node.node.computed &&
+                t.isIdentifier(node.node.property) &&
+                reactivityTypeByName(node.node.property.name, internal)) ||
+                (t.isStringLiteral(node.node.property) && reactivityTypeByName(node.node.property.value, internal)) ||
+                (checkForBreakpoints && hasBreakPoint(node, internal) && "readable")))
+    );
+}
+
+export type ReactiveType = "readable" | "writable" | "any";
+
+export function isReactiveName(name: string, internal: Internal) {
+    return isReadableName(name, internal) || isWritableName(name, internal);
+}
+
+export function forceReactiveName(name: string, type: ReactiveType, path: NodePath<unknown>, internal: Internal) {
+    return (
+        (type !== "writable" &&
+            (isReadableName(name, internal) ||
+                (type === "readable" &&
+                    isWritableName(name, internal) &&
+                    err(
+                        Errors.RulesOfVasille,
+                        path,
+                        `Expected "readonly" reactivity mark, the "${name}" has "writable" mark`,
+                        internal,
+                        true,
+                    )))) ||
+        (type !== "readable" &&
+            (isWritableName(name, internal) ||
+                (type === "writable" &&
+                    isReadableName(name, internal) &&
+                    err(
+                        Errors.RulesOfVasille,
+                        path,
+                        `Expected "writable" reactivity mark, the name "${name}" has "readonly" mark`,
+                        internal,
+                        true,
+                    ))))
+    );
+}
+
+export function leftIsThisInConstructor(left: NodePath<unknown>) {
+    if (left.isMemberExpression()) {
+        let iterator: NodePath<unknown> = left;
+        let inConstructor = false,
+            inFunction = false;
+
+        while (iterator && !inConstructor && !inFunction) {
+            inConstructor =
+                iterator.isClassMethod() &&
+                t.isIdentifier(iterator.node.key) &&
+                iterator.node.key.name === "constructor";
+            inFunction = iterator.isFunction();
+            iterator = iterator.parentPath;
+        }
+
+        return inConstructor && t.isThisExpression(left.node.object);
+    }
+    return false;
 }

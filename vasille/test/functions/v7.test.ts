@@ -87,7 +87,7 @@ it("use Zombie", function (done) {
     const [node, window] = createNode();
     const body = window.document.body;
 
-    Zombie({ $time: ref(1), trigger() {} }, node, ctx => {
+    Zombie({ r_time: ref(1), trigger() {} }, node, ctx => {
         ctx.tag("div", {});
     });
 

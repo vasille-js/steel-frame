@@ -5,10 +5,12 @@ export { safe } from "vasille";
 export {
     ensure,
     ref,
+    ref as state,
     expr,
     expr as bind,
     expr as calculate,
     expr as watch,
+    expr as live,
     set,
     Delay,
     For,

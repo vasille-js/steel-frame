@@ -56,6 +56,7 @@ export type FnNames =
     | "abortSignal"
     | "showPrompt"
     | "createModel"
+    | "bypassWriteRestriction"
     | "context";
 
 export const dynamicModulesFunctions = [
@@ -76,12 +77,13 @@ export const asyncFunctions = ["awaited"] as const satisfies FnNames[];
 
 export const inlineBindFunctions = ["bind", "live", "safeLive"] as const satisfies FnNames[];
 
+export const watchFunctions = ["watch", "effect"] as const satisfies FnNames[];
+
 export const bindFunctions = [
     ...inlineBindFunctions,
-    "watch",
+    ...watchFunctions,
     "calculate",
     "expr",
-    "effect",
 ] as const satisfies FnNames[];
 
 export const modelFunctions = ["arrayModel", "mapModel", "setModel"] as const satisfies FnNames[];
@@ -125,6 +127,7 @@ export const hintFunctions: FnNames[] = [
     ...unwrapFunctions,
     "debounced",
     "field",
+    "bypassWriteRestriction",
 ];
 
 export const safeFunctions: FnNames[] = ["safeLive", "safeState", "safeInit"];

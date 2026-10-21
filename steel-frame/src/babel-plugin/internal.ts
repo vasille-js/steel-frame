@@ -1,10 +1,12 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { removeExtension } from "./lib.js";
+import { meshExpression, meshStatement } from "./mesh.js";
 
 export enum VariablesStatus {
     StyleSheet = 2,
     ArrayModel = 3,
+    Function = 4,
 }
 
 export type VariableState = Record<string, 1 | object> | VariablesStatus;
@@ -12,24 +14,38 @@ export type VariableState = Record<string, 1 | object> | VariablesStatus;
 export class StackedStates {
     private maps: Map<string, VariableState>[] = [];
     private checkingIndex: number = 0;
+    private functionIndex: number = 0;
 
     public constructor() {
         this.push();
     }
 
-    public push(startChecking?: boolean) {
-        if (startChecking) {
+    public push(checking?: "bind" | "function" | false) {
+        if (checking === "bind") {
             this.checkingIndex = this.maps.length;
+        }
+        if (checking === "function") {
+            this.functionIndex = this.maps.length;
         }
         this.maps.push(new Map<string, VariableState>());
     }
 
     public pop() {
         this.maps.pop();
+        if (this.maps.length === this.checkingIndex) {
+            this.checkingIndex = 0;
+        }
+        if (this.maps.length === this.functionIndex) {
+            this.functionIndex = 0;
+        }
     }
 
-    public get(name: string): VariableState | undefined {
-        for (let i = this.maps.length - 1; i >= 0; i--) {
+    public isCheckingScope() {
+        return this.functionIndex > 0;
+    }
+
+    public get(name: string, area?: "function"): VariableState | undefined {
+        for (let i = this.maps.length - 1; i >= (area === "function" ? this.functionIndex : 0); i--) {
             if (this.maps[i].has(name)) {
                 return this.maps[i].get(name);
             }
@@ -187,6 +203,9 @@ export interface Internal {
     strictFolders: boolean;
     stylesConnected: boolean;
     replaceWeb: string;
+    v4Naming: boolean;
+    declaredComponents: Map<string, NodePath<types.Statement>>;
+    meshedStatements: Set<NodePath<types.Statement>>;
     routes?: string[][];
     headTag?: boolean;
     bodyTag?: boolean;
@@ -194,6 +213,7 @@ export interface Internal {
     hmr?: { local: types.Identifier; exported: types.Identifier | types.StringLiteral; isDynamic?: boolean }[];
     asyncComposing?: boolean;
     autoUnwrapThrows?: boolean;
+    functionOuterScopeForbidden?: boolean;
     // maps a local identifier to `${filePath}:${exportedIdentifier}`
     typeIdentifiersMapping: Map<string, string>;
     isWrapper: boolean;
@@ -253,7 +273,7 @@ export interface Internal {
     safe(arg: types.FunctionExpression | types.ArrowFunctionExpression): types.CallExpression;
 
     // dev helpers
-    updateIValue(assign: types.AssignmentExpression, left: types.Expression, right: types.Expression): types.Expression;
+    updateIValue(area: types.Node, left: types.Expression, right: types.Expression): types.Expression;
     wrapFunctionBody(
         fn: types.FunctionDeclaration | types.ObjectMethod | types.ClassMethod | types.ClassPrivateMethod,
     ): void;

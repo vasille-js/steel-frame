@@ -1,14 +1,7 @@
-import { view, For, beforeMount, component } from "steel-frame";
-
-export let control:
-  | {
-      addValue(value: string): void;
-      removeValue(value: string): void;
-    }
-  | undefined = undefined;
+import { view, For, beforeMount, component, setModel } from "steel-frame";
 
 export const SetModelStateTest = component(() => {
-  const model = new Set(["m"]);
+  const model = setModel(["m"]);
 
   beforeMount(() => {
     control = {
@@ -28,3 +21,10 @@ export const SetModelStateTest = component(() => {
     }}
   />;
 });
+
+export let control:
+  | {
+      addValue(value: string): void;
+      removeValue(value: string): void;
+    }
+  | undefined = undefined;

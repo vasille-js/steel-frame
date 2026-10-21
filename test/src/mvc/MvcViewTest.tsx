@@ -4,9 +4,15 @@ interface Models {
   model: { $value: number };
 }
 
-const MvcComponent = component(({ model }: Models) => {
-  <div>{model.$value}</div>;
-  <div>{model.$value + 2}</div>;
+export const MvcViewTest = component(() => {
+  <MvcComponent model={{ $value }} />;
+});
+
+const MvcComponent = component((props: Models) => {
+  const { model } = props;
+  const { $value } = model;
+  <div>{$value}</div>;
+  <div>{$value + 2}</div>;
 });
 
 let $value = ref(1);
@@ -16,7 +22,3 @@ export const control = {
     $value = x;
   },
 };
-
-export const MvcViewTest = component(() => {
-  <MvcComponent model={{ $value }} />;
-});

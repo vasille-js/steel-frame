@@ -1,4 +1,5 @@
 # 🌐 Vasille.JS Router API
+
 **Powerful client-side routing for modern web applications**
 
 Vasille router accepts several pages, which can be navigated.
@@ -7,7 +8,9 @@ Each page has a URL path, fixed or dynamical.
 > ✨ `v4.0+` | 🕹 Simple API | ⚡ Lightweight
 
 ## 🚀 Introduction
+
 Vasille.JS Router provides seamless client-side navigation for single-page applications. Key features:
+
 - Dynamic route matching
 - Programmatic navigation
 - Nested route support
@@ -18,12 +21,11 @@ Vasille.JS Router provides seamless client-side navigation for single-page appli
 The pages must be placed in `src/pages` folder.
 If a folder or file name match the pattern `(.*)` the name will be interpreted as a path param.
 
-
 | File path                     |     URL path     |    Example     |     Params      |
-|:------------------------------|:----------------:|:--------------:|:---------------:|
+| :---------------------------- | :--------------: | :------------: | :-------------: |
 | `src/pages/index.tsx`         |       `/`        |      `/`       |      `{}`       |
 | `src/pages/page/(number).tsx` | `/page/(number)` |   `/page/1`    | `{number: "1"}` |
-| `src/pages/(id)/summary.tsx`  |  `/(id)/summary`   | `/123/summary` |  `{id: "123"}`  |
+| `src/pages/(id)/summary.tsx`  | `/(id)/summary`  | `/123/summary` |  `{id: "123"}`  |
 
 ## 🧪 Pages
 
@@ -32,14 +34,16 @@ Each page file must export default the result of `page` function.
 ### `page(fn: (props: ScreenProps) => Promise<void>)`
 
 The `props: ScreenProps` object contains the next fields:
-* `path` contains the full path.
-* `params` contains the url params extracted from the path.
-* `query` contains parsed search params.
-* `hash` contains the URL hash value starting with `#`.
+
+- `path` contains the full path.
+- `params` contains the url params extracted from the path.
+- `query` contains parsed search params.
+- `hash` contains the URL hash value starting with `#`.
 
 Example of page (path is `src/pages/index.jsx`) without params:
+
 ```typescript jsx
-import { page } from "vasille-web";
+import { page } from "steel-frame";
 
 export default page<"/">(async (props) => {
     <div>The path is {props.path}</div>;
@@ -49,7 +53,7 @@ export default page<"/">(async (props) => {
 Example of page (path `src/pages/user/(nickname).tsx`) with params which fetches data from server:
 
 ```typescript jsx
-import { page } from "vasille-web";
+import { page } from "steel-frame";
 
 export default page<"/user/(nickname)">(async ({params}) => {
     const response = await fetch(`/api/user/${params.nickname}`);
@@ -58,7 +62,6 @@ export default page<"/user/(nickname)">(async ({params}) => {
     <div class="name">{data.name}</div>;
 })
 ```
-
 
 ## 🗺️ Navigation
 
@@ -74,6 +77,7 @@ If you want a smoother experience use `router()?.ajax(path)`,
 which will keep the current page content until the next page mount showing the loading overlay.
 
 Example:
+
 ```typescript jsx
 const Component = compose(() => {
   function onClick() {
@@ -84,7 +88,7 @@ const Component = compose(() => {
       router()?.ajax("/user/1");
     }
   }
-  
+
   <button onclick={onClick}>Navigate</button>
 })
 ```
@@ -102,12 +106,25 @@ It reloads the current path, similar page refresh.
 ### 😵 Unexisting path reaction
 
 When is required an unexisting path and the fallback screen is not present
-* `goTo` will show the error screen if present.
-* `load` will thrown an error.
+
+- `goTo` will show the error screen if present.
+- `load` will thrown an error.
 
 Navigation to an unexisting path when a fallback screen is present is considered a successful one.
 
 ## 💡 Best Practices
+
+### 🚦 Initialize application before router start
+
+Add a file with path `src/router/initialize.ts`, which exports an async function:
+
+```typescript jsx
+export default async function () {
+  // do something here
+}
+```
+
+_Starting with v7.0.0_
 
 ### ✋ Limit access to routes
 
@@ -125,7 +142,7 @@ export default async function (path: string) {
 Add a file with path `src/router/fallbackScreen.tsx`, which exports a component to render when the page is not found:
 
 ```typescript jsx
-import { component, FallbackScreenProps } from "vasille-web";
+import { component, FallbackScreenProps } from "steel-frame";
 
 export default component((props: FallbackScreenProps) => {
   <div>Not found</div>
@@ -137,7 +154,7 @@ export default component((props: FallbackScreenProps) => {
 Add a file with path `src/router/errorScreen.tsx`, which exports a component to render when navigation fails:
 
 ```typescript jsx
-import { component, ErrorScreenProps } from "vasille-web";
+import { component, ErrorScreenProps } from "steel-frame";
 
 export default component((props: ErrorScreenProps) => {
   <div>Error: {props.error}</div>
@@ -149,7 +166,7 @@ export default component((props: ErrorScreenProps) => {
 Add a file with path `src/router/loadingScreen.tsx`, which exports a component to render when until first page mount:
 
 ```typescript jsx
-import { component } from "vasille-web";
+import { component } from "steel-frame";
 
 export default component(() => {
   <div>Loading...</div>
@@ -161,30 +178,50 @@ export default component(() => {
 Add a file with path `src/router/loadingOverlay.tsx`, which exports a component to render when the page is switched via `router()?.ajax(path)`:
 
 ```typescript jsx
-import { component } from "vasille-web";
+import { component } from "steel-frame";
 
 export default component(() => {
   <div style={{position: "fixed"}}>Loading...</div>
 });
 ```
 
+### 🍬 Use a wrapper for router content which provides global dependencies
+
+Add a file with path `src/router/Wrapper.tsx`, which exports a wrapper component as default export value:
+
+```typescript jsx
+import { component } from "steel-frame";
+
+export default component<{slot() : void}>((props) => {
+  <Slot model={props.slot}/>;
+});
+```
+
+The slot is mandatory, it can not be conditional.
+
+_Starting with v7.0.0_
+
 ## ❓ FAQ
 
 ### Q: How to handle route parameters?
-A: Access via page argument:
-```typescript jsx
-import {screen} from "vasille-web";
 
-export default page<"/user/(nickname)">(async ({params}) => {
-    console.log(params.nikcname);
-})
+A: Access via page argument:
+
+```typescript jsx
+import { screen } from "steel-frame";
+
+export default page<"/user/(nickname)">(async ({ params }) => {
+  console.log(params.nickname);
+});
 ```
 
 ### Q: Does this support lazy loading?
+
 A: Yes! All pages are lazy loaded by default.
 
 <hr/>
 
 📚 Next Steps:
-* Explore [Vasille.JS Documentation](https://github.com/vasille-js/vasille-js/blob/v4/doc/V4-API.md)
-* Report [Issues](https://github.com/vasille-js/vasille-js/issues)
+
+- Explore [Vasille.JS Documentation](https://github.com/vasille-js/vasille-js/blob/v5/doc/V7-API.md)
+- Report [Issues](https://github.com/vasille-js/vasille-js/issues)

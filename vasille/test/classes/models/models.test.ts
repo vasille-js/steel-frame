@@ -21,6 +21,8 @@ it("listener", function () {
 it("array model", function () {
     const array = new ArrayModel<number>([1, 2, 3]);
 
+    expect(array.get(0)).toBe(1);
+
     array.fill(0);
     expect(array.join()).toEqual([0, 0, 0].join());
 

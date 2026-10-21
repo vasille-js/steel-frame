@@ -3,7 +3,15 @@ import { checkDir } from "../lib/fs.js";
 import path from "node:path";
 import { Dirent } from "node:fs";
 
-const initializationFields = ["checkAccess", "fallbackScreen", "errorScreen", "loadingScreen", "loadingOverlay"];
+const initializationFields = [
+    "checkAccess",
+    "fallbackScreen",
+    "errorScreen",
+    "loadingScreen",
+    "loadingOverlay",
+    "Wrapper",
+    "initialize",
+];
 
 export async function findRoutes(routerDir: string, pagesDir: string) {
     const present: { component: string; file: string }[] = [];

@@ -1,13 +1,5 @@
 import { view, If, Else, ref, component } from "steel-frame";
 
-let $state = ref("test");
-
-export const control = {
-  setValue(value: string) {
-    $state = value;
-  },
-};
-
 export const IfElseTest = component(() => {
   <>
     <If $condition={$state === "if"}>
@@ -18,3 +10,11 @@ export const IfElseTest = component(() => {
     </Else>
   </>;
 });
+
+let $state = ref("test");
+
+export const control = {
+  setValue(value: string) {
+    $state = value;
+  },
+};

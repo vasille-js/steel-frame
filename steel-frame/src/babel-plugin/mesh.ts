@@ -13,8 +13,9 @@ import {
     modelFunctions,
     refFunctions,
     unwrapFunctions,
+    watchFunctions,
 } from "./call.js";
-import { exprIsSure, idIsIValue, memberIsIValue, nodeIsMeshed } from "./expression.js";
+import { checkExpression, exprIsSure, idIsIValue, memberIsIValue, nodeIsMeshed } from "./expression.js";
 import { ctx, InterfaceData, Internal, V, VariablesStatus, VariableState } from "./internal.js";
 import { ConditionCollection, processConditions, transformJsx } from "./jsx.js";
 import {
@@ -23,9 +24,16 @@ import {
     err,
     Errors,
     exprCall,
+    forceReactiveName,
+    isReactiveName,
+    isReadableName,
+    isWritableName,
+    leftIsThisInConstructor,
     parseCalculateCall,
     pathIsReactiveValue,
     processModelCall,
+    reactivityTypeByName,
+    reactivityTypeOfNode,
     ref,
     removeExtension,
     toKebabCase,
@@ -41,6 +49,7 @@ import path from "path";
 import module from "node:module";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { abortFunction } from "./abort.js";
 
 /**
  * Resolve a re-export source path to a steel-file-path-like identifier.
@@ -146,6 +155,20 @@ export function meshComposeCall(
     if (!args || !arg || args.length !== 1) {
         return err(Errors.IncorrectArguments, path, "Invalid arguments number", internal);
     }
+
+    path.traverse({
+        JSXOpeningElement(path) {
+            const name = path.node.name;
+
+            if (
+                t.isJSXIdentifier(name) &&
+                name.name[0].toUpperCase() === name.name[0] &&
+                internal.declaredComponents.has(name.name)
+            ) {
+                meshStatement(internal.declaredComponents.get(name.name)!, internal);
+            }
+        },
+    });
 
     if (name || t.isExportDeclaration(path.parent)) {
         const tracking = (internal.componentTracking = internal.appData?.registerComponent(
@@ -296,7 +319,31 @@ export function meshExpression(
             break;
         }
         case "Identifier": {
-            if (idIsIValue(nodePath as NodePath<types.Identifier>) && !nodeIsMeshed(nodePath)) {
+            const idPath = nodePath as NodePath<types.Identifier>;
+            const id = idPath.node;
+
+            if (
+                internal.stack.isCheckingScope() &&
+                internal.stack.get(id.name, "function") !== internal.stack.get(id.name)
+            ) {
+                err(
+                    Errors.RulesOfVasille,
+                    nodePath,
+                    "Function expression in reactive variable declaration must not capture outer scope. " +
+                        `Captured variable is "${id.name}".`,
+                    internal,
+                );
+            }
+            if (internal.functionOuterScopeForbidden && internal.stack.get(id.name) === VariablesStatus.Function) {
+                err(
+                    Errors.RulesOfVasille,
+                    nodePath,
+                    `Local function "${id.name}" is not allowed to be used in variable declaration. ` +
+                        "Move it outside of composition function",
+                    internal,
+                );
+            }
+            if (idIsIValue(idPath, "any", internal) && !nodeIsMeshed(nodePath)) {
                 throwOnAutoUnwrap(nodePath, internal);
                 nodePath.replaceWith(t.memberExpression(expr, V));
             }
@@ -431,37 +478,29 @@ export function meshExpression(
             const path = nodePath as NodePath<types.AssignmentExpression>;
             const left = path.get("left");
             const right = path.get("right");
+            const leftReactivity = reactivityTypeOfNode(left, internal);
+            const rightReactivity = reactivityTypeOfNode(right, internal);
+            let bypassMesh = false;
 
-            if (left.isMemberExpression() && hasBreakPoint(left, internal) && !pathIsReactiveValue(left)) {
+            if (left.isMemberExpression() && hasBreakPoint(left, internal) && !memberIsIValue(left, "any", internal)) {
                 err(Errors.RulesOfVasille, left, "This assignment breaks the reactivity", internal);
             }
 
+            if (leftReactivity && rightReactivity) {
+                if (leftIsThisInConstructor(left)) {
+                    if (leftReactivity === "writable" && rightReactivity === "readable") {
+                        err(Errors.RulesOfVasille, left, "Cannot assign readonly reactive value to writable", internal);
+                    }
+                    bypassMesh = true;
+                }
+            } else if (leftReactivity === "readable") {
+                err(Errors.RulesOfVasille, left, "Writing to readonly reactive values is forbidden", internal);
+            }
             if (left.isMemberExpression() && !exprIsSure(left, internal)) {
-                const property = left.node.property;
-                let iterator: NodePath<unknown> = path;
-                let inConstructor = false,
-                    inFunction = false;
-
-                while (iterator && !inConstructor && !inFunction) {
-                    inConstructor =
-                        iterator.isClassMethod() &&
-                        t.isIdentifier(iterator.node.key) &&
-                        iterator.node.key.name === "constructor";
-                    inFunction = iterator.isFunction();
-                    iterator = iterator.parentPath;
+                if (!bypassMesh) {
+                    meshAssigment(path, left, right, left.node.property, internal);
                 }
-
-                if (!(
-                    inConstructor &&
-                    t.isIdentifier(property) &&
-                    property.name[0] === "$" &&
-                    t.isThisExpression(left.node.object) &&
-                    ((right.isIdentifier() && idIsIValue(right)) ||
-                        (right.isMemberExpression() && memberIsIValue(right.node)))
-                )) {
-                    meshAssigment(path, left, right, property, internal);
-                }
-            } else if (internal.devLayer && pathIsReactiveValue(left)) {
+            } else if (internal.devLayer && pathIsReactiveValue(left, "any", internal)) {
                 meshExpression(right, internal, canHasRef);
                 path.replaceWith(internal.updateIValue(path.node, left.node, right.node));
             } else {
@@ -482,12 +521,12 @@ export function meshExpression(
             meshExpression(object, internal, canHasRef);
             if (
                 t.isExpression(property) &&
-                (!propertyPath.isIdentifier() || (node.computed && idIsIValue(propertyPath)))
+                (!propertyPath.isIdentifier() || (node.computed && idIsIValue(propertyPath, "any", internal)))
             ) {
                 meshOrIgnoreExpression<types.PrivateName>(propertyPath, internal, true);
             }
 
-            if (memberIsIValue(node)) {
+            if (memberIsIValue(path, "any", internal)) {
                 /* istanbul ignore else */
                 if (!nodeIsMeshed(path)) {
                     throwOnAutoUnwrap(path, internal);
@@ -589,12 +628,9 @@ export function meshExpression(
             processObjectExpression(nodePath as NodePath<types.ObjectExpression>, internal, canHasRef);
             break;
         }
-        case "FunctionExpression": {
-            meshFunction(nodePath as NodePath<types.FunctionExpression>, internal);
-            break;
-        }
+        case "FunctionExpression":
         case "ArrowFunctionExpression": {
-            meshFunction(nodePath as NodePath<types.ArrowFunctionExpression>, internal);
+            meshFunction(nodePath as NodePath<types.FunctionExpression | types.ArrowFunctionExpression>, internal);
             break;
         }
         case "ClassExpression": {
@@ -699,14 +735,18 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
                     t.isIdentifier(property.value.left) &&
                     property.value.left.name);
 
-            if (originName && newName && originName.startsWith("$") !== newName.startsWith("$")) {
+            if (
+                originName &&
+                newName &&
+                reactivityTypeByName(originName, internal) !== reactivityTypeByName(newName, internal)
+            ) {
+                const correctName =
+                    originName.substring(0, originName.search(/[_$]/) + 1) +
+                    newName.substring(newName.search(/[_$]/) + 1);
                 err(
                     Errors.RulesOfVasille,
                     path.get("value"),
-                    `Property "${originName}" can not be renamed to "${newName}": ` +
-                        (originName.startsWith("$")
-                            ? `rename it to "$${newName}"`
-                            : `rename it to "${newName.substring(1)}"`),
+                    `Property "${originName}" can not be renamed to "${newName}": rename it to "${correctName}"`,
                     internal,
                 );
             }
@@ -715,7 +755,7 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
 
             if (valuePath.isObjectPattern()) {
                 /* istanbul ignore else */
-                if (originName && originName.startsWith("$")) {
+                if (originName && isReactiveName(originName, internal)) {
                     err(Errors.RulesOfVasille, path, "You can not destruct a reactive value", internal);
                 }
 
@@ -727,8 +767,8 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
                 meshExpression(right, internal, false);
 
                 if (
-                    (t.isIdentifier(property.key) && property.key.name.startsWith("$")) ||
-                    (t.isStringLiteral(property.key) && property.key.value.startsWith("$"))
+                    (t.isIdentifier(property.key) && isReactiveName(property.key.name, internal)) ||
+                    (t.isStringLiteral(property.key) && isReactiveName(property.key.value, internal))
                 ) {
                     right.replaceWith(internal.ref(right.node, property, undefined, false));
                 } else {
@@ -747,7 +787,7 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
                 if (t.isIdentifier(property.value)) {
                     internal.stack.set(property.value.name, {});
 
-                    if (property.value.name.startsWith("$")) {
+                    if (isReactiveName(property.value.name, internal)) {
                         path.get("value").replaceWith(
                             t.assignmentPattern(property.value, internal.ref(null, property, undefined, false)),
                         );
@@ -768,7 +808,7 @@ export function reactiveArrayPattern(
     if (path.isArrayPattern()) {
         path.get("elements").forEach((element, index) => {
             if (index < 2) {
-                checkReactiveName(element, internal);
+                checkReactiveName(element, "readable", internal);
             } else {
                 /* istanbul ignore else */
                 if (element.isIdentifier()) {
@@ -821,11 +861,11 @@ function meshClassBody(path: NodePath<types.ClassBody>, internal: Internal) {
             const key = item.get("key");
             const value = item.get("value");
 
-            if (value.isCallExpression() && calls(value, ["ref"], internal)) {
+            if (value.isCallExpression() && calls(value, refFunctions, internal)) {
                 const refValue = value.node.arguments[0];
                 const pos = value.node.loc;
 
-                checkReactiveName(key, internal);
+                checkReactiveName(key, "writable", internal);
                 meshAllUnknown(value.get("arguments"), internal, true);
                 value.replaceWith(
                     ref(
@@ -880,22 +920,27 @@ function procedureProcessObjectExpression(
                 const name = stringify(keyPath.node);
                 let isRef = false;
 
+                if (isWritableName(name, internal) && !isReadableName(name, internal)) {
+                    err(Errors.RulesOfVasille, prop, "Writable field are not allowed in objects", internal);
+                }
+
                 if (processRefCall(valuePath, property.node, internal)) {
                     isRef = true;
                     state[name] = 1;
-                } else if (pathIsReactiveValue(valuePath)) {
+                } else if (pathIsReactiveValue(valuePath, "any", internal)) {
                     state[name] = 1;
-                } else if (internal.isComposing && !internal.isFunctionParsing && name.startsWith("$")) {
+                } else if (internal.isComposing && !internal.isFunctionParsing && isReadableName(name, internal)) {
+                    forceReactiveName(name, "readable", keyPath, internal);
                     meshValue(name);
                     valuePath.replaceWith(internal.ref(valuePath.node, property.node, undefined, false));
                     state[name] = 1;
                 }
 
-                if ((isRef || name.startsWith("$")) && !canHasRef) {
+                if ((isRef || isReadableName(name, internal)) && !canHasRef) {
                     err(Errors.RulesOfVasille, keyPath, "This object can not contain reactive fields", internal);
                 }
 
-                if ((state[name] === 1) !== name.startsWith("$")) {
+                if ((state[name] === 1) !== isReadableName(name, internal)) {
                     err(Errors.RulesOfVasille, keyPath, "Reactivity mismatch between field name and value", internal);
                 } else {
                     if (!state[name]) {
@@ -916,10 +961,10 @@ function procedureProcessObjectExpression(
             }
         } else if (prop.isObjectMethod()) {
             if (
-                (keyPath.isIdentifier() && keyPath.node.name.startsWith("$") && !prop.node.computed) ||
-                (keyPath.isStringLiteral() && keyPath.node.value.startsWith("$"))
+                (keyPath.isIdentifier() && isReactiveName(keyPath.node.name, internal) && !prop.node.computed) ||
+                (keyPath.isStringLiteral() && isReactiveName(keyPath.node.value, internal))
             ) {
-                err(Errors.RulesOfVasille, prop.get("key"), "Method name can not start with $", internal);
+                err(Errors.RulesOfVasille, prop.get("key"), "Method name can not contain reactivity mark", internal);
             }
             meshStatement(prop.get("body"), internal);
             internal.wrapFunctionBody(prop.node);
@@ -950,6 +995,13 @@ export function processObjectExpression(
 
 export function meshStatement(path: NodePath<types.Statement | null | undefined>, internal: Internal) {
     const statement = path.node;
+
+    if (path.isStatement()) {
+        if (internal.meshedStatements.has(path)) {
+            return;
+        }
+        internal.meshedStatements.add(path);
+    }
 
     switch (statement && statement.type) {
         case "BlockStatement":
@@ -1162,7 +1214,7 @@ export function meshStatement(path: NodePath<types.Statement | null | undefined>
                     const pos = initPath.node.loc;
 
                     meshAllUnknown(initPath.get("arguments"), internal, false);
-                    checkReactiveName(idPath, internal);
+                    checkReactiveName(idPath, "writable", internal);
                     initPath.replaceWith(
                         ref(refValue, internal, declaration.node, undefined, calls(initPath, ["safeState"], internal)),
                     );
@@ -1332,6 +1384,7 @@ export function meshFunction(
     internal: Internal,
 ) {
     const throws = internal.autoUnwrapThrows;
+    const needIsolation = internal.functionOuterScopeForbidden && !internal.stack.isCheckingScope();
 
     if (path.isFunctionDeclaration() && path.node.id) {
         const idPath = path.get("id");
@@ -1346,7 +1399,7 @@ export function meshFunction(
         }
     }
 
-    internal.stack.push();
+    internal.stack.push(needIsolation && "function");
     internal.autoUnwrapThrows = false;
 
     if (path.isFunctionExpression() && path.node.id) {
@@ -1386,7 +1439,7 @@ export function composeExpression(path: NodePath<types.Expression | null | undef
     switch (expr && expr.type) {
         case "CallExpression":
         case "OptionalCallExpression": {
-            if (calls(path, ["watch"], internal)) {
+            if (calls(path, watchFunctions, internal)) {
                 parseCalculateCall(path, internal, path.node, undefined);
 
                 const args = (path.node as types.CallExpression).arguments;
@@ -1394,7 +1447,12 @@ export function composeExpression(path: NodePath<types.Expression | null | undef
                 /* istanbul ignore else */
                 if (args) {
                     if ((args[2] as types.ArrayExpression).elements.length <= 0) {
-                        path.replaceWith(t.callExpression(args[1] as types.Expression, []));
+                        err(
+                            Errors.RulesOfVasille,
+                            path,
+                            "Effect must have at least one dependency. Move code to beforeMount.",
+                            internal,
+                        );
                     }
                 }
             } else if (calls(path, ["beforeMount", "afterMount"], internal)) {
@@ -1479,6 +1537,8 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
             const kind = _path.node.kind;
             let switchToConst = true;
 
+            internal.functionOuterScopeForbidden = true;
+
             for (const declaration of _path.get("declarations")) {
                 const idPath = declaration.get("id");
                 const initPath = declaration.get("init");
@@ -1508,10 +1568,27 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
 
                 // const [x, y] = await(...)
                 if (calls(initPath, asyncFunctions, internal)) {
-                    const callPath = declaration.get("init") as NodePath<types.CallExpression>;
+                    const callPath = initPath;
+                    const firstArg = callPath.get("arguments")[0];
 
                     reactiveArrayPattern(declaration.get("id"), internal);
-                    meshAllUnknown(callPath.get("arguments"), internal, false);
+                    if (
+                        firstArg &&
+                        (firstArg.isFunctionExpression() || firstArg.isArrowFunctionExpression()) &&
+                        (!firstArg.node.params[0] || t.isIdentifier(firstArg.node.params[0]))
+                    ) {
+                        const param = firstArg.node.params[0] ?? t.identifier("VasilleAbortSignal");
+
+                        const abortCheck = t.callExpression(
+                            t.memberExpression(param, t.identifier("throwIfAborted")),
+                            [],
+                        );
+
+                        if (abortFunction(firstArg, abortCheck) && !firstArg.node.params[0]) {
+                            firstArg.node.params[0] = param;
+                        }
+                        exprCall(firstArg, firstArg.node, internal, {}, callPath.node, false, true);
+                    }
 
                     /* istanbul ignore else */
                     if (internal.devLayer) {
@@ -1575,11 +1652,11 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                         );
 
                         meshInit = !isReactive;
-                        checkReactiveName(idPath, internal);
+                        checkReactiveName(idPath, "readable", internal);
                     }
                     // let y = ref(2)
                     else if (isFrom(refFunctions) && processRefCall(initPath, declaration.node, internal, idName())) {
-                        checkReactiveName(idPath, internal);
+                        checkReactiveName(idPath, "writable", internal);
                         meshInit = false;
                     }
                     // const arr = arrayModel()
@@ -1605,35 +1682,40 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                     // const $x = debounced(y, 1000);
                     else if ("debounced" === called) {
                         processDebounceRefCall(callPath, declaration.node, idName(), internal);
-                        checkReactiveName(idPath, internal);
+                        checkReactiveName(idPath, "readable", internal);
                         meshInit = false;
                     }
                     // const $x = field($y.z);
-                    else if ("field" === called) {
+                    else if ("field" === called && forceReactiveName(idPath.node.name, "writable", idPath, internal)) {
                         initPath.replaceWith(processFieldRefCall(callPath, internal, declaration, idName()));
-                        checkReactiveName(idPath, internal);
+                        checkReactiveName(idPath, "writable", internal);
                     }
                     // const x = { .. }
-                    else if (initPath.isObjectExpression() && !idPath.node.name.startsWith("$")) {
+                    else if (initPath.isObjectExpression() && !isReactiveName(idPath.node.name, internal)) {
                         internal.stack.replace(idName(), processObjectExpression(initPath, internal, kind === "const"));
                         meshInit = false;
                     }
-                    // const x = y[z]
-                    else if (initPath.isOptionalMemberExpression() || initPath.isMemberExpression()) {
+                    // const $x = y[z]
+                    else if (
+                        (initPath.isOptionalMemberExpression() || initPath.isMemberExpression()) &&
+                        isWritableName(idPath.node.name, internal)
+                    ) {
                         const path = initPath as NodePath<t.MemberExpression | t.OptionalMemberExpression>;
-                        const split = kind === "let" && toFieldRef(path, internal, declaration, idName());
+                        const split =
+                            (kind === "let" || !isReadableName(idPath.node.name, internal)) &&
+                            toFieldRef(path, internal, declaration, idName());
 
                         // let $x = $y.z;
                         // let $z = $y[$z];
                         if (split) {
                             initPath.replaceWith(split);
-                            checkReactiveName(idPath, internal);
                             meshInit = false;
                         }
                         // const $x = $y.z;
                         // const $x = y[$z];
                         else if (
                             kind === "const" &&
+                            isReadableName(idPath.node.name, internal) &&
                             exprCall(
                                 path,
                                 path.node,
@@ -1643,7 +1725,6 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                                 false,
                             )
                         ) {
-                            checkReactiveName(idPath, internal);
                             meshInit = false;
                         }
                         // let $x = y.z;
@@ -1651,12 +1732,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                             meshExpression(path, internal, false);
                             meshInit = false;
 
-                            if (kind === "let" && t.isIdentifier(id) && id.name.startsWith("$")) {
-                                path.replaceWith(ref(path.node, internal, declaration.node, idName(), false));
-                            } else {
-                                checkNonReactiveName(idPath, internal);
-                                switchToConst = false;
-                            }
+                            path.replaceWith(ref(path.node, internal, declaration.node, idName(), false));
                         }
                     }
                     // let x = ..
@@ -1667,7 +1743,10 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                             meshExpression(initPath, internal, true);
                         }
 
-                        if (idPath.isIdentifier() && idPath.node.name.startsWith("$")) {
+                        if (
+                            idPath.isIdentifier() &&
+                            forceReactiveName(idPath.node.name, "writable", idPath, internal)
+                        ) {
                             declaration
                                 .get("init")
                                 .replaceWith(ref(declaration.node.init, internal, declaration.node, idName(), false));
@@ -1678,31 +1757,25 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                     }
                     // const x = ..
                     else {
-                        if (idPath.node.name.startsWith("$")) {
-                            checkReactiveName(idPath, internal);
-                            if (
-                                !exprCall(
-                                    initPath,
-                                    initPath.node,
-                                    internal,
-                                    {
-                                        name: idName(),
-                                        strong: true,
-                                    },
-                                    declaration.node,
-                                    false,
-                                )
-                            ) {
-                                err(
-                                    Errors.IncorrectArguments,
-                                    declaration,
-                                    "Computed expression has static value. Make it non reactive",
-                                    internal,
-                                );
-                            }
+                        if (
+                            isReactiveName(idPath.node.name, internal) &&
+                            exprCall(
+                                initPath,
+                                initPath.node,
+                                internal,
+                                {
+                                    name: idName(),
+                                    strong: true,
+                                },
+                                declaration.node,
+                                false,
+                            )
+                        ) {
+                            forceReactiveName(idPath.node.name, "readable", idPath, internal);
                             meshInit = false;
                         } else {
                             internal.autoUnwrapThrows = true;
+                            checkNonReactiveName(idPath, internal);
                             meshExpression(initPath, internal, true);
                             internal.autoUnwrapThrows = false;
                             meshInit = false;
@@ -1710,7 +1783,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
                     }
                 }
                 // const { x, y } = $z;
-                else if (idPath.isObjectPattern() && initPath.isIdentifier() && idIsIValue(initPath)) {
+                else if (idPath.isObjectPattern() && initPath.isIdentifier() && idIsIValue(initPath, "any", internal)) {
                     for (const property of idPath.get("properties")) {
                         if (property.isRestElement()) {
                             err(
@@ -1726,17 +1799,18 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
 
                             /* istanbul ignore else */
                             if (t.isIdentifier(renamed)) {
-                                if (!renamed.name.startsWith("$")) {
+                                if (!isReactiveName(renamed.name, internal)) {
                                     err(
                                         Errors.RulesOfVasille,
                                         property.get("value"),
-                                        "Reactive object destruction required renaming of fields. Example const {a: $a} = $obj;",
+                                        "Reactive object destruction required renaming of fields. Example const { a: wr_a } = $obj;",
                                         internal,
                                     );
                                 }
                                 if (
-                                    (item.computed && (!t.isStringLiteral(key) || !key.value.startsWith("$"))) ||
-                                    (!item.computed && t.isIdentifier(key) && !key.name.startsWith("$"))
+                                    (item.computed &&
+                                        (!t.isStringLiteral(key) || !isReactiveName(key.value, internal))) ||
+                                    (!item.computed && t.isIdentifier(key) && !isReactiveName(key.name, internal))
                                 ) {
                                     const newLine = t.variableDeclaration("const", [
                                         t.variableDeclarator(
@@ -1779,6 +1853,7 @@ export function composeStatement(path: NodePath<types.Statement | null | undefin
             if (switchToConst && kind === "let") {
                 _path.node.kind = "const";
             }
+            internal.functionOuterScopeForbidden = false;
             break;
         }
         default:
@@ -1804,6 +1879,14 @@ export function compose(
 
     if (t.isFunctionExpression(node) && node.id) {
         internal.stack.set(node.id.name, {});
+    }
+
+    if (body.isBlockStatement()) {
+        for (const statement of body.node.body) {
+            if (t.isFunctionDeclaration(statement) && statement.id) {
+                internal.stack.set(statement.id.name, VariablesStatus.Function);
+            }
+        }
     }
 
     if (params.length > 1 && !isInternalSlot) {

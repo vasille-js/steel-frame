@@ -1,7 +1,7 @@
-import { component, For, store, view } from "steel-frame";
+import { arrayModel, ArrayModelView, component, For, store } from "steel-frame";
 
 const modelStore = store(() => {
-  const arr = ["x"];
+  const arr = arrayModel(["x"]);
 
   return {
     arr,
@@ -9,13 +9,13 @@ const modelStore = store(() => {
       arr.push(value);
     },
     replaceValue(index: number, value: string) {
-      arr[index] = value;
+      arr.replace(index, value);
     },
   };
 });
 
 const Component = component(() => {
-  <For
+  <ArrayModelView
     of={modelStore.arr}
     slot={value => {
       <div>Hello {value}!</div>;

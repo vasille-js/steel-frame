@@ -36,6 +36,7 @@ async function run() {
                 configFile: false,
                 root: cwd(),
                 esbuild: false,
+                oxc: false,
                 appType: "spa",
                 build: {
                     outDir: "dist/spa",
@@ -76,6 +77,7 @@ async function run() {
                 configFile: false,
                 root: cwd(),
                 esbuild: false,
+                oxc: false,
                 build: {
                     lib: {
                         entry: `/web.vasille.js`,
@@ -180,6 +182,7 @@ async function run() {
                 configFile: false,
                 root: cwd(),
                 esbuild: false,
+                oxc: false,
                 appType: "spa",
                 command: "serve",
                 plugins: [
