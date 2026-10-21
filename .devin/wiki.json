@@ -85,7 +85,7 @@
     },
     {
       "title": "State Management",
-      "purpose": "Cover reactive variables and object properties with $ prefix, global stores, component models, reactive collections, computed values, and async data handling",
+      "purpose": "Cover reactive variables and object properties with r_/wr_ prefix, global stores, component models, reactive collections, computed values, and async data handling",
       "page_notes": [
         {
           "content": ""
@@ -94,7 +94,7 @@
     },
     {
       "title": "Reactive Variables",
-      "purpose": "Explain $-prefixed variables and object properties, ref() for explicit creating References, bind() for expressions, calculate() for computed functions, watch() for side effects",
+      "purpose": "Explain r_/wr_-prefixed variables and object properties, ref() for explicit creating References, bind() for expressions, calculate() for computed functions, watch() for side effects",
       "parent": "State Management",
       "page_notes": [
         {
@@ -124,7 +124,7 @@
     },
     {
       "title": "Computed Values",
-      "purpose": "Explain bind() for reactive expressions (transforms expressions to track dependencies), calculate() for reactive functions, and that an reactive expression are created automatically when a constant is declared in component and its value contain reactive values (variable or object properties which name start with $)",
+      "purpose": "Explain bind() for reactive expressions (transforms expressions to track dependencies), calculate() for reactive functions, and that an reactive expression are created automatically when a constant is declared in component and its value contain reactive values (variable or object properties which name start with r_/wr_)",
       "parent": "State Management",
       "page_notes": [
         {
@@ -193,7 +193,7 @@
     },
     {
       "title": "Loading States",
-      "purpose": "Explain loadingScreen (full-page), loadingOverlay (AJAX-style), $currentUrl and $loadingUrl reactive references",
+      "purpose": "Explain loadingScreen (full-page), loadingOverlay (AJAX-style), r_currentUrl and r_loadingUrl reactive references",
       "parent": "Routing",
       "page_notes": [
         {
