@@ -37,8 +37,8 @@ export class WebRouter<Routes extends string> extends Router<
     {},
     [NavigationMode]
 > {
-    public readonly $currentUrl = new Reference<string, unknown>("");
-    public readonly $loadingUrl = new Reference<string | null, unknown>(null);
+    public readonly r_currentUrl = new Reference<string, unknown>("");
+    public readonly r_loadingUrl = new Reference<string | null, unknown>(null);
 
     protected readonly webInit: WebRouterInitialization<Routes>;
     protected readonly window: Window;
@@ -60,7 +60,7 @@ export class WebRouter<Routes extends string> extends Router<
         this.window = window;
         this.location = location;
         this.node = node;
-        this.$currentUrl.V = location.pathname;
+        this.r_currentUrl.V = location.pathname;
 
         let routerNode = node;
 
@@ -107,7 +107,7 @@ export class WebRouter<Routes extends string> extends Router<
     }
 
     public reload(): void {
-        this.doNavigate(this.$currentUrl.V, true, "loading-screen");
+        this.doNavigate(this.r_currentUrl.V, true, "loading-screen");
     }
 
     protected doNavigate(url: string, canNavigate: boolean, mode: NavigationMode) {
@@ -131,7 +131,7 @@ export class WebRouter<Routes extends string> extends Router<
         props: ScreenProps<Route>,
         mode: NavigationMode,
     ): Promise<void> {
-        this.$loadingUrl.V = props.path;
+        this.r_loadingUrl.V = props.path;
 
         try {
             const { loadingScreen, loadingOverlay } = this.webInit;
@@ -146,7 +146,7 @@ export class WebRouter<Routes extends string> extends Router<
 
             await this.renderScreen(target.screen, props, "found");
 
-            this.$currentUrl.V = props.url;
+            this.r_currentUrl.V = props.url;
             if (this.location.href !== props.url && this.location.hash !== "#" + props.url) {
                 this.window.history.pushState({}, "", props.url);
             }
@@ -157,7 +157,7 @@ export class WebRouter<Routes extends string> extends Router<
             throw error;
         } finally {
             this.clearLoadings();
-            this.$loadingUrl.V = null;
+            this.r_loadingUrl.V = null;
         }
     }
 

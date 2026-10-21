@@ -34,10 +34,10 @@ export class DevWebRouter<Routes extends string> extends WebRouter<Routes> {
             inspector.registeredRoute({ path });
         });
 
-        this.$currentUrl.on(value => {
+        this.r_currentUrl.on(value => {
             inspector.routerStateChange({ name: "currentUrl", value, time: Date.now() });
         });
-        this.$loadingUrl.on(value => {
+        this.r_loadingUrl.on(value => {
             inspector.routerStateChange({ name: "loadingUrl", value, time: Date.now() });
         });
     }
@@ -58,7 +58,7 @@ export class DevWebRouter<Routes extends string> extends WebRouter<Routes> {
     }
 
     public reload() {
-        inspector.routerActionCall({ name: "reload", path: this.$currentUrl.V, time: Date.now() });
+        inspector.routerActionCall({ name: "reload", path: this.r_currentUrl.V, time: Date.now() });
         super.reload();
     }
 

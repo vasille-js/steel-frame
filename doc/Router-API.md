@@ -201,6 +201,18 @@ The slot is mandatory, it can not be conditional.
 
 _Starting with v7.0.0_
 
+### 🏁 Access to last loaded URL
+
+Use `router()?.r_currentUrl` to access last loaded URL.
+
+_Starting with v7.0.2_
+
+### ⌛ Access to current loading URL
+
+Use `router()?.r_loadingUrl` to track current loading URL, undefined when page is loaded.
+
+_Starting with v7.0.2_
+
 ## ❓ FAQ
 
 ### Q: How to handle route parameters?
