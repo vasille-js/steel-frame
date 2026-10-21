@@ -4,9 +4,7 @@
 /doc
 /out
 /pages
-/.idea
 /**.md
-/tsconfig.json
 /coverage
 /test
 /img
@@ -15,11 +13,10 @@
 /cdn/*.html
 /flow-typed/create.cjs
 /.eslint*
-/tsconfig*.json
 /*config.cjs
 *.tgz
 /.*
 /translations
-*.tsbuildinfo
 deno.json
 eslint.config.js
+tsconfig.*

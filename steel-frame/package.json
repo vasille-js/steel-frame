@@ -1,6 +1,6 @@
 {
     "name": "steel-frame",
-    "version": "7.0.2",
+    "version": "7.0.3",
     "description": "SteelFrame: Build Fault-Tolerant Web Applications Effortlessly.",
     "main": "build/cli/run.js",
     "types": "./index.d.ts",
