@@ -338,11 +338,13 @@ export const MyApp = component(() => {
 ## Styling
 
 Use the `styleSheet` function to generate stylesheets at compile time.
+`styleSheet` returns a `{[key: string]: CssStyleInjector}` object,
+style injectors are not string, use array to set to class attribute.
 
 ```typescript jsx
 export const MyComponent = component(() => {
-    <div class={css.root}>
-        <div class={css.container}>
+    <div class={[css.root]}>
+        <div class={[css.container]}>
             Styled text.
         </div>
     </div>;
