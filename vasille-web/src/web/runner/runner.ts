@@ -10,7 +10,7 @@ export type StyleType<T> = T | number | number[] | IValue<string | number | numb
 
 export interface WebTagOptions {
     /** attributes */
-    a?: Record<string, AttrType<number | boolean>>;
+    a?: Record<string, AttrType<number | boolean | string[]>>;
     /** classes */
     c?: (
         | string
@@ -149,11 +149,13 @@ export class WebTag<Options extends WebTagOptions, RunnerT extends WebRunner<Opt
                     /* istanbul ignore else */
                     if (typeof value === "boolean") {
                         /* istanbul ignore else */
-                        if (value) {
+                        if (name.startsWith("aria-")) {
+                            node.setAttribute(name, `${value}`);
+                        } else if (value) {
                             node.setAttribute(name, "");
                         }
                     } else if (value !== null && value !== undefined) {
-                        node.setAttribute(name, `${value}`);
+                        node.setAttribute(name, value instanceof Array ? value.join(" ") : `${value}`);
                     }
                 }
             }

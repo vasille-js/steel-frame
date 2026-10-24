@@ -133,6 +133,10 @@ We respect semantic versioning:
 - A minor version is increased when we add functionality.
 - Patch version is increased when we fix bugs.
 
+### 7.1
+
+- Add support for ARIA attributtes.
+
 ### 7.0
 
 - Add `debounced` and `field` functions, which extend the reativity system.

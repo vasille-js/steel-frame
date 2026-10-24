@@ -6,7 +6,10 @@ import type { CompilationErrorReporter } from "../../babel-plugin/index.js";
 
 export function getVitePlugins(
     target: "vasille-web/dev" | "vasille-web" | "vasille-web/ssg",
-    errorsHandler?: CompilationErrorReporter,
+    options: {
+        errorsHandler?: CompilationErrorReporter;
+        v4Naming: boolean;
+    },
 ) {
     return [
         babel({
@@ -20,7 +23,12 @@ export function getVitePlugins(
                     pluginJsxSyntax,
                     [
                         pluginVasille,
-                        { replaceWeb: target, devLayer: target === "vasille-web/dev", reporter: errorsHandler },
+                        {
+                            replaceWeb: target,
+                            devLayer: target === "vasille-web/dev",
+                            reporter: options.errorsHandler,
+                            v4Naming: options.v4Naming,
+                        },
                     ],
                     [pluginTypescript, { isTSX: true }],
                 ],

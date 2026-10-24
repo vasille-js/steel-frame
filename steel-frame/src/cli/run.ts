@@ -17,7 +17,8 @@ import { compileComponentsLib, compileLib, watchLib } from "./lib/compile-lib.js
 
 async function run() {
     const { routerDir, pagesDir, srcDir } = workingDirs();
-    const { build, dev, spa, ssg, help, lib, components, md, mdHtml } = await processArgs();
+    const { build, dev, spa, ssg, help, lib, components, md, mdHtml, v4Naming } = await processArgs();
+    const options = { v4Naming };
     const resolve = {
         alias: {
             "@": srcDir,
@@ -47,7 +48,7 @@ async function run() {
                 },
                 plugins: [
                     await indexPlugin(routerDir, pagesDir, "vasille-web"),
-                    ...getVitePlugins("vasille-web"),
+                    ...getVitePlugins("vasille-web", options),
                     compress(),
                 ],
                 resolve,
@@ -187,12 +188,15 @@ async function run() {
                 command: "serve",
                 plugins: [
                     await indexPlugin(routerDir, pagesDir, "vasille-web/dev"),
-                    ...getVitePlugins("vasille-web/dev", reports => {
-                        ideServer.clients.forEach(client => {
-                            if (client.readyState === WebSocket.OPEN) {
-                                client.send(JSON.stringify(["reportErrors", reports]));
-                            }
-                        });
+                    ...getVitePlugins("vasille-web/dev", {
+                        ...options,
+                        errorsHandler: reports => {
+                            ideServer.clients.forEach(client => {
+                                if (client.readyState === WebSocket.OPEN) {
+                                    client.send(JSON.stringify(["reportErrors", reports]));
+                                }
+                            });
+                        },
                     }),
                     inspect(),
                 ],

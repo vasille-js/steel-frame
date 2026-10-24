@@ -1,6 +1,6 @@
 {
     "name": "vasille-web",
-    "version": "7.0.1",
+    "version": "7.1.0",
     "description": "Build fault tolerant web applications.",
     "main": "index.js",
     "types": "./index.d.ts",

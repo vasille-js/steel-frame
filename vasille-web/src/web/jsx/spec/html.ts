@@ -1,5 +1,195 @@
 export type EventHandler<Event, Target> = (ev: Event, target: Target) => any;
 
+type RelValue =
+    | "alternate"
+    | "author"
+    | "bookmark"
+    | "canonical"
+    | "compression-dictionary"
+    | "dns-prefetch"
+    | "external"
+    | "expect"
+    | "help"
+    | "icon"
+    | "license"
+    | "manifest"
+    | "me"
+    | "modulepreload"
+    | "next"
+    | "nofollow"
+    | "noopener"
+    | "noreferrer"
+    | "opener"
+    | "pingback"
+    | "preconnect"
+    | "prefetch"
+    | "preload"
+    | "prerender"
+    | "prev"
+    | "privacy-policy"
+    | "search"
+    | "stylesheet"
+    | "tag"
+    | "terms-of-service";
+
+type ReferrerPolicy =
+    | "no-referrer"
+    | "no-referrer-when-downgrade"
+    | "origin"
+    | "origin-when-cross-origin"
+    | "same-origin"
+    | "strict-origin"
+    | "strict-origin-when-cross-origin"
+    | "unsafe-url";
+
+type AriaRoles =
+    | "alert"
+    | "alertdialog"
+    | "application"
+    | "article"
+    | "banner"
+    | "button"
+    | "cell"
+    | "checkbox"
+    | "columnheader"
+    | "combobox"
+    | "command"
+    | "comment"
+    | "complementary"
+    | "composite"
+    | "contentinfo"
+    | "definition"
+    | "dialog"
+    | "directory"
+    | "document"
+    | "feed"
+    | "figure"
+    | "form"
+    | "generic"
+    | "graphics-document"
+    | "graphics-object"
+    | "graphics-symbol"
+    | "grid"
+    | "gridcell"
+    | "group"
+    | "heading"
+    | "img"
+    | "input"
+    | "landmark"
+    | "link"
+    | "list"
+    | "listbox"
+    | "listitem"
+    | "log"
+    | "main"
+    | "mark"
+    | "marquee"
+    | "math"
+    | "menu"
+    | "menubar"
+    | "menuitem"
+    | "menuitemcheckbox"
+    | "menuitemradio"
+    | "meter"
+    | "navigation"
+    | "none"
+    | "note"
+    | "option"
+    | "presentation"
+    | "progressbar"
+    | "radio"
+    | "radiogroup"
+    | "range"
+    | "region"
+    | "roletype"
+    | "row"
+    | "rowgroup"
+    | "rowheader"
+    | "scrollbar"
+    | "search"
+    | "searchbox"
+    | "section"
+    | "sectionhead"
+    | "select"
+    | "separator"
+    | "slider"
+    | "spinbutton"
+    | "status"
+    | "Structural"
+    | "structure"
+    | "suggestion"
+    | "switch"
+    | "tab"
+    | "table"
+    | "tablist"
+    | "tabpanel"
+    | "term"
+    | "textbox"
+    | "timer"
+    | "toolbar"
+    | "tooltip"
+    | "tree"
+    | "treegrid"
+    | "treeitem"
+    | "widget"
+    | "window";
+
+interface AriaAttributes {
+    "aria-activedescendant": string;
+    "aria-atomic": "true" | "false";
+    "aria-autocomplete": "none" | "inline" | "list" | "both";
+    "aria-braillelabel": string;
+    "aria-brailleroledescription": string;
+    "aria-busy": "true" | "false";
+    "aria-checked": "mixed" | "false" | "true";
+    "aria-colcount": number;
+    "aria-colindex": number;
+    "aria-colindextext": string;
+    "aria-colspan": number;
+    "aria-controls": string;
+    "aria-current": "page" | "step" | "location" | "date" | "time" | "true" | "false" | boolean;
+    "aria-describedby": string;
+    "aria-description": string;
+    "aria-details": string;
+    "aria-disabled": "true" | "false" | boolean;
+    "aria-dropeffect": "none" | "link" | "copy" | "execute" | "move" | "popup";
+    "aria-errormessage": string;
+    "aria-expanded": "true" | "false" | boolean;
+    "aria-flowto": string | string[];
+    "aria-grabbed": "true" | "false" | boolean;
+    "aria-haspopup": "true" | "false" | boolean | "menu" | "listbox" | "tree" | "grid" | "dialog";
+    "aria-hidden": "true" | "false" | boolean;
+    "aria-invalid": "true" | "false" | boolean | "grammar" | "spelling";
+    "aria-keyshortcuts": string | string[];
+    "aria-label": string;
+    "aria-labelledby": string | string[];
+    "aria-level": number;
+    "aria-live": "off" | "assertive" | "polite";
+    "aria-modal": "true" | "false" | boolean;
+    "aria-multiline": "true" | "false" | boolean;
+    "aria-multiselectable": "true" | "false" | boolean;
+    "aria-orientation": "horizontal" | "vertical";
+    "aria-owns": string | string[];
+    "aria-placeholder": string;
+    "aria-posinset": number;
+    "aria-pressed": "true" | "false" | boolean | "mixed";
+    "aria-readonly": "true" | "false" | boolean;
+    "aria-relevant": "additions" | "additions text" | "all" | "additions removals text" | "removals" | "text";
+    "aria-required": "true" | "false" | boolean;
+    "aria-roledescription": string;
+    "aria-rowcount": number;
+    "aria-rowindex": number;
+    "aria-rowindextext": string;
+    "aria-rowspan": number;
+    "aria-selected": "true" | "false" | boolean;
+    "aria-setsize": number;
+    "aria-sort": "none" | "ascending" | "descending" | "other";
+    "aria-valuemax": number;
+    "aria-valuemin": number;
+    "aria-valuenow": number;
+    "aria-valuetext": string;
+}
+
 export interface Tag<Attrs, Events, Props> {
     attrs: Attrs;
     events: Events;
@@ -10,7 +200,7 @@ export type TagEvents<Target> = {
     [K in keyof HTMLElementEventMap]: EventHandler<HTMLElementEventMap[K], Target> | undefined;
 };
 
-export interface TagAttrs {
+export interface TagAttrs extends AriaAttributes {
     id: string;
     accesskey: string;
     autocapitalize: "off" | "none" | "on" | "sentences" | "words" | "characters";
@@ -31,7 +221,7 @@ export interface TagAttrs {
     lang: string;
     nonce: string;
     part: string;
-    role: string;
+    role: AriaRoles | string;
     slot: string;
     spellcheck: "true" | "false" | "" | boolean;
     tabindex: number;
@@ -65,12 +255,12 @@ interface BaseAttrs extends TagAttrs {
 interface LinkAttrs extends TagAttrs {
     href: string;
     crossorigin: "anonymous" | "use-credentials" | "" | boolean;
-    rel: string;
+    rel: RelValue[] | string;
     media: string;
     integrity: string;
     hreflang: string;
     type: string;
-    referrerpolicy: string;
+    referrerpolicy: ReferrerPolicy | string;
     sizes: string;
     imagesrcset: string;
     imagesizes: string;
@@ -108,13 +298,13 @@ interface OlAttrs extends TagAttrs {
 
 interface AAttrs extends TagAttrs {
     href: string;
-    target: string;
+    target: "_self" | "_blank" | "_parent" | "_top" | "_unfencedTop";
     download: string;
     ping: string;
     hreflang: string;
     type: string;
-    referrerpolicy: string;
-    rel: string;
+    referrerpolicy: ReferrerPolicy | string;
+    rel: RelValue[] | string;
 }
 
 interface QAttrs extends TagAttrs {
@@ -149,7 +339,7 @@ interface ImgAttrs extends TagAttrs {
     ismap: string;
     width: number;
     height: number;
-    referrerpolicy: string;
+    referrerpolicy: ReferrerPolicy | string;
     decoding: string;
     loading: string;
     fetchpriority: "high" | "low" | "auto";
@@ -164,7 +354,7 @@ interface IframeAttrs extends TagAttrs {
     allowfullscreen: string;
     width: number;
     height: number;
-    referrerpolicy: string;
+    referrerpolicy: ReferrerPolicy | string;
     loading: string;
 }
 
@@ -216,8 +406,8 @@ interface AreaAttrs extends TagAttrs {
     target: string;
     download: string;
     ping: string;
-    rel: string;
-    referrerpolicy: string;
+    rel: RelValue[] | string;
+    referrerpolicy: ReferrerPolicy | string;
 }
 
 interface ColAttrs extends TagAttrs {
@@ -244,7 +434,7 @@ interface FormAttrs extends TagAttrs {
     name: string;
     novalidate: string;
     target: string;
-    rel: string;
+    rel: RelValue[] | string;
 }
 
 interface LabelAttrs extends TagAttrs {
