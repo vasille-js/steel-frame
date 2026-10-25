@@ -1,14 +1,15 @@
 import {
   beforeDestroy,
+  bypassWriteRestriction,
   component,
+  CssStyleInjector,
   dark,
-  Delay,
   Else,
   For,
   If,
+  QueuedRender,
   raw,
   styleSheet,
-  tablet,
   watch,
 } from "steel-frame";
 import { Row as ViewRow } from "./code-block/lib/Row.js";
@@ -25,116 +26,13 @@ interface GridProps {
 interface RowProps extends GridProps {
   row: number;
   color: string;
-  classes: [string, string];
+  classes: [string | CssStyleInjector, string | CssStyleInjector];
   ontransitionend(): void;
 }
 
 interface CellProps extends Omit<RowProps, "classes"> {
   col: number;
 }
-
-const Cell = component<CellProps>(
-  ({ row, col, $active, maskPosX, maskPosY, ontransitionend, color }) => {
-    const inactiveClass =
-      col % 2 === 0 ? styles.cellInactiveEven : styles.cellInactiveOdd;
-    let $class = $active ? "active" : inactiveClass;
-
-    watch(() => {
-      $class = $active ? "active" : inactiveClass;
-    });
-
-    <div
-      class={[styles.cell, $class]}
-      style={{
-        top: 0,
-        left: `${(col / 4) * 100}%`,
-        "background-color": color,
-        "mask-position": [-(maskPosX + 64 * col), -(maskPosY + 64 * row)],
-        "mask-image": `url("${devStepsSvg}")`,
-        "transition-delay": `${0.2 + row * 0.5}s`,
-      }}
-      ontransitionend={() => {
-        if (col === 3 && row === 3) {
-          ontransitionend();
-        }
-      }}
-    ></div>;
-  },
-);
-
-const Row = component<RowProps>(
-  ({ row, $active, maskPosX, maskPosY, ontransitionend, color, classes }) => {
-    <div
-      style={{ top: `${row * 25}%`, "transition-delay": `${row * 0.5}s` }}
-      class={[styles.line, classes[row % 2]]}
-    >
-      <For
-        of={[0, 1, 2, 3]}
-        slot={(col) => {
-          <Cell
-            color={color}
-            row={row}
-            col={col}
-            $active={$active}
-            maskPosX={maskPosX}
-            maskPosY={maskPosY}
-            ontransitionend={ontransitionend}
-          />;
-        }}
-      />
-    </div>;
-  },
-);
-
-const Grid = component<GridProps>(({ $active, maskPosX, maskPosY }) => {
-  let $localActive = $active;
-  let $display = $active ? "block" : "none";
-
-  watch(() => {
-    if ($active) {
-      $display = "block";
-      requestAnimationFrame(() => {
-        $localActive = true;
-      });
-    } else {
-      $localActive = false;
-    }
-  });
-
-  function onTransitionEnd() {
-    if (!$active) {
-      $display = "none";
-    }
-  }
-
-  <div class={styles.grid} style={{ display: $display }}>
-    <For
-      of={[0, 1, 2, 3]}
-      slot={(row) => {
-        <Delay time={5}>
-          <Row
-            row={row}
-            color={"#191919"}
-            $active={$localActive}
-            maskPosX={maskPosX}
-            maskPosY={maskPosY}
-            ontransitionend={onTransitionEnd}
-            classes={[styles.rowLightOdd, styles.rowLightEven]}
-          />
-          <Row
-            row={row}
-            color={"#ffffff"}
-            $active={$localActive}
-            maskPosX={maskPosX}
-            maskPosY={maskPosY}
-            ontransitionend={onTransitionEnd}
-            classes={[styles.rowDarkOdd, styles.rowDarkEven]}
-          />
-        </Delay>;
-      }}
-    />
-  </div>;
-});
 
 interface Item {
   id: string;
@@ -163,18 +61,276 @@ interface ItemContentProps {
   resizeObserver: ResizeObserver;
 }
 
+export const Accordion = component<Props>(({ items, id }) => {
+  let $current = localStorage.getItem(id) ?? items[0].id;
+
+  watch(() => {
+    localStorage.setItem(id, $current);
+  });
+
+  <ViewRow class={styles.bg}>
+    <div class={[styles.image]}>
+      <div class={[styles.gridsContainer]}>
+        <For
+          of={items}
+          slot={(item) => {
+            <Grid
+              $active={$current === item.id}
+              maskPosX={item.maskPosX}
+              maskPosY={item.maskPosY}
+            />;
+          }}
+        />
+      </div>
+    </div>
+    <div class={styles.items}>
+      <For
+        of={items}
+        slot={(item) => {
+          const $isCurrent = $current === item.id;
+          const isLast = items.at(-1) === item;
+          let $bodyHeight = 0;
+          const resizeObserver = newResizeObserver({ $height: $bodyHeight });
+          let wr_descriptionDisplay = "flex";
+          let wr_descriptionTransform = "translateX(0)";
+          let wr_buttonTransform = "translateY(0)";
+          let $inited = false;
+          const isCurrent = raw($isCurrent);
+
+          watch(() => {
+            if ($isCurrent) {
+              bypassWriteRestriction(wr_descriptionDisplay, "flex");
+              requestAnimationFrame(() => {
+                bypassWriteRestriction(
+                  wr_descriptionTransform,
+                  "translateX(0)",
+                );
+                bypassWriteRestriction(wr_buttonTransform, "translateY(0)");
+              });
+            } else {
+              bypassWriteRestriction(
+                wr_descriptionTransform,
+                "translateX(100%)",
+              );
+              bypassWriteRestriction(wr_buttonTransform, "translateY(-100%)");
+            }
+          });
+
+          <div class={styles.item}>
+            <div
+              class={[styles.itemTitle, $isCurrent && styles.active]}
+              onclick={() => ($current = item.id)}
+              onkeydown={(ev) => {
+                if (ev.key === "Enter" || ev.key === " ") {
+                  $current = item.id;
+                }
+              }}
+              style={{ cursor: $isCurrent ? "default" : "pointer" }}
+              role="button"
+              aria-label={item.title}
+              aria-pressed={$isCurrent}
+              tabindex={$isCurrent ? -1 : 0}
+            >
+              <div style={{ flex: "1" }}>// {item.title}</div>
+              <div
+                class={[
+                  styles.round,
+                  styles.roundBg,
+                  $isCurrent && styles.activeBg,
+                ]}
+                style={{
+                  transform: $isCurrent ? "rotate(45deg)" : "rotate(-45deg)",
+                }}
+              >
+                <div class={styles.roundRow}>
+                  <div
+                    class={[styles.round, styles.roundFg]}
+                    style={{
+                      "mask-image": `url("${itemSvg}")`,
+                      "background-color": "#191919",
+                    }}
+                  />
+                  <div
+                    class={[styles.round, styles.roundFg]}
+                    style={{
+                      "mask-image": `url("${itemSvg}")`,
+                      "background-color": "#FFFFFF",
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+            <If $condition={isCurrent}>
+              <ItemContent
+                item={item}
+                $current={$current}
+                $isCurrent={$isCurrent}
+                $bodyHeight={$bodyHeight}
+                $inited={$inited}
+                $descriptionDisplay={wr_descriptionDisplay}
+                $descriptionTransform={wr_descriptionTransform}
+                $buttonTransform={wr_buttonTransform}
+                resizeObserver={resizeObserver}
+              />
+            </If>
+            <Else>
+              <QueuedRender>
+                <ItemContent
+                  item={item}
+                  $current={$current}
+                  $isCurrent={$isCurrent}
+                  $bodyHeight={$bodyHeight}
+                  $inited={$inited}
+                  $descriptionDisplay={wr_descriptionDisplay}
+                  $descriptionTransform={wr_descriptionTransform}
+                  $buttonTransform={wr_buttonTransform}
+                  resizeObserver={resizeObserver}
+                />
+              </QueuedRender>
+            </Else>
+            <div
+              class={styles.hr}
+              style={{ width: $isCurrent || isLast ? 0 : "100%" }}
+            ></div>
+          </div>;
+
+          beforeDestroy(() => {
+            resizeObserver.disconnect();
+          });
+        }}
+      />
+    </div>
+  </ViewRow>;
+});
+
+function newResizeObserver({ $height }: { $height: number }) {
+  return new ResizeObserver((entries) => {
+    const height = entries[0].contentRect.height;
+
+    if (height) {
+      $height = height;
+    }
+  });
+}
+
+const Cell = component<CellProps>(
+  ({ row, col, maskPosX, maskPosY, ontransitionend, color, ...props }) => {
+    const $active = props.$active;
+    const inactiveClass =
+      col % 2 === 0 ? styles.cellInactiveEven : styles.cellInactiveOdd;
+    let wr_class = $active ? "active" : inactiveClass;
+
+    watch(() => {
+      bypassWriteRestriction(wr_class, $active ? "active" : inactiveClass);
+    });
+
+    <div
+      class={[styles.cell, wr_class]}
+      style={{
+        top: 0,
+        left: `${(col / 4) * 100}%`,
+        "background-color": color,
+        "mask-position": [-(maskPosX + 64 * col), -(maskPosY + 64 * row)],
+        "mask-image": `url("${devStepsSvg}")`,
+        "transition-delay": `${0.2 + row * 0.5}s`,
+      }}
+      ontransitionend={() => {
+        if (col === 3 && row === 3) {
+          ontransitionend();
+        }
+      }}
+    ></div>;
+  },
+);
+
+const Row = component<RowProps>(
+  ({ row, maskPosX, maskPosY, ontransitionend, color, classes, ...props }) => {
+    const $active = props.$active;
+
+    <div
+      style={{ top: `${row * 25}%`, "transition-delay": `${row * 0.5}s` }}
+      class={[styles.line, classes[row % 2]]}
+    >
+      <For
+        of={[0, 1, 2, 3]}
+        slot={(col) => {
+          <Cell
+            color={color}
+            row={row}
+            col={col}
+            $active={$active}
+            maskPosX={maskPosX}
+            maskPosY={maskPosY}
+            ontransitionend={ontransitionend}
+          />;
+        }}
+      />
+    </div>;
+  },
+);
+
+const Grid = component<GridProps>(({ maskPosX, maskPosY, ...props }) => {
+  const $active = props.$active;
+  let wr_localActive = $active;
+  let wr_display = $active ? "block" : "none";
+
+  watch(() => {
+    if ($active) {
+      bypassWriteRestriction(wr_display, "block");
+      requestAnimationFrame(() => {
+        bypassWriteRestriction(wr_localActive, true);
+      });
+    } else {
+      bypassWriteRestriction(wr_localActive, false);
+    }
+  });
+
+  function onTransitionEnd() {
+    if (!$active) {
+      wr_display = "none";
+    }
+  }
+
+  <div class={styles.grid} style={{ display: wr_display }}>
+    <For
+      of={[0, 1, 2, 3]}
+      slot={(row) => {
+        <QueuedRender>
+          <Row
+            row={row}
+            color={"#191919"}
+            $active={wr_localActive}
+            maskPosX={maskPosX}
+            maskPosY={maskPosY}
+            ontransitionend={onTransitionEnd}
+            classes={[styles.rowLightOdd, styles.rowLightEven]}
+          />
+          <Row
+            row={row}
+            color={"#ffffff"}
+            $active={wr_localActive}
+            maskPosX={maskPosX}
+            maskPosY={maskPosY}
+            ontransitionend={onTransitionEnd}
+            classes={[styles.rowDarkOdd, styles.rowDarkEven]}
+          />
+        </QueuedRender>;
+      }}
+    />
+  </div>;
+});
+
 const ItemContent = component<ItemContentProps>(
-  ({
-    item,
-    $inited,
-    $bodyHeight,
-    $buttonTransform,
-    $descriptionTransform,
-    $descriptionDisplay,
-    $current,
-    $isCurrent,
-    resizeObserver,
-  }) => {
+  ({ item, resizeObserver, ...props }) => {
+    let {
+      $inited,
+      $bodyHeight,
+      $buttonTransform,
+      $descriptionTransform,
+      $descriptionDisplay,
+      $current,
+      $isCurrent,
+    } = props;
     <div
       style={{
         height: $current === item.id ? ($inited ? $bodyHeight : "auto") : 0,
@@ -240,147 +396,6 @@ const ItemContent = component<ItemContentProps>(
     </div>;
   },
 );
-
-export const Accordion = component<Props>(({ items, id }) => {
-  let $current = localStorage.getItem(id) ?? items[0].id;
-
-  watch(() => {
-    localStorage.setItem(id, $current);
-  });
-
-  <ViewRow class={styles.bg}>
-    <div class={styles.image}>
-      <div class={styles.gridsContainer}>
-        <For
-          of={items}
-          slot={(item) => {
-            <Grid
-              $active={$current === item.id}
-              maskPosX={item.maskPosX}
-              maskPosY={item.maskPosY}
-            />;
-          }}
-        />
-      </div>
-    </div>
-    <div class={styles.items}>
-      <For
-        of={items}
-        slot={(item) => {
-          const $isCurrent = $current === item.id;
-          const isLast = items.at(-1) === item;
-          let $bodyHeight = 0;
-          const resizeObserver = new ResizeObserver((entries) => {
-            const height = entries[0].contentRect.height;
-            if (height > 0) {
-              $bodyHeight = height;
-            }
-          });
-          let $descriptionDisplay = "flex";
-          let $descriptionTransform = "translateX(0)";
-          let $buttonTransform = "translateY(0)";
-          let $inited = false;
-          const isCurrent = raw($isCurrent);
-
-          watch(() => {
-            if ($isCurrent) {
-              $descriptionDisplay = "flex";
-              requestAnimationFrame(() => {
-                $descriptionTransform = "translateX(0)";
-                $buttonTransform = "translateY(0)";
-              });
-            } else {
-              $descriptionTransform = "translateX(100%)";
-              $buttonTransform = "translateY(-100%)";
-            }
-          });
-
-          <div class={styles.item}>
-            <div
-              class={[styles.itemTitle, $isCurrent && styles.active]}
-              onclick={() => ($current = item.id)}
-              onkeydown={(ev) => {
-                if (ev.key === "Enter" || ev.key === " ") {
-                  $current = item.id;
-                }
-              }}
-              style={{ cursor: $isCurrent ? "default" : "pointer" }}
-              role="button"
-              aria-label={item.title}
-              aria-pressed={$isCurrent}
-              tabindex={$isCurrent ? "-1" : "0"}
-            >
-              <div style={{ flex: "1" }}>// {item.title}</div>
-              <div
-                class={[
-                  styles.round,
-                  styles.roundBg,
-                  $isCurrent && styles.activeBg,
-                ]}
-                style={{
-                  transform: $isCurrent ? "rotate(45deg)" : "rotate(-45deg)",
-                }}
-              >
-                <div class={styles.roundRow}>
-                  <div
-                    class={[styles.round, styles.roundFg]}
-                    style={{
-                      "mask-image": `url("${itemSvg}")`,
-                      "background-color": "#191919",
-                    }}
-                  />
-                  <div
-                    class={[styles.round, styles.roundFg]}
-                    style={{
-                      "mask-image": `url("${itemSvg}")`,
-                      "background-color": "#FFFFFF",
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-            <If $condition={isCurrent}>
-              <ItemContent
-                item={item}
-                $current={$current}
-                $isCurrent={$isCurrent}
-                $bodyHeight={$bodyHeight}
-                $inited={$inited}
-                $descriptionDisplay={$descriptionDisplay}
-                $descriptionTransform={$descriptionTransform}
-                $buttonTransform={$buttonTransform}
-                resizeObserver={resizeObserver}
-              />
-            </If>
-            <Else>
-              <Delay time={0}>
-                <ItemContent
-                  item={item}
-                  $current={$current}
-                  $isCurrent={$isCurrent}
-                  $bodyHeight={$bodyHeight}
-                  $inited={$inited}
-                  $descriptionDisplay={$descriptionDisplay}
-                  $descriptionTransform={$descriptionTransform}
-                  $buttonTransform={$buttonTransform}
-                  resizeObserver={resizeObserver}
-                />
-              </Delay>
-            </Else>
-            <div
-              class={styles.hr}
-              style={{ width: $isCurrent || isLast ? 0 : "100%" }}
-            ></div>
-          </div>;
-
-          beforeDestroy(() => {
-            resizeObserver.disconnect();
-          });
-        }}
-      />
-    </div>
-  </ViewRow>;
-});
 
 const styles = styleSheet({
   bg: {

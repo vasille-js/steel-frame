@@ -22,100 +22,50 @@ import { Keyword } from "../Keyword.js";
  */
 
 export const ThirdPartyScriptsExample = component(() => {
-  <CodeLine
-    number={1}
-    content={(props) => {
-      <Comment {...props}>
-        {"// Third party scripts fail to load when of CDN is down"}
-      </Comment>;
-    }}
-  />;
-  <CodeLine
-    number={2}
-    content={(props) => {
-      <>
-        {"const MyComponent = "}
-        <Highlight {...props}>component</Highlight>
-        {"(() => {"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={3}
-    content={(props) => {
-      <>
-        {"  function "}
-        <Keyword {...props}>onClick</Keyword>
-        {"() {"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={4}
-    content={(props) => {
-      <Comment {...props}>
-        {"    // the errors here are automatically catch and reported"}
-      </Comment>;
-    }}
-  />;
-  <CodeLine
-    number={5}
-    content={() => {
-      <>{'    window.$("button").text("Hello World!");'}</>;
-    }}
-  />;
-  <CodeLine
-    number={6}
-    content={() => {
-      <>{"  }"}</>;
-    }}
-  />;
-  <CodeLine number={7} content={() => {}} />;
-  <CodeLine
-    number={8}
-    content={(props) => {
-      <>
-        {"  <button onclick={"}
-        <Keyword {...props}>onClick</Keyword>
-        {"}>Click me</button>"}
-      </>;
-    }}
-  />;
-  <CodeLine number={9} content={() => {}} />;
-  <CodeLine
-    number={10}
-    content={(props) => {
-      <>
-        <Highlight {...props}>{"  afterMount"}</Highlight>
-        {"(() => {"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={11}
-    content={(props) => {
-      <Comment {...props}>
-        {"    // the errors here are automatically catch and reported"}
-      </Comment>;
-    }}
-  />;
-  <CodeLine
-    number={12}
-    content={() => {
-      <>{'    window.$("button").addClass("active");'}</>;
-    }}
-  />;
-  <CodeLine
-    number={13}
-    content={() => {
-      <>{"  });"}</>;
-    }}
-  />;
-  <CodeLine
-    number={14}
-    content={() => {
-      <>{"});"}</>;
-    }}
-  />;
-  <CodeLine number={15} content={() => {}} />;
+  <CodeLine number={1}>
+    <Comment>
+      {"// Third party scripts fail to load when of CDN is down"}
+    </Comment>
+  </CodeLine>;
+  <CodeLine number={2}>
+    {"const MyComponent = "}
+    <Highlight>component</Highlight>
+    {"(() => {"}
+  </CodeLine>;
+  <CodeLine number={3}>
+    {"  function "}
+    <Keyword>onClick</Keyword>
+    {"() {"}
+  </CodeLine>;
+  <CodeLine number={4}>
+    <Comment>
+      {"    // the errors here are automatically catch and reported"}
+    </Comment>
+  </CodeLine>;
+  <CodeLine number={5}>
+    <>{'    window.$("button").text("Hello World!");'}</>
+  </CodeLine>;
+  <CodeLine number={6}>{"  }"}</CodeLine>;
+  <CodeLine number={7} />;
+  <CodeLine number={8}>
+    {"  <button onclick={"}
+    <Keyword>onClick</Keyword>
+    {"}>Click me</button>"}
+  </CodeLine>;
+  <CodeLine number={9} />;
+  <CodeLine number={10}>
+    <Highlight>{"  afterMount"}</Highlight>
+    {"(() => {"}
+  </CodeLine>;
+  <CodeLine number={11}>
+    <Comment>
+      {"    // the errors here are automatically catch and reported"}
+    </Comment>
+  </CodeLine>;
+  <CodeLine number={12}>
+    {'    window.$("button").addClass("active");'}
+  </CodeLine>;
+  <CodeLine number={13}>{"  });"}</CodeLine>;
+  <CodeLine number={14}>{"});"}</CodeLine>;
+  <CodeLine number={15} />;
 });

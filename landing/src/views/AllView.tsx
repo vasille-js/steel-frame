@@ -1,4 +1,4 @@
-import { afterMount, Delay, mobile, styleSheet, view } from "steel-frame";
+import { mobile, QueuedRender, styleSheet, view } from "steel-frame";
 import { VisibilityTracker } from "../components/code-block/VisibilityTracker.js";
 import { DescriptionView } from "./DescriptionView.js";
 import { GetStartedView } from "./GetStartedView.js";
@@ -30,42 +30,36 @@ export const AllView = view(() => {
     <VisibilityTracker>
       <DescriptionView />
     </VisibilityTracker>
-    <Delay time={50}>
+    <QueuedRender>
       <VisibilityTracker>
         <GetStartedView />
       </VisibilityTracker>
-      <Delay time={50}>
-        <VisibilityTracker>
-          <GameChangerView />
-        </VisibilityTracker>
-        <Delay time={50}>
-          <VisibilityTracker>
-            <ErrorsStopHereView />
-          </VisibilityTracker>
-          <Delay time={50}>
-            <VisibilityTracker>
-              <GreatForView />
-            </VisibilityTracker>
-            <Delay time={50}>
-              <VisibilityTracker>
-                <ExperienceView />
-              </VisibilityTracker>
-              <Delay
-                time={50}
-                slot={() => {
-                  <VisibilityTracker>
-                    <ReadyView />
-                  </VisibilityTracker>;
-                  afterMount(() => {
-                    trackScroll();
-                  });
-                }}
-              />
-            </Delay>
-          </Delay>
-        </Delay>
-      </Delay>
-    </Delay>
+    </QueuedRender>
+    <QueuedRender>
+      <VisibilityTracker>
+        <GameChangerView />
+      </VisibilityTracker>
+    </QueuedRender>
+    <QueuedRender>
+      <VisibilityTracker>
+        <ErrorsStopHereView />
+      </VisibilityTracker>
+    </QueuedRender>
+    <QueuedRender>
+      <VisibilityTracker>
+        <GreatForView />
+      </VisibilityTracker>
+    </QueuedRender>
+    <QueuedRender>
+      <VisibilityTracker>
+        <ExperienceView />
+      </VisibilityTracker>
+    </QueuedRender>
+    <QueuedRender callback={trackScroll}>
+      <VisibilityTracker>
+        <ReadyView />
+      </VisibilityTracker>
+    </QueuedRender>
   </div>;
 });
 

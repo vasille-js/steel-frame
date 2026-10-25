@@ -19,88 +19,46 @@ import { Keyword } from "../Keyword.js";
  */
 
 export const NoTypescriptExample = component(() => {
-  <CodeLine
-    number={1}
-    content={(props) => {
-      <Comment {...props}>{"// Button props were changed"}</Comment>;
-    }}
-  />;
-  <CodeLine
-    number={2}
-    content={(props) => {
-      <Comment {...props}>{"// Backward compatibility is missing"}</Comment>;
-    }}
-  />;
-  <CodeLine
-    number={3}
-    content={(props) => {
-      <>
-        {"import "}
-        <Highlight {...props}>Button</Highlight>
-        {' from "./Button.js";'}
-      </>;
-    }}
-  />;
-  <CodeLine number={4} content={() => {}} />;
-  <CodeLine
-    number={5}
-    content={(props) => {
-      <>
-        {"const MyComponent = "}
-        <Keyword {...props}>component</Keyword>
-        {"(() => {"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={6}
-    content={(props) => {
-      <Comment {...props}>{"  // This usage will throw an error"}</Comment>;
-    }}
-  />;
-  <CodeLine
-    number={7}
-    content={(props) => {
-      <>
-        {"  <"}
-        <Highlight {...props}>Button</Highlight>
-        {' height={"24"}>Click me</'}
-        <Highlight {...props}>Button</Highlight>
-        {">"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={8}
-    content={(props) => {
-      <Comment {...props}>{"  // This usage will work fine"}</Comment>;
-    }}
-  />;
-  <CodeLine
-    number={9}
-    content={(props) => {
-      <Comment {...props}>
-        {"  // Even if the previous usage throws an error"}
-      </Comment>;
-    }}
-  />;
-  <CodeLine
-    number={10}
-    content={(props) => {
-      <>
-        {"  <"}
-        <Highlight {...props}>Button</Highlight>
-        {" height={24}>Click me</"}
-        <Highlight {...props}>Button</Highlight>
-        {">"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={11}
-    content={() => {
-      <>{"});"}</>;
-    }}
-  />;
-  <CodeLine number={12} content={() => {}} />;
+  <CodeLine number={1}>
+    <Comment>{"// Button props were changed"}</Comment>
+  </CodeLine>;
+  <CodeLine number={2}>
+    <Comment>{"// Backward compatibility is missing"}</Comment>
+  </CodeLine>;
+  <CodeLine number={3}>
+    {"import "}
+    <Highlight>Button</Highlight>
+    {' from "./Button.js";'}
+  </CodeLine>;
+  <CodeLine number={4} />;
+  <CodeLine number={5}>
+    {"const MyComponent = "}
+    <Keyword>component</Keyword>
+    {"(() => {"}
+  </CodeLine>;
+  <CodeLine number={6}>
+    <Comment>{"  // This usage will throw an error"}</Comment>
+  </CodeLine>;
+  <CodeLine number={7}>
+    {"  <"}
+    <Highlight>Button</Highlight>
+    {' height={"24"}>Click me</'}
+    <Highlight>Button</Highlight>
+    {">"}
+  </CodeLine>;
+  <CodeLine number={8}>
+    <Comment>{"  // This usage will work fine"}</Comment>
+  </CodeLine>;
+  <CodeLine number={9}>
+    <Comment>{"  // Even if the previous usage throws an error"}</Comment>
+  </CodeLine>;
+  <CodeLine number={10}>
+    {"  <"}
+    <Highlight>Button</Highlight>
+    {" height={24}>Click me</"}
+    <Highlight>Button</Highlight>
+    {">"}
+  </CodeLine>;
+  <CodeLine number={11}>{"});"}</CodeLine>;
+  <CodeLine number={12} />;
 });

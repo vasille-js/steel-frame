@@ -1,31 +1,22 @@
 import {
-  afterMount,
   awaited,
-  dark,
-  Delay,
   Else,
   ElseIf,
   If,
   mobile,
   page,
+  QueuedRender,
+  router,
   styleSheet,
-  Watch,
 } from "steel-frame";
 import { Panel } from "./../components/Panel.js";
 import { HeroView } from "../views/HeroView.js";
-import { DescriptionView } from "../views/DescriptionView.js";
-import { GetStartedView } from "../views/GetStartedView.js";
-import { GameChangerView } from "../views/GameChangerView.js";
-import { ErrorsStopHereView } from "../views/ErrorsStopHereView.js";
-import { GreatForView } from "../views/GreatForView.js";
 import { VisibilityTracker } from "../components/code-block/VisibilityTracker.js";
-import { ExperienceView } from "../views/ExperienceView.js";
-import { ReadyView } from "../views/ReadyView.js";
 import { Button } from "../components/Button.js";
 
 export default page(async () => {
-  const [$err, $next, retry] = awaited(() => import("./../views/AllView.js"));
-  const $AllView = $next?.AllView;
+  const [r_err, r_next] = awaited(() => import("./../views/AllView.js"));
+  const r_AllView = r_next?.AllView;
 
   <div class={styles.page}>
     <VisibilityTracker>
@@ -33,14 +24,19 @@ export default page(async () => {
     </VisibilityTracker>
     <main role="main" class={styles.bigScreen}>
       <If
-        $condition={$AllView}
+        $condition={r_AllView}
         slot={(AllView) => {
           <AllView />;
         }}
       />
-      <ElseIf $condition={$err}>
+      <ElseIf $condition={r_err}>
         <div style={{ "align-self": "center", display: "flex" }}>
-          <Button text={"Retry"} action={retry} />
+          <Button
+            text={"Retry"}
+            action={() => {
+              router()?.reload();
+            }}
+          />
         </div>
       </ElseIf>
       <Else>
@@ -58,9 +54,9 @@ export default page(async () => {
         </div>
       </Else>
     </main>
-    <Delay time={1}>
+    <QueuedRender priority="high">
       <Panel />
-    </Delay>
+    </QueuedRender>
   </div>;
 });
 

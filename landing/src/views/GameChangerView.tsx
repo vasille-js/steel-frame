@@ -1,4 +1,11 @@
-import { dark, For, mobile, styleSheet, tablet, view } from "steel-frame";
+import {
+  CssStyleInjector,
+  dark,
+  For,
+  styleSheet,
+  tablet,
+  view,
+} from "steel-frame";
 import { FeatureRow } from "../components/feature/FeatureRow.js";
 import { FeatureKey } from "../components/feature/FeatureKey.js";
 import { FeatureTitle } from "../components/feature/FeatureTitle.js";
@@ -17,52 +24,8 @@ interface CardProps {
   features: string[];
   ease: string;
   originY: number;
-  adoptionClass?: string;
+  adoptionClass?: string | CssStyleInjector;
 }
-
-const CardView = view<CardProps>(
-  ({ title, image, features, originY, ease, adoptionClass }: CardProps) => {
-    <div class={[styles.card, adoptionClass ?? "nope"]}>
-      <div class={styles.doubleContainer}>
-        <div class={[styles.title, styles.light]}>{title}</div>
-        <div class={[styles.title, styles.dark]}>{title}</div>
-      </div>
-      <div
-        class={styles.image}
-        style={{
-          transition: `background-color 3.5s ${ease}, transform 2s ${ease}, border-color 1s ${ease}`,
-          "transform-origin": `50% ${originY}%`,
-        }}
-      >
-        <img src={image} alt={title} width={140} height={140} />
-      </div>
-      <div class={styles.list}>
-        <For
-          of={features}
-          slot={(feature) => {
-            <div class={styles.listItem}>
-              <div
-                class={[styles.listItemIcon]}
-                style={{ "mask-image": `url("${itemSvg}")` }}
-              />
-              <div class={styles.listItemText}>{feature}</div>
-            </div>;
-          }}
-        />
-      </div>
-      <a href={"#"}>
-        <div class={styles.overlay}>
-          <div class={[styles.title, styles.overlayTitle]}>{title}</div>
-          <div class={[styles.overlayIcon, styles.overlayIconBg]} />
-          <div
-            class={styles.overlayIcon}
-            style={{ "mask-image": `url("${itemSvg}")` }}
-          />
-        </div>
-      </a>
-    </div>;
-  },
-);
 
 export const GameChangerView = view(() => {
   <FeatureRow reverse>
@@ -115,6 +78,50 @@ export const GameChangerView = view(() => {
   <VLine reverse height={40} />;
   <HLine />;
 });
+
+const CardView = view<CardProps>(
+  ({ title, image, features, originY, ease, adoptionClass }: CardProps) => {
+    <div class={[styles.card, adoptionClass ?? "nope"]}>
+      <div class={styles.doubleContainer}>
+        <div class={[styles.title, styles.light]}>{title}</div>
+        <div class={[styles.title, styles.dark]}>{title}</div>
+      </div>
+      <div
+        class={styles.image}
+        style={{
+          transition: `background-color 3.5s ${ease}, transform 2s ${ease}, border-color 1s ${ease}`,
+          "transform-origin": `50% ${originY}%`,
+        }}
+      >
+        <img src={image} alt={title} width={140} height={140} />
+      </div>
+      <div class={styles.list}>
+        <For
+          of={features}
+          slot={(feature) => {
+            <div class={styles.listItem}>
+              <div
+                class={[styles.listItemIcon]}
+                style={{ "mask-image": `url("${itemSvg}")` }}
+              />
+              <div class={styles.listItemText}>{feature}</div>
+            </div>;
+          }}
+        />
+      </div>
+      <a href={"#"}>
+        <div class={styles.overlay}>
+          <div class={[styles.title, styles.overlayTitle]}>{title}</div>
+          <div class={[styles.overlayIcon, styles.overlayIconBg]} />
+          <div
+            class={styles.overlayIcon}
+            style={{ "mask-image": `url("${itemSvg}")` }}
+          />
+        </div>
+      </a>
+    </div>;
+  },
+);
 
 const styles = styleSheet({
   card: {

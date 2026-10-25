@@ -205,7 +205,7 @@ it("rest element in internal slot", function () {
 });
 
 it("destruction of internal slot props", function () {
-    throwTest(__dirname, "destruction-of-slot-props", "Move destruction inside the function body", true);
+    throwTest(__dirname, "destruction-of-slot-props", "Extract reactive fields inside the function body", true);
 });
 
 it("safeInit with no args", function () {

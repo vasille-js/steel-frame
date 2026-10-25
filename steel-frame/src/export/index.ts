@@ -480,4 +480,6 @@ export type {
     NavigationMode,
     ClassItem,
     WebRouterInitialization,
+    CssStyleInjector,
+    StyleSheetProps,
 } from "vasille-web/types";

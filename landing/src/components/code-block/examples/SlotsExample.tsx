@@ -18,101 +18,46 @@ import { Keyword } from "../Keyword.js";
  *
  * */
 export const SlotsExample = component(() => {
-  <CodeLine
-    number={1}
-    content={() => {
-      <>{"interface Props {"}</>;
-    }}
-  />;
-  <CodeLine
-    number={2}
-    content={({ isDark }) => {
-      <>
-        <span>{"  "}</span>
-        <Highlight isDark={isDark}>slot</Highlight>
-        {"(): void;"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={3}
-    content={() => {
-      <>{"}"}</>;
-    }}
-  />;
-  <CodeLine
-    number={4}
-    content={({ isDark }) => {
-      <>
-        {"const Hello = "}
-        <Keyword isDark={isDark}>component</Keyword>
-        {"<Props>(({"}
-        <Highlight isDark={isDark}>slot</Highlight>
-        {"}) => {"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={5}
-    content={({ isDark }) => {
-      <>
-        {"  <"}
-        <Keyword isDark={isDark}>h1</Keyword>
-        {">"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={6}
-    content={({ isDark }) => {
-      <>
-        {"    Hello <Slot model={"}
-        <Highlight isDark={isDark}>slot</Highlight>
-        {"}/>!"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={7}
-    content={({ isDark }) => {
-      <>
-        {"  <"}
-        <Keyword isDark={isDark}>h1</Keyword>
-        {">;"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={8}
-    content={() => {
-      <>{"});"}</>;
-    }}
-  />;
-  <CodeLine
-    number={9}
-    content={({ isDark }) => {
-      <>
-        {"const HelloWorld = "}
-        <Keyword isDark={isDark}>component</Keyword>
-        {"(() => {"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={10}
-    content={({ isDark }) => {
-      <>
-        {"  <Hello>"}
-        <Highlight isDark={isDark}>World</Highlight>
-        {"</Hello>;"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={11}
-    content={() => {
-      <>{"});"}</>;
-    }}
-  />;
-  <CodeLine number={12} content={() => {}} />;
+  <CodeLine number={1}>{"interface Props {"}</CodeLine>;
+  <CodeLine number={2}>
+    <span>{"  "}</span>
+    <Highlight>slot</Highlight>
+    {"(): void;"}
+  </CodeLine>;
+  <CodeLine number={3}>{"}"}</CodeLine>;
+  <CodeLine number={4}>
+    {"const Hello = "}
+    <Keyword>component</Keyword>
+    {"<Props>(({"}
+    <Highlight>slot</Highlight>
+    {"}) => {"}
+  </CodeLine>;
+  <CodeLine number={5}>
+    {"  <"}
+    <Keyword>h1</Keyword>
+    {">"}
+  </CodeLine>;
+  <CodeLine number={6}>
+    {"    Hello <Slot model={"}
+    <Highlight>slot</Highlight>
+    {"}/>!"}
+  </CodeLine>;
+  <CodeLine number={7}>
+    {"  <"}
+    <Keyword>h1</Keyword>
+    {">;"}
+  </CodeLine>;
+  <CodeLine number={8}>{"});"}</CodeLine>;
+  <CodeLine number={9}>
+    {"const HelloWorld = "}
+    <Keyword>component</Keyword>
+    {"(() => {"}
+  </CodeLine>;
+  <CodeLine number={10}>
+    {"  <Hello>"}
+    <Highlight>World</Highlight>
+    {"</Hello>;"}
+  </CodeLine>;
+  <CodeLine number={11}>{"});"}</CodeLine>;
+  <CodeLine number={12} />;
 });

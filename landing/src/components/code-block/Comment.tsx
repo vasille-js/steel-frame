@@ -1,12 +1,13 @@
-import { component, Slot } from "steel-frame";
+import { component, receive, Slot } from "steel-frame";
 
 interface Props {
-  isDark: boolean;
   slot?(): void;
 }
 
-export const Comment = component<Props>(({ isDark, slot }) => {
+export const Comment = component<Props>((props) => {
+  const isDark = receive("dark");
+
   <span style={{ color: isDark ? "#a5a5a5" : "#585858" }}>
-    <Slot model={slot} />
+    <Slot model={props.slot} />
   </span>;
 });

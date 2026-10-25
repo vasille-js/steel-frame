@@ -1,4 +1,4 @@
-import { dark, For, styleSheet, view } from "steel-frame";
+import { CssStyleInjector, dark, For, styleSheet, view } from "steel-frame";
 import { FeatureRow } from "../components/feature/FeatureRow.js";
 import { FeatureKey } from "../components/feature/FeatureKey.js";
 import { FeatureTitle } from "../components/feature/FeatureTitle.js";
@@ -16,45 +16,11 @@ interface HalfProps {
   why: string;
   images: [string, string];
   list: string[];
-  color: string;
-  bg: string;
-  border: string;
-  imageClass: string;
+  color: string | CssStyleInjector;
+  bg: string | CssStyleInjector;
+  border: string | CssStyleInjector;
+  imageClass: string | CssStyleInjector;
 }
-
-const HalfView = view<HalfProps>(
-  ({ why, list, color, imageClass, images, border, bg, number }: HalfProps) => {
-    <div class={styles.half}>
-      <div class={[styles.number, color]}>{number}</div>
-      <div class={styles.hr} />
-      <div class={styles.why}>{why}</div>
-      <div class={[styles.container, border]}>
-        <div class={[styles.innerContainer, border]}>
-          <div
-            class={[styles.image, imageClass]}
-            style={{
-              "background-image": `url("${images[0]}"), url("${images[1]}")`,
-            }}
-          />
-          <div class={styles.list}>
-            <For
-              of={list}
-              slot={(item) => {
-                <div class={styles.listItem}>
-                  <div
-                    class={[styles.itemIcon, bg]}
-                    style={{ "mask-image": `url("${itemSvg}")` }}
-                  />
-                  <div class={styles.itemText}>{item}</div>
-                </div>;
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    </div>;
-  },
-);
 
 export const GreatForView = view(() => {
   <FeatureRow reverse>
@@ -99,6 +65,40 @@ export const GreatForView = view(() => {
   <VLine reverse height={50} />;
   <HLine />;
 });
+
+const HalfView = view<HalfProps>(
+  ({ why, list, color, imageClass, images, border, bg, number }: HalfProps) => {
+    <div class={styles.half}>
+      <div class={[styles.number, color]}>{number}</div>
+      <div class={styles.hr} />
+      <div class={styles.why}>{why}</div>
+      <div class={[styles.container, border]}>
+        <div class={[styles.innerContainer, border]}>
+          <div
+            class={[styles.image, imageClass]}
+            style={{
+              "background-image": `url("${images[0]}"), url("${images[1]}")`,
+            }}
+          />
+          <div class={styles.list}>
+            <For
+              of={list}
+              slot={(item) => {
+                <div class={styles.listItem}>
+                  <div
+                    class={[styles.itemIcon, bg]}
+                    style={{ "mask-image": `url("${itemSvg}")` }}
+                  />
+                  <div class={styles.itemText}>{item}</div>
+                </div>;
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>;
+  },
+);
 
 const styles = styleSheet({
   half: {

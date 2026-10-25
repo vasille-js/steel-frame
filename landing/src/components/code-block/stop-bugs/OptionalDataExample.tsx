@@ -21,106 +21,52 @@ import { Highlight } from "../Highlight.js";
  */
 
 export const OptionalDataExample = component(() => {
-  <CodeLine
-    number={1}
-    content={(props) => {
-      <>
-        {"const MyComponent = "}
-        <Keyword {...props}>component</Keyword>
-        {"(() => {"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={2}
-    content={(props) => {
-      <Comment {...props}>
-        {'  // use "error" to show an error message'}
-      </Comment>;
-    }}
-  />;
-  <CodeLine
-    number={3}
-    content={(props) => {
-      <Comment {...props}>{'  // use "profile" to show the profile'}</Comment>;
-    }}
-  />;
-  <CodeLine
-    number={4}
-    content={(props) => {
-      <Comment {...props}>{'  // use "reload" to reload the profile'}</Comment>;
-    }}
-  />;
-  <CodeLine
-    number={5}
-    content={(props) => {
-      <Comment {...props}>
-        {"  // when the user requires reloading the profile"}
-      </Comment>;
-    }}
-  />;
-  <CodeLine
-    number={6}
-    content={(props) => {
-      <>
-        {"  const ["}
-        <Highlight {...props}>$error</Highlight>
-        {", "}
-        <Highlight {...props}>$profile</Highlight>
-        {", "}
-        <Highlight {...props}>reload</Highlight>
-        {"] = awaited(getProfile);"}
-      </>;
-    }}
-  />;
-  <CodeLine number={7} content={() => {}} />;
-  <CodeLine
-    number={8}
-    content={() => {
-      <>{"  <>"}</>;
-    }}
-  />;
-  <CodeLine
-    number={9}
-    content={(props) => {
-      <>
-        {"   \xA0"}
-        <Highlight {...props}>$error</Highlight>
-        {" ? <ErrorComponent error={"}
-        <Highlight {...props}>$error</Highlight>
-        {"}/> :"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={10}
-    content={(props) => {
-      <>
-        {"   \xA0"}
-        <Highlight {...props}>$profile</Highlight>
-        {" ? <ProfileComponent profile={"}
-        <Highlight {...props}>$profile</Highlight>
-        {"}/> :"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={11}
-    content={() => {
-      <>{"   <LoadingComponent />;"}</>;
-    }}
-  />;
-  <CodeLine
-    number={12}
-    content={() => {
-      <>{"  </>"}</>;
-    }}
-  />;
-  <CodeLine
-    number={13}
-    content={() => {
-      <>{"});"}</>;
-    }}
-  />;
-  <CodeLine number={14} content={() => {}} />;
+  <CodeLine number={1}>
+    {"const MyComponent = "}
+    <Keyword>component</Keyword>
+    {"(() => {"}
+  </CodeLine>;
+  <CodeLine number={2}>
+    <Comment>{'  // use "error" to show an error message'}</Comment>
+  </CodeLine>;
+  <CodeLine number={3}>
+    <Comment>{'  // use "profile" to show the profile'}</Comment>
+  </CodeLine>;
+  <CodeLine number={4}>
+    <Comment>{'  // use "reload" to reload the profile'}</Comment>
+  </CodeLine>;
+  <CodeLine number={5}>
+    <Comment>{"  // when the user requires reloading the profile"}</Comment>
+  </CodeLine>;
+  <CodeLine number={6}>
+    {"  const ["}
+    <Highlight>$error</Highlight>
+    {", "}
+    <Highlight>$profile</Highlight>
+    {", "}
+    <Highlight>reload</Highlight>
+    {"] = awaited(getProfile);"}
+  </CodeLine>;
+  <CodeLine number={7} />;
+  <CodeLine number={8}>{"  <>"}</CodeLine>;
+  <CodeLine number={9}>
+    {"   \xA0"}
+    <Highlight>$error</Highlight>
+    {" ? <ErrorComponent error={"}
+    <Highlight>$error</Highlight>
+    {"}/> :"}
+  </CodeLine>;
+  <CodeLine number={10}>
+    {"   \xA0"}
+    <Highlight>$profile</Highlight>
+    {" ? <ProfileComponent profile={"}
+    <Highlight>$profile</Highlight>
+    {"}/> :"}
+  </CodeLine>;
+  <CodeLine number={11}>
+    <>{"   <LoadingComponent />;"}</>
+  </CodeLine>;
+  <CodeLine number={12}>{"  </>"}</CodeLine>;
+  <CodeLine number={13}>{"});"}</CodeLine>;
+  <CodeLine number={14} />;
 });

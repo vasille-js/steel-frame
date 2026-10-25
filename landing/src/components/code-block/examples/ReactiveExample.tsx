@@ -19,101 +19,48 @@ import { Keyword } from "../Keyword.js";
  * })
  * */
 export const ReactiveExample = component(() => {
-  <CodeLine
-    number={1}
-    content={({ isDark }) => {
-      <>
-        {"const HelloWorld = "}
-        <Keyword isDark={isDark}>component</Keyword>
-        {"(() => {"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={2}
-    content={({ isDark }) => {
-      <Comment isDark={isDark}>{"  // This is a reactive state"}</Comment>;
-    }}
-  />;
-  <CodeLine
-    number={3}
-    content={({ isDark }) => {
-      <>
-        {"  let "}
-        <Highlight isDark={isDark}>$name</Highlight>
-        {" = 'World';"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={4}
-    content={({ isDark }) => {
-      <Comment isDark={isDark}>
-        {"  // This is a derived reactive state"}
-      </Comment>;
-    }}
-  />;
-  <CodeLine
-    number={5}
-    content={({ isDark }) => {
-      <>
-        {"  const "}
-        <Highlight isDark={isDark}>$message</Highlight>
-        {" = `Hello ${"}
-        <Highlight isDark={isDark}>$name</Highlight>
-        {"}!`;"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={6}
-    content={({ isDark }) => {
-      <Comment isDark={isDark}>
-        {"  // This function will update the reactive state"}
-      </Comment>;
-    }}
-  />;
-  <CodeLine
-    number={7}
-    content={() => {
-      <>{"  function changeName() {"}</>;
-    }}
-  />;
-  <CodeLine
-    number={8}
-    content={({ isDark }) => {
-      <>
-        <span>{"    "}</span>
-        <Highlight isDark={isDark}>$name</Highlight>
-        {" = 'Steel Frame Kit';"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={9}
-    content={() => {
-      <>{"  }"}</>;
-    }}
-  />;
-  <CodeLine
-    number={10}
-    content={({ isDark }) => {
-      <>
-        {"  <"}
-        <Keyword isDark={isDark}>h1</Keyword>
-        {" onclick={changeName}>{"}
-        <Highlight isDark={isDark}>$message</Highlight>
-        {"}</"}
-        <Keyword isDark={isDark}>h1</Keyword>
-        {">"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={11}
-    content={() => {
-      <>{"});"}</>;
-    }}
-  />;
-  <CodeLine number={12} content={() => {}} />;
+  <CodeLine number={1}>
+    {"const HelloWorld = "}
+    <Keyword>component</Keyword>
+    {"(() => {"}
+  </CodeLine>;
+  <CodeLine number={2}>
+    <Comment>{"  // This is a reactive state"}</Comment>
+  </CodeLine>;
+  <CodeLine number={3}>
+    {"  let "}
+    <Highlight>$name</Highlight>
+    {" = 'World';"}
+  </CodeLine>;
+  <CodeLine number={4}>
+    <Comment>{"  // This is a derived reactive state"}</Comment>
+  </CodeLine>;
+  <CodeLine number={5}>
+    {"  const "}
+    <Highlight>$message</Highlight>
+    {" = `Hello ${"}
+    <Highlight>$name</Highlight>
+    {"}!`;"}
+  </CodeLine>;
+  <CodeLine number={6}>
+    <Comment>{"  // This function will update the reactive state"}</Comment>
+  </CodeLine>;
+  <CodeLine number={7}>{"  function changeName() {"}</CodeLine>;
+  <CodeLine number={8}>
+    <span>{"    "}</span>
+    <Highlight>$name</Highlight>
+    {" = 'Steel Frame Kit';"}
+  </CodeLine>;
+  <CodeLine number={9}>{"  }"}</CodeLine>;
+  <CodeLine number={10}>
+    {"  <"}
+    <Keyword>h1</Keyword>
+    {" onclick={changeName}>{"}
+    <Highlight>$message</Highlight>
+    {"}</"}
+    <Keyword>h1</Keyword>
+    {">"}
+  </CodeLine>;
+  <CodeLine number={11}>{"});"}</CodeLine>;
+  <CodeLine number={12} />;
 });

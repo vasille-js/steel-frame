@@ -17,68 +17,32 @@ import { Comment } from "../Comment.js";
  */
 
 export const BackendIsDownExample = component(() => {
-  <CodeLine
-    number={1}
-    content={(props) => {
-      <>
-        {"export default "}
-        <Keyword {...props}>page</Keyword>
-        {"(({"}
-        <Highlight {...props}>params</Highlight>
-        {"}) => {"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={2}
-    content={(props) => {
-      <Comment {...props}>{"  // This error is caught automatically"}</Comment>;
-    }}
-  />;
-  <CodeLine
-    number={3}
-    content={(props) => {
-      <Comment {...props}>
-        {"  // A custom fallback screen will be shown"}
-      </Comment>;
-    }}
-  />;
-  <CodeLine
-    number={4}
-    content={(props) => {
-      <Comment {...props}>{"  // The request can be easily retried"}</Comment>;
-    }}
-  />;
-  <CodeLine
-    number={5}
-    content={(props) => {
-      <Comment {...props}>
-        {"  // Single solution for all critical data"}
-      </Comment>;
-    }}
-  />;
-  <CodeLine
-    number={6}
-    content={(props) => {
-      <>
-        {"  const profileData = await getProfile("}
-        <Highlight {...props}>params</Highlight>
-        {".id);"}
-      </>;
-    }}
-  />;
-  <CodeLine number={7} content={() => {}} />;
-  <CodeLine
-    number={8}
-    content={() => {
-      <>{"  <UserProfile profile={profileData}/>;"}</>;
-    }}
-  />;
-  <CodeLine
-    number={9}
-    content={() => {
-      <>{"});"}</>;
-    }}
-  />;
-  <CodeLine number={10} content={() => {}} />;
+  <CodeLine number={1}>
+    {"export default "}
+    <Keyword>page</Keyword>
+    {"(({"}
+    <Highlight>params</Highlight>
+    {"}) => {"}
+  </CodeLine>;
+  <CodeLine number={2}>
+    <Comment>{"  // This error is caught automatically"}</Comment>
+  </CodeLine>;
+  <CodeLine number={3}>
+    <Comment>{"  // A custom fallback screen will be shown"}</Comment>
+  </CodeLine>;
+  <CodeLine number={4}>
+    <Comment>{"  // The request can be easily retried"}</Comment>
+  </CodeLine>;
+  <CodeLine number={5}>
+    <Comment>{"  // Single solution for all critical data"}</Comment>
+  </CodeLine>;
+  <CodeLine number={6}>
+    {"  const profileData = await getProfile("}
+    <Highlight>params</Highlight>
+    {".id);"}
+  </CodeLine>;
+  <CodeLine number={7} />;
+  <CodeLine number={8}>{"  <UserProfile profile={profileData}/>;"}</CodeLine>;
+  <CodeLine number={9}>{"});"}</CodeLine>;
+  <CodeLine number={10} />;
 });
