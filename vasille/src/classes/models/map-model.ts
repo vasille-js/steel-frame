@@ -22,7 +22,7 @@ type Arguments<K, T> = [Ops.Clear] | [Ops.Remove, K] | [Ops.Add, K, T];
 export class MapModel<K, T> extends Map<K, T> {
     public readonly listener: Listener<Arguments<K, T>>;
     public readonly rDeep: number;
-    public readonly $size: ReadOnlyReference<number, unknown>;
+    public readonly r_size: ReadOnlyReference<number, unknown>;
 
     /**
      * Constructs a map model
@@ -37,7 +37,7 @@ export class MapModel<K, T> extends Map<K, T> {
             super.set(key, value);
         });
         this.rDeep = ctx?.sDeep || 0;
-        this.$size = new ReadOnlyReference(this.size, ctx);
+        this.r_size = new ReadOnlyReference(this.size, ctx);
     }
 
     /**
@@ -71,7 +71,7 @@ export class MapModel<K, T> extends Map<K, T> {
 
     protected run<T>(fn: () => T): T {
         const result = fn();
-        this.$size.set(this.size);
+        this.r_size.set(this.size);
         return result;
     }
 }

@@ -199,7 +199,7 @@ export declare function ElseIf(props: { $condition: unknown; "vasille:slot"?: Va
 /** Renders content conditionally, use strict after `<If/>` or `<ElseIf/>` */
 export declare function Else(props: { slot?: () => void; "vasille:slot"?: VasilleSlot }): void;
 
-/** Renders content several times using a model (array, map or set) */
+/** Renders content several times using a model (array, map, or set) */
 export declare function For<T>(props: {
     of: ReadonlyArray<T>;
     slot?: (value: T) => void;
@@ -483,3 +483,5 @@ export type {
     CssStyleInjector,
     StyleSheetProps,
 } from "vasille-web/types";
+
+export type { ArrayModel, SetModel, MapModel } from "vasille";

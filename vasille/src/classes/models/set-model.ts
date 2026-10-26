@@ -1,5 +1,4 @@
 import { Reactive } from "../core/core.js";
-import { IValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
@@ -22,7 +21,7 @@ type Arguments<T> = [Ops.Clear] | [Ops.Remove, T] | [Ops.Add, T];
 export class SetModel<T> extends Set<T> {
     public readonly listener: Listener<Arguments<T>>;
     public readonly rDeep: number;
-    public readonly $size: ReadOnlyReference<number, unknown>;
+    public readonly r_size: ReadOnlyReference<number, unknown>;
 
     /**
      * Constructs a set model based on a set
@@ -35,7 +34,7 @@ export class SetModel<T> extends Set<T> {
             super.add(item);
         });
         this.rDeep = ctx?.sDeep || 0;
-        this.$size = new ReadOnlyReference(this.size, ctx);
+        this.r_size = new ReadOnlyReference(this.size, ctx);
     }
 
     /**
@@ -68,7 +67,7 @@ export class SetModel<T> extends Set<T> {
 
     protected run<T>(fn: () => T): T {
         const result = fn();
-        this.$size.set(this.size);
+        this.r_size.set(this.size);
         return result;
     }
 }

@@ -27,7 +27,7 @@ function fixedIndex(index: number | undefined, length: number, defaultValue: num
 export class ArrayModel<T> extends Array<T> {
     public readonly listener: Listener<Arguments<T>>;
     public readonly rDeep: number;
-    public readonly $length: ReadOnlyReference<number, unknown>;
+    public readonly r_length: ReadOnlyReference<number, unknown>;
 
     [k: number]: never;
 
@@ -43,7 +43,15 @@ export class ArrayModel<T> extends Array<T> {
         if (data instanceof Array) {
             super.push(...data);
         }
-        this.$length = new ReadOnlyReference(this.length, ctx);
+        this.r_length = new ReadOnlyReference(this.length, ctx);
+    }
+
+    public override get length(): number {
+        return super.length;
+    }
+
+    public override set length(value: number) {
+        this.r_length.set((super.length = value));
     }
 
     /* Array members */
@@ -140,7 +148,7 @@ export class ArrayModel<T> extends Array<T> {
 
     protected run<T>(fn: () => T): T {
         const result = fn();
-        this.$length.set(this.length);
+        this.r_length.set(super.length);
         return result;
     }
 }
