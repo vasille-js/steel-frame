@@ -1,9 +1,10 @@
 import { Reactive } from "../core/core.js";
-import { IValue } from "../core/ivalue.js";
+import { WritableIValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
-import { ReadOnlyReference } from "../value/reference.js";
+import { Reference } from "../value/reference.js";
+import { Collection } from "./collection.js";
 import { Listener, removeFragmentFromTree } from "./listener.js";
 
 const enum Ops {
@@ -19,33 +20,34 @@ type Arguments<K, T> = [Ops.Clear] | [Ops.Remove, K] | [Ops.Add, K, T];
  * @class MapModel
  * @extends Map
  */
-export class MapModel<K, T> extends Map<K, T> {
+export class MapModel<K, T> extends Collection<[K, T][] | Map<K, T> | undefined, Map<K, T>> {
     public readonly listener: Listener<Arguments<K, T>>;
-    public readonly rDeep: number;
-    public readonly r_size: ReadOnlyReference<number, unknown>;
+    public readonly r_size: Reference<number, unknown>;
 
     /**
      * Constructs a map model
-     * @param map {[*, *][]} input data
+     * @param data {[*, *][]} input data
      * @param ctx lifetime context
      */
-    public constructor(map?: [K, T][], ctx?: Reactive) {
-        super();
+    public constructor(
+        data?: [K, T][] | Map<K, T> | Reference<[K, T][] | Map<K, T> | undefined, unknown>,
+        ctx?: Reactive,
+    ) {
+        super(v => new Map(v), data, ctx);
         this.listener = new Listener();
+        this.r_size = new Reference(this.d.size, ctx);
+    }
 
-        map?.forEach(([key, value]) => {
-            super.set(key, value);
-        });
-        this.rDeep = ctx?.sDeep || 0;
-        this.r_size = new ReadOnlyReference(this.size, ctx);
+    public get map(): ReadonlyMap<K, T> {
+        return this.d;
     }
 
     /**
      * Calls `Map.clear` and notify about changes
      */
-    public override clear() {
+    public clear(): void {
         this.listener.emit(Ops.Clear);
-        this.run(() => super.clear());
+        this.run(() => this.d.clear());
     }
 
     /**
@@ -53,9 +55,9 @@ export class MapModel<K, T> extends Map<K, T> {
      * @param key {*} key
      * @return {boolean} true if removed something, otherwise false
      */
-    public override delete(key: K): boolean {
+    public delete(key: K): boolean {
         this.listener.emit(Ops.Remove, key);
-        return this.run(() => super.delete(key));
+        return this.run(() => this.d.delete(key));
     }
 
     /**
@@ -64,15 +66,35 @@ export class MapModel<K, T> extends Map<K, T> {
      * @param value {*} value
      * @return {MapModel} a pointer to this
      */
-    public override set(key: K, value: T): this {
+    public set(key: K, value: T): this {
         this.listener.emit(Ops.Add, key, value);
-        return this.run(() => super.set(key, value));
+        return this.run(() => {
+            this.d.set(key, value);
+            return this;
+        });
     }
 
     protected run<T>(fn: () => T): T {
         const result = fn();
-        this.r_size.set(this.size);
+        const r = this.r;
+
+        this.r_size.up(this.d.size);
+        if (r) {
+            r.up((this.last = r.V instanceof Array ? [...this.d] : new Map(this.d)));
+        }
         return result;
+    }
+
+    protected override reset(next: Map<K, T> | [K, T][] | undefined) {
+        this.listener.emit(Ops.Clear);
+        this.d.clear();
+        if (next) {
+            for (const [key, value] of next) {
+                this.listener.emit(Ops.Add, key, value);
+                this.d.set(key, value);
+            }
+        }
+        this.r_size.up(this.d.size);
     }
 }
 
@@ -88,13 +110,13 @@ export class MapViewNode<
         K,
         {
             frag: Fragment<Node, Element, TagOptions, Runner>;
-            value: IValue<T, unknown>;
+            value: WritableIValue<T, unknown>;
         }
     >();
     private acceptUpdate: ((...args: Arguments<K, T>) => void) | undefined;
     private readonly slot: (
         ctx: Fragment<Node, Element, TagOptions, Runner>,
-        value: IValue<T, unknown>,
+        value: WritableIValue<T, unknown>,
         key: K,
     ) => void;
 
@@ -102,8 +124,8 @@ export class MapViewNode<
         runner: Runner,
         deep: number,
         private readonly model: MapModel<K, T>,
-        slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: IValue<T, unknown>, key: K) => void,
-        private readonly ref: <T>(v: T) => IValue<T, unknown>,
+        slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: WritableIValue<T, unknown>, key: K) => void,
+        private readonly ref: <T>(v: T) => WritableIValue<T, unknown>,
         private readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(runner, deep);
@@ -147,7 +169,7 @@ export class MapViewNode<
             }
         }
 
-        this.model.forEach((value, key) => create(key, value));
+        this.model.map.forEach((value, key) => create(key, value));
         this.model.listener.on(acceptUpdate);
         this.acceptUpdate = acceptUpdate;
     }

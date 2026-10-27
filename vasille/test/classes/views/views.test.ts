@@ -74,7 +74,7 @@ it("array view", function () {
     array.splice(1, 0, 2);
     expect(element.innerHTML).toBe("321");
 
-    array.splice(array.indexOf(1), 1);
+    array.splice(array.array.indexOf(1), 1);
     expect(element.innerHTML).toBe("32");
 
     array.splice(0);

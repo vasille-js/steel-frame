@@ -42,11 +42,6 @@ export const AllView = view(() => {
     </QueuedRender>
     <QueuedRender>
       <VisibilityTracker>
-        <ErrorsStopHereView />
-      </VisibilityTracker>
-    </QueuedRender>
-    <QueuedRender>
-      <VisibilityTracker>
         <GreatForView />
       </VisibilityTracker>
     </QueuedRender>

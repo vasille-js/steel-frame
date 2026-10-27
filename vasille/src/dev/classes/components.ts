@@ -1,4 +1,5 @@
-import { AppNode, Fragment, IValue, PortalNode, SwitchedNode, WatchNode, ZombieNode } from "../../classes/index.js";
+import { ReadableIValue } from "../../classes/core/ivalue.js";
+import { AppNode, Fragment, PortalNode, SwitchedNode, WatchNode, ZombieNode } from "../../classes/index.js";
 import { SwitchedNodeCase } from "../../classes/node/node.js";
 import { IRunner } from "../../classes/node/runner.js";
 import { WatchOptions } from "../../classes/node/watch.js";
@@ -164,7 +165,7 @@ export class DevZombieNode<Node, Element, TagOptions extends object> extends Zom
     public constructor(
         usage: StaticPosition,
         runner: IRunner<Node, Element, TagOptions>,
-        time: IValue<number, unknown>,
+        time: ReadableIValue<number, unknown>,
         trigger: () => void,
     ) {
         super(runner, time, trigger);

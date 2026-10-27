@@ -1,4 +1,4 @@
-import { IValue } from "../core/ivalue.js";
+import { ReadableIValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "./node.js";
 import { IRunner } from "./runner.js";
@@ -9,10 +9,10 @@ export class ZombieNode<
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Fragment<Node, Element, TagOptions, Runner> {
-    public readonly time: IValue<number, unknown>;
+    public readonly time: ReadableIValue<number, unknown>;
     public readonly trigger: () => void;
 
-    public constructor(runner: Runner, time: IValue<number, unknown>, trigger: () => void) {
+    public constructor(runner: Runner, time: ReadableIValue<number, unknown>, trigger: () => void) {
         super(runner, 0);
 
         this.time = time;

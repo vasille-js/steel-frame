@@ -1,3 +1,4 @@
+import { WritableIValue } from "../../classes/core/ivalue.js";
 import {
     ArrayModelViewNode,
     Fragment,
@@ -159,7 +160,7 @@ export class DevMapViewNode<Node, Element, TagOptions extends object, K, T> exte
     public constructor(
         runner: IRunner<Node, Element, TagOptions>,
         model: DevMapModel<K, T>,
-        slot: (ctx: Fragment<Node, Element, TagOptions>, value: IValue<T, ExecutionPosition>, key: K) => void,
+        slot: (ctx: Fragment<Node, Element, TagOptions>, value: WritableIValue<T, ExecutionPosition>, key: K) => void,
         usage: StaticPosition,
         valueDeclaration: StaticPosition | undefined,
     ) {

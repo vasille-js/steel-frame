@@ -1,5 +1,5 @@
 import { Reactive } from "../core/core.js";
-import { IValue } from "../core/ivalue.js";
+import { IValue, WritableIValue } from "../core/ivalue.js";
 import { reportError } from "../functional/safety.js";
 
 /**
@@ -7,7 +7,7 @@ import { reportError } from "../functional/safety.js";
  * @class Reference
  * @extends IValue
  */
-export class Reference<T, Extra extends unknown> extends IValue<T, Extra> {
+export class Reference<T, Extra extends unknown> extends IValue<T, Extra> implements WritableIValue<T, Extra> {
     /**
      * The encapsulated value
      * @type {*}

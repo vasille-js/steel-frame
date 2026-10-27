@@ -1,3 +1,4 @@
+import { WritableIValue } from "../../classes/core/ivalue.js";
 import {
     DebounceReference,
     DeepFieldReference,
@@ -249,7 +250,7 @@ export class DevSingleFieldReference extends SingleFieldReference<ExecutionPosit
 
     public constructor(
         createRef: (v: unknown, ctx?: Reactive) => DevReference<unknown>,
-        object: IValue<object | undefined | null, ExecutionPosition>,
+        object: WritableIValue<object | undefined | null, ExecutionPosition>,
         field: string | symbol,
         ctx: Reactive,
     ) {
@@ -263,7 +264,7 @@ export class DevDeepFieldReference extends DeepFieldReference<ExecutionPosition>
 
     public constructor(
         createRef: (v: unknown, ctx?: Reactive) => DevReference<unknown>,
-        object: IValue<object | undefined | null, ExecutionPosition>,
+        object: WritableIValue<object | undefined | null, ExecutionPosition>,
         fields: (string | symbol)[],
         ctx: Reactive,
     ) {

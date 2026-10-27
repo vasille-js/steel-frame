@@ -2,7 +2,8 @@ import { Reactive } from "../core/core.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
-import { ReadOnlyReference } from "../value/reference.js";
+import { Reference } from "../value/reference.js";
+import { Collection } from "./collection.js";
 import { Listener, removeFragmentFromTree } from "./listener.js";
 
 const enum Ops {
@@ -18,41 +19,43 @@ type Arguments<T> = [Ops.Clear] | [Ops.Remove, T] | [Ops.Add, T];
  * @class SetModel
  * @extends Set
  */
-export class SetModel<T> extends Set<T> {
+export class SetModel<T> extends Collection<T[] | Set<T> | undefined, Set<T>> {
     public readonly listener: Listener<Arguments<T>>;
-    public readonly rDeep: number;
-    public readonly r_size: ReadOnlyReference<number, unknown>;
+    public readonly r_size: Reference<number, unknown>;
 
     /**
      * Constructs a set model based on a set
      */
-    public constructor(set?: T[], ctx?: Reactive) {
-        super();
+    public constructor(data?: T[] | Set<T> | Reference<T[] | Set<T> | undefined, unknown>, ctx?: Reactive) {
+        super(v => new Set(v), data, ctx);
         this.listener = new Listener();
-
-        set?.forEach(item => {
-            super.add(item);
-        });
-        this.rDeep = ctx?.sDeep || 0;
-        this.r_size = new ReadOnlyReference(this.size, ctx);
     }
+
+    public get set(): ReadonlySet<T> {
+        return this.d;
+    }
+
+    /* Set mutate members */
 
     /**
      * Calls `Set.add` and notify abut changes
      * @param value {*} value
      * @return {this} a pointer to this
      */
-    public override add(value: T): this {
+    public add(value: T): this {
         this.listener.emit(Ops.Add, value);
-        return this.run(() => super.add(value));
+        return this.run(() => {
+            this.d.add(value);
+            return this;
+        });
     }
 
     /**
      * Calls `Set.clear` and notify about changes
      */
-    public override clear() {
+    public clear() {
         this.listener.emit(Ops.Clear);
-        this.run(() => super.clear());
+        this.run(() => this.d.clear());
     }
 
     /**
@@ -60,14 +63,30 @@ export class SetModel<T> extends Set<T> {
      * @param value {*}
      * @return {boolean} true if a value was deleted, otherwise false
      */
-    public override delete(value: T): boolean {
+    public delete(value: T): boolean {
         this.listener.emit(Ops.Remove, value);
-        return this.run(() => super.delete(value));
+        return this.run(() => this.d.delete(value));
+    }
+
+    protected override reset(next: Set<T> | Array<T> | undefined) {
+        this.listener.emit(Ops.Clear);
+        this.d.clear();
+        next?.forEach((value: T) => {
+            this.listener.emit(Ops.Add, value);
+            this.d.add(value);
+        });
+        this.r_size.up(this.d.size);
     }
 
     protected run<T>(fn: () => T): T {
         const result = fn();
-        this.r_size.set(this.size);
+        const r = this.r;
+
+        this.r_size.up(this.d.size);
+        if (r) {
+            r.up((this.last = r.V instanceof Array ? [...this.d] : new Set(this.d)));
+        }
+
         return result;
     }
 }
@@ -129,7 +148,7 @@ export class SetViewNode<
             }
         }
 
-        this.model.forEach(value => create(value));
+        this.model.set.forEach(value => create(value));
         this.model.listener.on(acceptUpdate);
         this.acceptUpdate = acceptUpdate;
     }

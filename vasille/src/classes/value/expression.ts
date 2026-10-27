@@ -1,7 +1,7 @@
 import { Reactive } from "../core/core.js";
 import { Destroyable } from "../core/destroyable.js";
-import { reportError, safe } from "../functional/safety.js";
-import { IValue } from "../core/ivalue.js";
+import { safe } from "../functional/safety.js";
+import { IValue, WritableIValue } from "../core/ivalue.js";
 import { SyncedIValue } from "./synced.js";
 
 export type KindOfIValue<T extends unknown[], Extra extends unknown> = {
@@ -39,7 +39,7 @@ export class Expression<T, Args extends unknown[], Extra extends unknown>
      */
     public constructor(
         func: (...args: Args) => T,
-        ref: (arg: Args) => IValue<T, Extra>,
+        ref: (arg: Args) => WritableIValue<T, Extra>,
         values: KindOfIValue<Args, Extra>,
         ctx: Reactive,
     ) {
@@ -71,16 +71,6 @@ export class Expression<T, Args extends unknown[], Extra extends unknown>
 
     public get V(): T {
         return this.sync.V;
-    }
-
-    public set V(value: T) {
-        this.up(value);
-    }
-
-    public up(value: T, arg?: Extra): T {
-        reportError(new Error("Expression was updated manually. Reactivity is disabled."));
-        this.destroy();
-        return this.sync.up(value, arg);
     }
 
     public destroy(): void {

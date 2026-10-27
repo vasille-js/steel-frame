@@ -1,4 +1,4 @@
-import { AppNode, ArrayModel, MapModel, SetModel, ScreenProps } from "vasille";
+import { AppNode, ScreenProps } from "vasille";
 import type { VasilleSlot } from "vasille-web/jsx-runtime";
 import { WebRouter, WebTagOptions, CssStyleInjector, StyleSheetProps } from "vasille-web/types";
 
@@ -130,6 +130,39 @@ export declare function effect(f: () => void): void;
  * @deprecated report cases when you need it, we will fix
  * */
 export declare function bypassWriteRestriction<T>(reactive: T, value: T): T;
+
+/** Encapsulate an array for more comfortable editing */
+export declare class ArrayModel<T> {
+    private constructor();
+    /** Give read access to the encapsulated array */
+    public get array(): readonly T[];
+    /** Give read access to the encapsulated array as a reactive value */
+    public get r_array(): readonly T[];
+    /**  */
+    public get r_length(): number;
+    /**  */
+    public get length(): number;
+    /**  */
+    public set length(value: number);
+    /**  */
+    public copyWithin(target: number, start: number, end?: number): this;
+    /**  */
+    public fill(value: T, start?: number, end?: number): this;
+    /**  */
+    public pop(): T | undefined;
+    /**  */
+    public push(...items: Array<T>): number;
+    /**  */
+    public shift(): T | undefined;
+    /**  */
+    public sort(compareFn?: (a: T, b: T) => number): this;
+    /**  */
+    public splice(start: number, deleteCount?: number, ...items: T[]): T[];
+    /**  */
+    public unshift(...items: T[]): number;
+    /**  */
+    public replace(at: number, with_: T): this;
+}
 
 /** Returns an array model of the array */
 export declare function arrayModel<T>(v?: T[]): ArrayModel<T>;
@@ -483,5 +516,3 @@ export type {
     CssStyleInjector,
     StyleSheetProps,
 } from "vasille-web/types";
-
-export type { ArrayModel, SetModel, MapModel } from "vasille";

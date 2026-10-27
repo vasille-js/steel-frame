@@ -65,7 +65,7 @@ it("set test", function () {
     expect(o.c.V).toBe(30);
     expect(o.c).toBe(c);
     expect(arr.length).toBe(1);
-    expect(arr[0]).toBe(1);
+    expect(arr.array[0]).toBe(1);
 });
 
 it("match test", function () {

@@ -1,3 +1,4 @@
+import { ReadableIValue, WritableIValue } from "../classes/core/ivalue.js";
 import {
     ArrayModel,
     ArrayModelViewNode,
@@ -52,7 +53,7 @@ export function Slot<Node, Element, TagOptions extends object, T extends object 
 
 export interface SwitchOptions<Node, Element, TagOptions extends object> {
     cases: {
-        $case: IValue<unknown, unknown>;
+        $case: ReadableIValue<unknown, unknown>;
         slot: (ctx: Fragment<Node, Element, TagOptions>) => void;
     }[];
     default?: (ctx: Fragment<Node, Element, TagOptions>) => void;
@@ -74,9 +75,39 @@ export function For<
     Node,
     Element,
     TagOptions extends object,
-    T extends Set<unknown> | Map<unknown, unknown> | unknown[],
-    K = T extends unknown[] ? number : T extends Set<infer R> ? R : T extends Map<infer R, unknown> ? R : never,
-    V = T extends (infer R)[] ? R : T extends Set<infer R> ? R : T extends Map<unknown, infer R> ? R : never,
+    T extends
+        | Set<unknown>
+        | SetModel<unknown>
+        | Map<unknown, unknown>
+        | MapModel<unknown, unknown>
+        | unknown[]
+        | ArrayModel<unknown>,
+    K = T extends unknown[]
+        ? number
+        : T extends ArrayModel<unknown>
+          ? number
+          : T extends Set<infer R>
+            ? R
+            : T extends SetModel<infer R>
+              ? R
+              : T extends Map<infer R, unknown>
+                ? R
+                : T extends MapModel<infer R, unknown>
+                  ? R
+                  : never,
+    V = T extends (infer R)[]
+        ? R
+        : T extends Set<infer R>
+          ? R
+          : T extends Map<unknown, infer R>
+            ? R
+            : T extends ArrayModel<infer R>
+              ? R
+              : T extends SetModel<infer R>
+                ? R
+                : T extends MapModel<unknown, infer R>
+                  ? R
+                  : never,
 >(
     { of: model, slot: _slot }: ForOptions<Node, Element, TagOptions, T, [V, K]>,
     ctx: Fragment<Node, Element, TagOptions>,
@@ -93,7 +124,7 @@ export function For<
             new ArrayModelViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
                 ctx.runner,
                 ctx.sDeep + 1,
-                model,
+                model as ArrayModel<V>,
                 (ctx, value, index) => {
                     slot(ctx, value, index.V as K);
                 },
@@ -106,7 +137,7 @@ export function For<
             new MapViewNode<K, V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>(
                 ctx.runner,
                 ctx.sDeep + 1,
-                model,
+                model as MapModel<K, V>,
                 (ctx, iValue, key) => {
                     Watch(
                         {
@@ -127,7 +158,7 @@ export function For<
             new SetViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>(
                 ctx.runner,
                 ctx.sDeep + 1,
-                model,
+                model as SetModel<V>,
                 (ctx, value) => {
                     slot(ctx, value, value as unknown as K);
                 },
@@ -165,12 +196,12 @@ export function ArrayViewFn<
     V = T extends (infer R)[] ? R : never,
 >(
     props: {
-        r_of: IValue<V[], unknown>;
+        r_of: ReadableIValue<V[], unknown>;
         key: (value: V) => number | string;
         slot: (
             ctx: Fragment<Node, Element, TagOptions>,
-            value: IValue<V, unknown>,
-            index: IValue<number, unknown>,
+            value: ReadableIValue<V, unknown>,
+            index: ReadableIValue<number, unknown>,
         ) => void;
     },
     ctx: Fragment<Node, Element, TagOptions>,
@@ -206,7 +237,7 @@ export function ArrayModelView<Node, Element, TagOptions extends object, V>(
 }
 
 export function MapModelView<Node, Element, TagOptions extends object, K, V>(
-    props: Required<ForOptions<Node, Element, TagOptions, MapModel<K, V>, [IValue<V, unknown>, K]>>,
+    props: Required<ForOptions<Node, Element, TagOptions, MapModel<K, V>, [WritableIValue<V, unknown>, K]>>,
     ctx: Fragment<Node, Element, TagOptions>,
 ) {
     ctx.child(
@@ -237,7 +268,7 @@ export function SetModelView<Node, Element, TagOptions extends object, V>(
 }
 
 export interface WatchOptions<Node, Element, TagOptions extends object, T, Extra = unknown> {
-    r_model: IValue<T, Extra>;
+    r_model: ReadableIValue<T, Extra>;
     slot?: (ctx: Fragment<Node, Element, TagOptions>, value: T) => void;
 }
 
@@ -296,7 +327,7 @@ export function Delay<
 }
 
 export interface ZombieOptions<Extra = unknown> {
-    r_time: IValue<number, Extra>;
+    r_time: ReadableIValue<number, Extra>;
     trigger(): void;
 }
 

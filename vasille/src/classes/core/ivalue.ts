@@ -1,19 +1,28 @@
+export interface ReadableIValue<T, Extra> {
+    get id(): number | undefined;
+    get sDeep(): number;
+    get rDeep(): number;
+    get V(): T;
+    on(handler: (value: T, extra?: Extra) => void): void;
+    off(handler: (value: T, extra?: Extra) => void): void;
+}
+
+export interface WritableIValue<T, Extra> extends ReadableIValue<T, Extra> {
+    get V(): T;
+    set V(value: T);
+    up(value: T, arg?: Extra): T;
+}
+
 /**
  * Interface which describes a value
  * @class IValue
  */
-export abstract class IValue<T, Extra extends unknown> {
+export abstract class IValue<T, Extra extends unknown> implements ReadableIValue<T, Extra> {
     /**
      * Get the encapsulated value
      * @return {*} the encapsulated value
      */
     public abstract get V(): T;
-
-    /**
-     * Sets the encapsulated value
-     * @param value {*} value to encapsulate
-     */
-    public abstract set V(value: T);
 
     /**
      * Add a new handler to value change
@@ -26,13 +35,6 @@ export abstract class IValue<T, Extra extends unknown> {
      * @param handler {function(value : *)} the handler to remove
      */
     public abstract off(handler: (value: T, extra?: Extra) => void): void;
-
-    /**
-     * Updates the value
-     * @param value {*} the new value
-     * @param arg {*} extra argument
-     */
-    public abstract up(value: T, arg?: Extra): T;
 
     /** use it for debugging */
     declare public id: number | undefined;

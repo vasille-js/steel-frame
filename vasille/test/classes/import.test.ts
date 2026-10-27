@@ -63,7 +63,7 @@ it("import test", function () {
     const watch = new WatchNode({ model: ref }, runner, 1);
 
     expect(ref instanceof IValue).toBe(true);
-    expect(array instanceof Array).toBe(true);
+    expect(array instanceof Array).toBe(false);
     expect(map instanceof Map).toBe(true);
     expect(set instanceof Set).toBe(true);
     expect(arrayView instanceof Fragment).toBe(true);

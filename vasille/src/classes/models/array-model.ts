@@ -1,9 +1,10 @@
 import { Reactive } from "../core/core.js";
-import { IValue } from "../core/ivalue.js";
+import { ReadableIValue, WritableIValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
-import { ReadOnlyReference } from "../value/reference.js";
+import { Reference } from "../value/reference.js";
+import { Collection } from "./collection.js";
 import { Listener } from "./listener.js";
 
 type Arguments<T> = [number, number, T[]] | [number, number];
@@ -24,37 +25,62 @@ function fixedIndex(index: number | undefined, length: number, defaultValue: num
  * Model based on Array class
  * @extends Array
  */
-export class ArrayModel<T> extends Array<T> {
+export class ArrayModel<T> extends Collection<T[] | undefined, T[]> {
     public readonly listener: Listener<Arguments<T>>;
-    public readonly rDeep: number;
-    public readonly r_length: ReadOnlyReference<number, unknown>;
-
-    [k: number]: never;
+    public readonly r_length: Reference<number, unknown>;
 
     /**
      * @param data {Array} input data
      * @param ctx lifetime context of model
      */
-    public constructor(data?: Array<T> | number, ctx?: Reactive) {
-        super(typeof data === "number" ? data : 0);
+    public constructor(data?: T[] | WritableIValue<T[], unknown>, ctx?: Reactive) {
+        super(arr => (arr ? [...arr] : []), data, ctx);
         this.listener = new Listener();
-        this.rDeep = ctx?.sDeep || 0;
-
-        if (data instanceof Array) {
-            super.push(...data);
-        }
-        this.r_length = new ReadOnlyReference(this.length, ctx);
+        this.r_length = new Reference(this.d.length, ctx);
+        ctx?.bind(this);
     }
 
-    public override get length(): number {
-        return super.length;
+    /**
+     * Give read access to the encapsulated array
+     */
+    public get array(): readonly T[] {
+        return this.d;
     }
 
-    public override set length(value: number) {
-        this.r_length.set((super.length = value));
+    /* Array fields */
+
+    /**
+     * Returns the length of the array
+     */
+    public get length(): number {
+        return this.d.length;
     }
 
-    /* Array members */
+    /**
+     * Sets the length of the array
+     */
+    public set length(value: number) {
+        this.run(() => (this.d.length = value));
+    }
+
+    /* Array mutate members */
+
+    /**
+     * Modify the encapsulated array using copyWithin method
+     */
+    public copyWithin(target: number, start: number, end?: number): this {
+        return this.run(() => {
+            const length = this.length;
+            const startIndex = fixedIndex(start, length, 0);
+            const endIndex = fixedIndex(end, length, length);
+            const fromIndex = fixedIndex(target, length, 0);
+            const toIndex = Math.min(fromIndex + (endIndex - startIndex), length);
+
+            this.d.copyWithin(fromIndex, startIndex, endIndex);
+            this.listener.emit(fromIndex, toIndex - fromIndex, this.d.slice(fromIndex, toIndex));
+            return this;
+        });
+    }
 
     /**
      * Calls `Array.fill` and notify about changes
@@ -62,7 +88,7 @@ export class ArrayModel<T> extends Array<T> {
      * @param start {?number} begin index
      * @param end {?number} end index
      */
-    public override fill(value: T, start?: number, end?: number): this {
+    public fill(value: T, start?: number, end?: number): this {
         const length = this.length;
         const from = fixedIndex(start, length, 0);
         const to = fixedIndex(end, length, length);
@@ -71,21 +97,23 @@ export class ArrayModel<T> extends Array<T> {
             return this;
         }
 
-        super.fill(value, start, end);
-        this.listener.emit(from, to - from, this.slice(from, to));
-        return this;
+        return this.run(() => {
+            this.d.fill(value, start, end);
+            this.listener.emit(from, to - from, this.d.slice(from, to));
+            return this;
+        });
     }
 
     /**
      * Calls `Array.pop` and notify about changes
      * @return {*} removed value
      */
-    public override pop(): T | undefined {
+    public pop(): T | undefined {
         /* istanbul ignore else */
         if (this.length > 0) {
             this.listener.emit(this.length - 1, 1);
 
-            return this.run(() => super.pop());
+            return this.run(() => this.d.pop());
         }
     }
 
@@ -94,21 +122,37 @@ export class ArrayModel<T> extends Array<T> {
      * @param items {...*} values to push
      * @return {number} new length of the array
      */
-    public override push(...items: Array<T>): number {
+    public push(...items: Array<T>): number {
         this.listener.emit(this.length, 0, items);
-        return this.run(() => super.push(...items));
+        return this.run(() => this.d.push(...items));
     }
 
     /**
      * Calls `Array.shift` and notify about changed
      * @return {*} the shifted value
      */
-    public override shift(): T | undefined {
+    public shift(): T | undefined {
         /* istanbul ignore else */
         if (this.length > 0) {
             this.listener.emit(0, 1);
-            return this.run(() => super.shift());
+            return this.run(() => this.d.shift());
         }
+    }
+
+    /**
+     * Calls `Array.sort` and notify about changed
+     * `a - b` in ascending order
+     * `b - a` in descending order
+     * @param compareFn {?function} compare function
+     * @return {ArrayModel} a pointer to this
+     */
+    public sort(compareFn?: (a: T, b: T) => number): this {
+        return this.run(() => {
+            const data = this.d;
+            data.sort(compareFn);
+            this.listener.emit(0, data.length, data);
+            return this;
+        });
     }
 
     /**
@@ -118,12 +162,13 @@ export class ArrayModel<T> extends Array<T> {
      * @param items {...*}
      * @return {ArrayModel} a pointer to this
      */
-    public override splice(start: number, deleteCount?: number, ...items: Array<T>): T[] {
-        start = Math.min(start, this.length);
-        deleteCount = typeof deleteCount === "number" ? deleteCount : this.length - start;
-        this.listener.emit(start, deleteCount, items);
-
-        return this.run(() => super.splice(start, deleteCount, ...items));
+    public splice(start: number, deleteCount?: number, ...items: Array<T>): T[] {
+        return this.run(() => {
+            const startIndex = Math.min(start, this.length);
+            const removeCount = typeof deleteCount === "number" ? deleteCount : this.length - startIndex;
+            this.listener.emit(startIndex, removeCount, items);
+            return this.d.splice(startIndex, removeCount, ...items);
+        });
     }
 
     /**
@@ -131,25 +176,36 @@ export class ArrayModel<T> extends Array<T> {
      * @param items {...*} values to insert
      * @return {number} the length after prepending
      */
-    public override unshift(...items: Array<T>): number {
+    public unshift(...items: Array<T>): number {
         this.listener.emit(0, 0, items);
-        return this.run(() => super.unshift(...items));
+        return this.run(() => this.d.unshift(...items));
     }
 
-    public get(at: number): T | undefined {
-        return (this as unknown as { [k: number]: T })[at];
-    }
-
+    /**
+     * Replace item at index `at` with `with_`
+     * @param at {number} index of item to replace
+     * @param with_ {*} new value
+     * @return {ArrayModel} a pointer to this
+     */
     public replace(at: number, with_: T): this {
-        this.listener.emit(at, 1, [with_]);
-        (this as unknown as { [k: number]: T })[at] = with_;
-        return this;
+        return this.run(() => {
+            this.listener.emit(at, 1, [with_]);
+            this.d[at] = with_;
+            return this;
+        });
     }
 
     protected run<T>(fn: () => T): T {
         const result = fn();
-        this.r_length.set(super.length);
+        this.r_length.up(this.d.length);
+        this.r?.up((this.last = [...this.d]));
         return result;
+    }
+
+    protected override reset(arr: T[] | undefined) {
+        const newArr = arr ? [...arr] : [];
+        this.listener.emit(0, this.length, newArr);
+        this.d.splice(0, this.length, ...newArr);
     }
 }
 
@@ -161,7 +217,7 @@ interface CacheItem<
     Extra extends unknown,
 > {
     frag: Fragment<Node, Element, TagOptions, Runner>;
-    index: IValue<number, Extra>;
+    index: WritableIValue<number, Extra>;
 }
 
 class BaseArrayView<
@@ -208,15 +264,19 @@ export class ArrayModelViewNode<
     private readonly slot: (
         ctx: Fragment<Node, Element, TagOptions, Runner>,
         value: T,
-        index: IValue<number, Extra>,
+        index: ReadableIValue<number, Extra>,
     ) => void;
 
     public constructor(
         runner: Runner,
         deep: number,
         private readonly model: ArrayModel<T>,
-        slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T, index: IValue<number, Extra>) => void,
-        private readonly ref: <T>(v: T) => IValue<T, Extra>,
+        slot: (
+            ctx: Fragment<Node, Element, TagOptions, Runner>,
+            value: T,
+            index: ReadableIValue<number, Extra>,
+        ) => void,
+        private readonly ref: <T>(v: T) => WritableIValue<T, Extra>,
         private readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(runner, deep);
@@ -226,7 +286,7 @@ export class ArrayModelViewNode<
     public override compose() {
         const view = this;
 
-        function apply(this: void, index: number, remove: number, values?: T[]) {
+        function apply(this: void, index: number, remove: number, values?: readonly T[]) {
             const children: CacheItem<Node, Element, TagOptions, Runner, Extra>[] = view.cache;
             const toInsert: CacheItem<Node, Element, TagOptions, Runner, Extra>[] = [];
             const prev = children[index - 1]?.frag;
@@ -269,7 +329,7 @@ export class ArrayModelViewNode<
             }
         }
 
-        apply(0, 0, this.model);
+        apply(0, 0, this.model.array);
         this.model.listener.on(apply);
         this.apply = apply;
     }
@@ -292,7 +352,7 @@ interface KeyedCacheItem<
     Extra extends unknown,
 > extends CacheItem<Node, Element, TagOptions, Runner, Extra> {
     key: string | number;
-    value: IValue<T, Extra>;
+    value: WritableIValue<T, Extra>;
     moved: boolean;
     unmounted: boolean;
 }
@@ -315,22 +375,22 @@ export class DiffingArrayView<
     protected match: ((model: T[]) => void) | undefined;
     protected slot: (
         ctx: Fragment<Node, Element, TagOptions, Runner>,
-        value: IValue<T, Extra>,
-        index: IValue<number, Extra>,
+        value: ReadableIValue<T, Extra>,
+        index: ReadableIValue<number, Extra>,
     ) => void;
 
     public constructor(
         runner: Runner,
         deep: number,
-        protected readonly model: IValue<T[], Extra>,
+        protected readonly model: ReadableIValue<T[], Extra>,
         protected readonly key: (item: T) => number | string,
         slot: (
             ctx: Fragment<Node, Element, TagOptions, Runner>,
-            value: IValue<T, Extra>,
-            index: IValue<number, Extra>,
+            value: ReadableIValue<T, Extra>,
+            index: ReadableIValue<number, Extra>,
         ) => void,
-        protected readonly vRef: <T>(v: T) => IValue<T, Extra>,
-        protected readonly iRef: <T>(v: T) => IValue<T, Extra>,
+        protected readonly vRef: <T>(v: T) => WritableIValue<T, Extra>,
+        protected readonly iRef: <T>(v: T) => WritableIValue<T, Extra>,
         protected readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(runner, deep);

@@ -1,18 +1,21 @@
 import { Reactive } from "../core/core.js";
 import { Destroyable } from "../core/destroyable.js";
-import { IValue } from "../core/ivalue.js";
+import { IValue, WritableIValue } from "../core/ivalue.js";
 import { SyncedIValue } from "./synced.js";
 
-export class FieldReference<Extra extends unknown> extends SyncedIValue<unknown, Extra> implements Destroyable {
-    protected readonly object: IValue<object | undefined | null, Extra>;
+export class FieldReference<Extra extends unknown>
+    extends SyncedIValue<unknown, Extra>
+    implements Destroyable, WritableIValue<unknown, Extra>
+{
+    protected readonly object: WritableIValue<object | undefined | null, Extra>;
     protected readonly updated: (v: unknown) => object;
     protected readonly handler: (v: object | undefined | null) => void;
     protected readonly deps: IValue<unknown, Extra>[];
     protected readonly depsHandler: (() => void) | undefined;
 
     public constructor(
-        createRef: (v: unknown, ctx?: Reactive) => IValue<unknown, Extra>,
-        object: IValue<object | undefined | null, Extra>,
+        createRef: (v: unknown, ctx?: Reactive) => WritableIValue<unknown, Extra>,
+        object: WritableIValue<object | undefined | null, Extra>,
         getValue: (v: object | undefined | null) => unknown,
         update: (v: unknown) => object,
         ctx: Reactive,
@@ -74,8 +77,8 @@ function unwrap<T>(value: T | IValue<T, unknown>): T {
 
 export class SingleFieldReference<Extra extends unknown> extends FieldReference<Extra> {
     public constructor(
-        createRef: (v: unknown, ctx?: Reactive) => IValue<unknown, Extra>,
-        object: IValue<object | undefined | null, Extra>,
+        createRef: (v: unknown, ctx?: Reactive) => WritableIValue<unknown, Extra>,
+        object: WritableIValue<object | undefined | null, Extra>,
         field: number | string | symbol | IValue<number | string | symbol, Extra>,
         ctx: Reactive,
     ) {
@@ -95,8 +98,8 @@ export class SingleFieldReference<Extra extends unknown> extends FieldReference<
 
 export class DeepFieldReference<Extra extends unknown> extends FieldReference<Extra> {
     public constructor(
-        createRef: (v: unknown, ctx?: Reactive) => IValue<unknown, Extra>,
-        object: IValue<object | undefined | null, Extra>,
+        createRef: (v: unknown, ctx?: Reactive) => WritableIValue<unknown, Extra>,
+        object: WritableIValue<object | undefined | null, Extra>,
         fields: (number | string | symbol | IValue<number | string | symbol, Extra>)[],
         ctx: Reactive,
     ) {

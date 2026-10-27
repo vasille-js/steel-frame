@@ -1,3 +1,4 @@
+import { WritableIValue } from "../../classes/core/ivalue.js";
 import { Fragment, IValue, IRunner as Runner, safe, userError } from "../../classes/index.js";
 import {
     Delay,
@@ -191,7 +192,9 @@ export function DevArrayModelView<Node, Element, TagOptions extends object, V>(
 }
 
 export function DevMapModelView<Node, Element, TagOptions extends object, K, V>(
-    props: Required<ForOptions<Node, Element, TagOptions, DevMapModel<K, V>, [IValue<V, ExecutionPosition>, K]>>,
+    props: Required<
+        ForOptions<Node, Element, TagOptions, DevMapModel<K, V>, [WritableIValue<V, ExecutionPosition>, K]>
+    >,
     ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
     _defaultSlot: never,
     usage: StaticPosition,

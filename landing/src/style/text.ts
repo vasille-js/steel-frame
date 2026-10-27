@@ -1,6 +1,6 @@
 import { dark, styleSheet } from "steel-frame";
 
-const styles = styleSheet({
+export const styles = styleSheet({
   h1: {
     "font-size": 35,
     "letter-spacing": "-1.05px",
