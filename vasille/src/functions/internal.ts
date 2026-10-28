@@ -35,7 +35,7 @@ export function safeExpr<T, Args extends unknown[]>(
  * It transforms a non-reactive value to a reactive one.
  * 1. `let a = 0` to `const a = ref(0)`
  */
-export function ref<T>(v: T, ctx?: Reactive): Reference<T, unknown> {
+export function ref<T, Extra = unknown>(v: T, ctx?: Reactive): Reference<T, Extra> {
     return new Reference(v, ctx);
 }
 
@@ -51,24 +51,28 @@ export function safeRef<T>(fn: () => T, ctx?: Reactive): IValue<T | undefined, u
  * create a `Set` model
  * 1. translate `setModel(#)` to `setModel(ctx, #)`
  */
-export function setModel(ctx: Reactive | undefined, data?: unknown[]) {
-    return new SetModel(data, ctx);
+export function setModel(ctx: Reactive | undefined, data?: unknown[], size?: WritableIValue<number, unknown>) {
+    return new SetModel(data, ctx, size);
 }
 
 /**
  * create a `Map` model
  * 1. `mapModel(#)` to `mapModel(ctx, #)`
  */
-export function mapModel(ctx: Reactive | undefined, data?: [unknown, unknown][]) {
-    return new MapModel(data, ctx);
+export function mapModel(
+    ctx: Reactive | undefined,
+    data?: [unknown, unknown][],
+    size?: WritableIValue<number, unknown>,
+) {
+    return new MapModel(data, ctx, size);
 }
 
 /**
  * create an `Array` model
  * 1. `arrayModel([...])` to `arrayModel(ctx, [...])`
  */
-export function arrayModel(ctx: Reactive | undefined, data?: unknown[]) {
-    return new ArrayModel(data, ctx);
+export function arrayModel(ctx: Reactive | undefined, data?: unknown[], length?: WritableIValue<number, unknown>) {
+    return new ArrayModel(data, ctx, length);
 }
 
 /**
@@ -94,7 +98,12 @@ export function ensure<T extends object, K extends keyof T>(
  * 1. `{[a]: a1} = {x: 2}` to `{[a]: a1 = match("a1")} = {x: 2}`
  * 1. `{[a]: a1 = 3} = {x: 2}` to `{[a]: a1 = match("a1", 3)} = {x: 2}`
  */
-export function match(ctx: Reactive | undefined, name: string | number | symbol, data?: unknown, createRef = ref) {
+export function match<Extra = unknown>(
+    ctx: Reactive | undefined,
+    name: string | number | symbol,
+    data?: unknown,
+    createRef = ref<unknown, Extra>,
+) {
     const iValueRequired = typeof name === "string" && name.startsWith("$");
     const isIValue = data instanceof IValue;
 
@@ -113,12 +122,12 @@ export function match(ctx: Reactive | undefined, name: string | number | symbol,
  * 1. `obj.$key = 23` to `set(obj, "$key", 23)`
  * 2. `arr[0] = 23` to `set(arr, 0, 23)`
  */
-export function set(
+export function set<Extra = unknown>(
     ctx: Reactive | undefined,
     o: object,
     key: string | symbol | number,
     value: unknown,
-    createRef = ref,
+    createRef = ref<unknown, Extra>,
 ) {
     if (o[key] instanceof IValue && "up" in o[key]) {
         (o[key] as WritableIValue<unknown, unknown>).up(value);

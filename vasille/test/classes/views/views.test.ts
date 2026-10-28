@@ -17,7 +17,8 @@ it("array view", function () {
     const window = page();
     const runner = new Runner(window.document);
     const root = new AppNode<Node, Element, TagOptions>(window.document.body, runner);
-    const array = new ArrayModel<number>([1]);
+    const length = new Reference(0);
+    const array = new ArrayModel<number, unknown>([0], undefined, length);
     let element!: Element;
     let view!: ArrayModelViewNode<any, any, any, any, any, unknown>;
 
@@ -30,15 +31,13 @@ it("array view", function () {
                 function (f, item) {
                     f.text(`${item}`);
                 },
+                false,
                 v => new Reference(v),
                 r => new Fragment(r, tag.sDeep + 1),
             )),
         );
     });
 
-    expect(element.innerHTML).toBe("1");
-
-    array.fill(0);
     expect(element.innerHTML).toBe("0");
 
     array.push(1);
@@ -59,7 +58,7 @@ it("array view", function () {
     array.push(4);
     expect(element.innerHTML).toBe("3214");
 
-    array.splice(array.length - 1, 1);
+    array.splice(length.V - 1, 1);
     expect(element.innerHTML).toBe("321");
 
     array.unshift(4);
@@ -329,7 +328,7 @@ it("map view", function () {
     const window = page();
     const runner = new Runner(window.document);
     const root = new AppNode<Node, Element, TagOptions>(window.document.body, runner);
-    const model = new MapModel<number, number>([
+    const model = new MapModel<number, number, unknown>([
         [1, 2],
         [2, 3],
         [3, 4],
@@ -339,13 +338,14 @@ it("map view", function () {
 
     root.tag("div", { callback: node => (element = node as HTMLElement) }, function (tag) {
         tag.child(
-            (view = new MapViewNode<number, number, Node, Element, TagOptions, typeof runner>(
+            (view = new MapViewNode<number, number, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 tag.sDeep + 1,
                 model,
                 function (f, item) {
                     f.text(item);
                 },
+                false,
                 v => new Reference(v),
                 r => new Fragment(r, tag.sDeep + 1),
             )),
@@ -393,7 +393,7 @@ it("map view remount", function () {
                 item => item.id,
                 function (f, item) {
                     f.child(
-                        new MapViewNode<number, number, Node, Element, TagOptions, typeof runner>(
+                        new MapViewNode<number, number, Node, Element, TagOptions, typeof runner, unknown>(
                             runner,
                             f.sDeep + 1,
                             new MapModel([[item.V.id, item.V.value]]),
@@ -405,6 +405,7 @@ it("map view remount", function () {
                                     ctx.text(item);
                                 });
                             },
+                            false,
                             v => new Reference(v),
                             r => new Fragment(r, f.sDeep + 1),
                         ),
@@ -435,7 +436,7 @@ it("set view", function () {
 
     root.tag("div", { callback: node => (element = node as HTMLElement) }, function (f) {
         f.child(
-            (view = new SetViewNode<number, Node, Element, TagOptions, typeof runner>(
+            (view = new SetViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 f.sDeep + 1,
                 model,
@@ -476,7 +477,7 @@ it("view timeout test", function (done) {
 
     root.tag("div", { callback: node => (element = node as HTMLElement) }, function (f) {
         f.child(
-            new SetViewNode<number, Node, Element, TagOptions, typeof runner>(
+            new SetViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
                 f.sDeep + 1,
                 model,
@@ -526,7 +527,7 @@ it("set view remount", function () {
                 item => item.id,
                 function (f, item) {
                     f.child(
-                        new SetViewNode<number, Node, Element, TagOptions, typeof runner>(
+                        new SetViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
                             runner,
                             f.sDeep + 1,
                             new SetModel([item.V.id, item.V.value]),

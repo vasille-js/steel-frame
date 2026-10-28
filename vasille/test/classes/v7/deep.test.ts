@@ -220,7 +220,7 @@ it("destroys array view", () => {
     const window = page();
     const runner = new Runner(window.document);
     const root = new AppNode<Node, Element, TagOptions>(window.document.body, runner);
-    const array = new ArrayModel<number>([1, 2, 3]);
+    const array = new ArrayModel<number, unknown>([1, 2, 3]);
     const ref = new Reference(0);
 
     root.tag("div", {}, function (tag) {
@@ -229,9 +229,10 @@ it("destroys array view", () => {
                 runner,
                 tag.sDeep + 1,
                 array,
-                function (f, item) {
+                function (f, item: number) {
                     f.text(new TestExpression(a => a + item, [ref], f));
                 },
+                false,
                 v => new Reference(v),
                 r => new Fragment(r, tag.sDeep + 1),
             ),

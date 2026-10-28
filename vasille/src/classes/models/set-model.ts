@@ -1,4 +1,5 @@
 import { Reactive } from "../core/core.js";
+import { WritableIValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
@@ -19,16 +20,25 @@ type Arguments<T> = [Ops.Clear] | [Ops.Remove, T] | [Ops.Add, T];
  * @class SetModel
  * @extends Set
  */
-export class SetModel<T> extends Collection<T[] | Set<T> | undefined, Set<T>> {
+export class SetModel<T, Extra> extends Collection<T[] | Set<T> | undefined, Set<T>> {
     public readonly listener: Listener<Arguments<T>>;
-    public readonly r_size: Reference<number, unknown>;
+    public readonly size?: WritableIValue<number, unknown>;
 
     /**
      * Constructs a set model based on a set
      */
-    public constructor(data?: T[] | Set<T> | Reference<T[] | Set<T> | undefined, unknown>, ctx?: Reactive) {
+    public constructor(
+        data?: T[] | Set<T> | Reference<T[] | Set<T> | undefined, unknown>,
+        ctx?: Reactive,
+        size?: WritableIValue<number, Extra>,
+    ) {
         super(v => new Set(v), data, ctx);
         this.listener = new Listener();
+
+        if (size) {
+            this.size = size;
+            size.up(this.d.size);
+        }
     }
 
     public get set(): ReadonlySet<T> {
@@ -75,14 +85,14 @@ export class SetModel<T> extends Collection<T[] | Set<T> | undefined, Set<T>> {
             this.listener.emit(Ops.Add, value);
             this.d.add(value);
         });
-        this.r_size.up(this.d.size);
+        this.size?.up(this.d.size);
     }
 
     protected run<T>(fn: () => T): T {
         const result = fn();
         const r = this.r;
 
-        this.r_size.up(this.d.size);
+        this.size?.up(this.d.size);
         if (r) {
             r.up((this.last = r.V instanceof Array ? [...this.d] : new Set(this.d)));
         }
@@ -97,6 +107,7 @@ export class SetViewNode<
     Element,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
+    Extra,
 > extends Fragment<Node, Element, TagOptions, Runner> {
     private map = new Map<T, Fragment<Node, Element, TagOptions, Runner>>();
     private acceptUpdate: ((...args: Arguments<T>) => void) | undefined;
@@ -105,7 +116,7 @@ export class SetViewNode<
     public constructor(
         runner: Runner,
         deep: number,
-        private readonly model: SetModel<T>,
+        private readonly model: SetModel<T, Extra>,
         slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T) => void,
         private readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     ) {

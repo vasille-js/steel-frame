@@ -101,7 +101,7 @@ export function devEnsure<T extends object>(
 }
 
 export function devMatch(name: string | number | symbol, data: unknown, declaration: StaticPosition, ctx?: Reactive) {
-    return match(ctx, name, data, v => devRef(v, ctx, declaration));
+    return match<ExecutionPosition>(ctx, name, data, (v, ctx) => devRef(v, ctx, declaration));
 }
 
 export function devSet(
@@ -116,7 +116,7 @@ export function devSet(
         return value;
     }
 
-    return set(ctx, o, key, value, v => devRef(v, ctx, declaration));
+    return set(ctx, o, key, value, (v, ctx) => devRef(v, ctx, declaration));
 }
 
 function createRef<T>(declaration: StaticPosition, name?: string): (value: T, ctx?: Reactive) => DevReference<T> {

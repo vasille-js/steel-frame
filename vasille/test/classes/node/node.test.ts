@@ -172,7 +172,7 @@ it("Error handling", function () {
     });
 });
 
-function checkSpanAfterDiv(node: Tag<Node, Element, object>, bool: IValue<boolean, unknown>, window: DOMWindow) {
+function checkSpanAfterDiv(node: Tag<Node, Element, object>, bool: Reference<boolean, unknown>, window: DOMWindow) {
     expect(node.node!.childNodes.length).toBe(2);
     expect(node.node!.childNodes[0]).toBeInstanceOf(window.HTMLDivElement);
     expect(node.node!.childNodes[1]).toBeInstanceOf(window.HTMLSpanElement);

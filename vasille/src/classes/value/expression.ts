@@ -1,11 +1,11 @@
 import { Reactive } from "../core/core.js";
 import { Destroyable } from "../core/destroyable.js";
 import { safe } from "../functional/safety.js";
-import { IValue, WritableIValue } from "../core/ivalue.js";
+import { ReadableIValue, WritableIValue } from "../core/ivalue.js";
 import { SyncedIValue } from "./synced.js";
 
 export type KindOfIValue<T extends unknown[], Extra extends unknown> = {
-    [K in keyof T]: IValue<T[K], Extra> | undefined;
+    [K in keyof T]: ReadableIValue<T[K], Extra> | undefined;
 };
 
 /**

@@ -77,22 +77,22 @@ export function For<
     TagOptions extends object,
     T extends
         | Set<unknown>
-        | SetModel<unknown>
+        | SetModel<unknown, unknown>
         | Map<unknown, unknown>
-        | MapModel<unknown, unknown>
+        | MapModel<unknown, unknown, unknown>
         | unknown[]
-        | ArrayModel<unknown>,
+        | ArrayModel<unknown, unknown>,
     K = T extends unknown[]
         ? number
-        : T extends ArrayModel<unknown>
+        : T extends ArrayModel<unknown, unknown>
           ? number
           : T extends Set<infer R>
             ? R
-            : T extends SetModel<infer R>
+            : T extends SetModel<infer R, unknown>
               ? R
               : T extends Map<infer R, unknown>
                 ? R
-                : T extends MapModel<infer R, unknown>
+                : T extends MapModel<infer R, unknown, unknown>
                   ? R
                   : never,
     V = T extends (infer R)[]
@@ -101,11 +101,11 @@ export function For<
           ? R
           : T extends Map<unknown, infer R>
             ? R
-            : T extends ArrayModel<infer R>
+            : T extends ArrayModel<infer R, unknown>
               ? R
-              : T extends SetModel<infer R>
+              : T extends SetModel<infer R, unknown>
                 ? R
-                : T extends MapModel<unknown, infer R>
+                : T extends MapModel<unknown, infer R, unknown>
                   ? R
                   : never,
 >(
@@ -124,20 +124,21 @@ export function For<
             new ArrayModelViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
                 ctx.runner,
                 ctx.sDeep + 1,
-                model as ArrayModel<V>,
+                model as ArrayModel<V, unknown>,
                 (ctx, value, index) => {
-                    slot(ctx, value, index.V as K);
+                    slot(ctx, value as V, index.V as K);
                 },
+                false,
                 ref,
                 frag,
             ),
         );
     } else if (model instanceof MapModel) {
         ctx.child(
-            new MapViewNode<K, V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>(
+            new MapViewNode<K, V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
                 ctx.runner,
                 ctx.sDeep + 1,
-                model as MapModel<K, V>,
+                model as MapModel<K, V, unknown>,
                 (ctx, iValue, key) => {
                     Watch(
                         {
@@ -149,16 +150,17 @@ export function For<
                         ctx,
                     );
                 },
+                false,
                 ref,
                 frag,
             ),
         );
     } else if (model instanceof SetModel) {
         ctx.child(
-            new SetViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>(
+            new SetViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
                 ctx.runner,
                 ctx.sDeep + 1,
-                model as SetModel<V>,
+                model as SetModel<V, unknown>,
                 (ctx, value) => {
                     slot(ctx, value, value as unknown as K);
                 },
@@ -220,8 +222,12 @@ export function ArrayViewFn<
     );
 }
 
-export function ArrayModelView<Node, Element, TagOptions extends object, V>(
-    props: Required<ForOptions<Node, Element, TagOptions, ArrayModel<V>, [V, IValue<number, unknown>]>>,
+export interface WritableViewOptions<Node, Element, TagOptions extends object, T, Args extends unknown[]>
+    extends Required<ForOptions<Node, Element, TagOptions, T, Args>> {
+    writable: boolean;
+}
+export function ArrayModelView<Node, Element, TagOptions extends object, V, Extra>(
+    props: WritableViewOptions<Node, Element, TagOptions, ArrayModel<V, Extra>, [V, IValue<number, unknown>]>,
     ctx: Fragment<Node, Element, TagOptions>,
 ) {
     ctx.child(
@@ -230,6 +236,7 @@ export function ArrayModelView<Node, Element, TagOptions extends object, V>(
             ctx.sDeep + 1,
             props.of,
             props.slot,
+            props.writable,
             ref,
             frag,
         ),
@@ -237,15 +244,16 @@ export function ArrayModelView<Node, Element, TagOptions extends object, V>(
 }
 
 export function MapModelView<Node, Element, TagOptions extends object, K, V>(
-    props: Required<ForOptions<Node, Element, TagOptions, MapModel<K, V>, [WritableIValue<V, unknown>, K]>>,
+    props: WritableViewOptions<Node, Element, TagOptions, MapModel<K, V, unknown>, [WritableIValue<V, unknown>, K]>,
     ctx: Fragment<Node, Element, TagOptions>,
 ) {
     ctx.child(
-        new MapViewNode<K, V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>(
+        new MapViewNode<K, V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
             ctx.runner,
             ctx.sDeep + 1,
             props.of,
             props.slot,
+            props.writable,
             ref,
             frag,
         ),
@@ -253,11 +261,11 @@ export function MapModelView<Node, Element, TagOptions extends object, K, V>(
 }
 
 export function SetModelView<Node, Element, TagOptions extends object, V>(
-    props: Required<ForOptions<Node, Element, TagOptions, SetModel<V>, [V]>>,
+    props: Required<ForOptions<Node, Element, TagOptions, SetModel<V, unknown>, [V]>>,
     ctx: Fragment<Node, Element, TagOptions>,
 ) {
     ctx.child(
-        new SetViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>(
+        new SetViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
             ctx.runner,
             ctx.sDeep + 1,
             props.of,

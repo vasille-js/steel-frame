@@ -151,7 +151,7 @@ it("test reference debounce update via debounce ref", function (done) {
     const debounce = new DebounceReference(v => new Reference(v), ref, 1, ctx);
 
     expect(debounce.V).toBe(0);
-    debounce.V = 1;
+    ref.V = 1;
     expect(debounce.V).toBe(0);
     setTimeout(() => {
         expect(debounce.V).toBe(1);
@@ -165,7 +165,7 @@ it("test reference debounce update via debounce ref (up)", function (done) {
     const debounce = new DebounceReference(v => new Reference(v), ref, 1, ctx);
 
     expect(debounce.V).toBe(0);
-    debounce.up(1);
+    ref.up(1);
     expect(debounce.V).toBe(0);
     setTimeout(() => {
         expect(debounce.V).toBe(1);

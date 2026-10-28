@@ -3,7 +3,7 @@ import { WritableIValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
-import { Reference } from "../value/reference.js";
+import { SyncedIValue } from "../value/synced.js";
 import { Collection } from "./collection.js";
 import { Listener, removeFragmentFromTree } from "./listener.js";
 
@@ -20,9 +20,9 @@ type Arguments<K, T> = [Ops.Clear] | [Ops.Remove, K] | [Ops.Add, K, T];
  * @class MapModel
  * @extends Map
  */
-export class MapModel<K, T> extends Collection<[K, T][] | Map<K, T> | undefined, Map<K, T>> {
+export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | undefined, Map<K, T>> {
     public readonly listener: Listener<Arguments<K, T>>;
-    public readonly r_size: Reference<number, unknown>;
+    public readonly size?: WritableIValue<number, unknown>;
 
     /**
      * Constructs a map model
@@ -30,12 +30,17 @@ export class MapModel<K, T> extends Collection<[K, T][] | Map<K, T> | undefined,
      * @param ctx lifetime context
      */
     public constructor(
-        data?: [K, T][] | Map<K, T> | Reference<[K, T][] | Map<K, T> | undefined, unknown>,
+        data?: [K, T][] | Map<K, T> | WritableIValue<[K, T][] | Map<K, T> | undefined, unknown>,
         ctx?: Reactive,
+        size?: WritableIValue<number, Extra>,
     ) {
         super(v => new Map(v), data, ctx);
         this.listener = new Listener();
-        this.r_size = new Reference(this.d.size, ctx);
+
+        if (size) {
+            this.size = size;
+            size.up(this.d.size);
+        }
     }
 
     public get map(): ReadonlyMap<K, T> {
@@ -78,10 +83,8 @@ export class MapModel<K, T> extends Collection<[K, T][] | Map<K, T> | undefined,
         const result = fn();
         const r = this.r;
 
-        this.r_size.up(this.d.size);
-        if (r) {
-            r.up((this.last = r.V instanceof Array ? [...this.d] : new Map(this.d)));
-        }
+        this.size?.up(this.d.size);
+        r?.up((this.last = r.V instanceof Array ? [...this.d] : new Map(this.d)));
         return result;
     }
 
@@ -94,7 +97,35 @@ export class MapModel<K, T> extends Collection<[K, T][] | Map<K, T> | undefined,
                 this.d.set(key, value);
             }
         }
-        this.r_size.up(this.d.size);
+        this.size?.up(this.d.size);
+    }
+}
+
+class WritableMapValue<K, T, Extra> extends SyncedIValue<T, Extra> implements WritableIValue<T, Extra> {
+    public constructor(
+        ctx: Reactive,
+        public readonly model: MapModel<K, T, Extra>,
+        public readonly key: K,
+        ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
+    ) {
+        super(ref(model.map.get(key)!, ctx), ctx);
+    }
+
+    public get V(): T {
+        return this.sync.V;
+    }
+
+    public set V(v: T) {
+        this.up(v);
+    }
+
+    public up(v: T, arg?: Extra) {
+        if (v !== this.sync.V) {
+            this.sync.up(v, arg);
+            this.model.set(this.key, v);
+        }
+
+        return v;
     }
 }
 
@@ -105,6 +136,7 @@ export class MapViewNode<
     Element,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
+    Extra,
 > extends Fragment<Node, Element, TagOptions, Runner> {
     private map = new Map<
         K,
@@ -123,9 +155,10 @@ export class MapViewNode<
     public constructor(
         runner: Runner,
         deep: number,
-        private readonly model: MapModel<K, T>,
+        private readonly model: MapModel<K, T, Extra>,
         slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: WritableIValue<T, unknown>, key: K) => void,
-        private readonly ref: <T>(v: T) => WritableIValue<T, unknown>,
+        private readonly writable: boolean,
+        private readonly ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, unknown>,
         private readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(runner, deep);
@@ -137,7 +170,7 @@ export class MapViewNode<
 
         function create(this: void, key: K, value: T) {
             const frag = view.frag(view.runner, view.sDeep + 1);
-            const ref = view.ref(value);
+            const ref = view.writable ? new WritableMapValue(frag, view.model, key, view.ref) : view.ref(value, frag);
 
             frag.link(view, view.last, undefined);
             view.slot(frag, ref, key);
@@ -149,7 +182,7 @@ export class MapViewNode<
                 const existing = view.map.get(key!);
 
                 if (existing) {
-                    existing.value.V = value!;
+                    existing.value.up(value!);
                 } else {
                     create(key!, value!);
                 }

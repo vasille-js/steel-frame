@@ -3,41 +3,37 @@ import { ReadableIValue, WritableIValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
-import { Reference } from "../value/reference.js";
+import { SyncedIValue } from "../value/synced.js";
 import { Collection } from "./collection.js";
 import { Listener } from "./listener.js";
 
 type Arguments<T> = [number, number, T[]] | [number, number];
 
-function fixedIndex(index: number | undefined, length: number, defaultValue: number) {
-    return typeof index === "number"
-        ? index < 0
-            ? index < -length
-                ? 0
-                : length + index
-            : index > length
-              ? length
-              : index
-        : defaultValue;
-}
-
 /**
  * Model based on Array class
  * @extends Array
  */
-export class ArrayModel<T> extends Collection<T[] | undefined, T[]> {
+export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
     public readonly listener: Listener<Arguments<T>>;
-    public readonly r_length: Reference<number, unknown>;
+    public readonly length?: WritableIValue<number, unknown>;
 
     /**
      * @param data {Array} input data
      * @param ctx lifetime context of model
      */
-    public constructor(data?: T[] | WritableIValue<T[], unknown>, ctx?: Reactive) {
+    public constructor(
+        data?: T[] | WritableIValue<T[], unknown>,
+        ctx?: Reactive,
+        length?: WritableIValue<number, Extra>,
+    ) {
         super(arr => (arr ? [...arr] : []), data, ctx);
         this.listener = new Listener();
-        this.r_length = new Reference(this.d.length, ctx);
         ctx?.bind(this);
+
+        if (length) {
+            this.length = length;
+            length.up(this.d.length);
+        }
     }
 
     /**
@@ -47,62 +43,7 @@ export class ArrayModel<T> extends Collection<T[] | undefined, T[]> {
         return this.d;
     }
 
-    /* Array fields */
-
-    /**
-     * Returns the length of the array
-     */
-    public get length(): number {
-        return this.d.length;
-    }
-
-    /**
-     * Sets the length of the array
-     */
-    public set length(value: number) {
-        this.run(() => (this.d.length = value));
-    }
-
     /* Array mutate members */
-
-    /**
-     * Modify the encapsulated array using copyWithin method
-     */
-    public copyWithin(target: number, start: number, end?: number): this {
-        return this.run(() => {
-            const length = this.length;
-            const startIndex = fixedIndex(start, length, 0);
-            const endIndex = fixedIndex(end, length, length);
-            const fromIndex = fixedIndex(target, length, 0);
-            const toIndex = Math.min(fromIndex + (endIndex - startIndex), length);
-
-            this.d.copyWithin(fromIndex, startIndex, endIndex);
-            this.listener.emit(fromIndex, toIndex - fromIndex, this.d.slice(fromIndex, toIndex));
-            return this;
-        });
-    }
-
-    /**
-     * Calls `Array.fill` and notify about changes
-     * @param value {*} value to fill with
-     * @param start {?number} begin index
-     * @param end {?number} end index
-     */
-    public fill(value: T, start?: number, end?: number): this {
-        const length = this.length;
-        const from = fixedIndex(start, length, 0);
-        const to = fixedIndex(end, length, length);
-
-        if (from >= to) {
-            return this;
-        }
-
-        return this.run(() => {
-            this.d.fill(value, start, end);
-            this.listener.emit(from, to - from, this.d.slice(from, to));
-            return this;
-        });
-    }
 
     /**
      * Calls `Array.pop` and notify about changes
@@ -110,8 +51,8 @@ export class ArrayModel<T> extends Collection<T[] | undefined, T[]> {
      */
     public pop(): T | undefined {
         /* istanbul ignore else */
-        if (this.length > 0) {
-            this.listener.emit(this.length - 1, 1);
+        if (this.d.length > 0) {
+            this.listener.emit(this.d.length - 1, 1);
 
             return this.run(() => this.d.pop());
         }
@@ -123,7 +64,7 @@ export class ArrayModel<T> extends Collection<T[] | undefined, T[]> {
      * @return {number} new length of the array
      */
     public push(...items: Array<T>): number {
-        this.listener.emit(this.length, 0, items);
+        this.listener.emit(this.d.length, 0, items);
         return this.run(() => this.d.push(...items));
     }
 
@@ -133,7 +74,7 @@ export class ArrayModel<T> extends Collection<T[] | undefined, T[]> {
      */
     public shift(): T | undefined {
         /* istanbul ignore else */
-        if (this.length > 0) {
+        if (this.d.length > 0) {
             this.listener.emit(0, 1);
             return this.run(() => this.d.shift());
         }
@@ -164,8 +105,8 @@ export class ArrayModel<T> extends Collection<T[] | undefined, T[]> {
      */
     public splice(start: number, deleteCount?: number, ...items: Array<T>): T[] {
         return this.run(() => {
-            const startIndex = Math.min(start, this.length);
-            const removeCount = typeof deleteCount === "number" ? deleteCount : this.length - startIndex;
+            const startIndex = Math.min(start, this.d.length);
+            const removeCount = typeof deleteCount === "number" ? deleteCount : this.d.length - startIndex;
             this.listener.emit(startIndex, removeCount, items);
             return this.d.splice(startIndex, removeCount, ...items);
         });
@@ -197,36 +138,43 @@ export class ArrayModel<T> extends Collection<T[] | undefined, T[]> {
 
     protected run<T>(fn: () => T): T {
         const result = fn();
-        this.r_length.up(this.d.length);
+        this.length?.up(this.d.length);
         this.r?.up((this.last = [...this.d]));
         return result;
     }
 
     protected override reset(arr: T[] | undefined) {
         const newArr = arr ? [...arr] : [];
-        this.listener.emit(0, this.length, newArr);
-        this.d.splice(0, this.length, ...newArr);
+        const length = this.d.length;
+
+        this.listener.emit(0, length, newArr);
+        this.d.splice(0, length, ...newArr);
+        this.length?.up(newArr.length);
     }
 }
 
 interface CacheItem<
+    T,
     Node,
     Element,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
-    Extra extends unknown,
+    Extra,
+    Writable extends WritableIValue<T, Extra> = WritableIValue<T, Extra>,
 > {
     frag: Fragment<Node, Element, TagOptions, Runner>;
     index: WritableIValue<number, Extra>;
+    writable?: Writable;
 }
 
 class BaseArrayView<
+    T,
     Node,
     Element,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra extends unknown,
-    CacheItemType extends CacheItem<Node, Element, TagOptions, Runner, Extra>,
+    CacheItemType extends CacheItem<T, Node, Element, TagOptions, Runner, Extra>,
 > extends Fragment<Node, Element, TagOptions, Runner> {
     protected cache: CacheItemType[] = [];
 
@@ -252,6 +200,40 @@ class BaseArrayView<
     }
 }
 
+class WritableArrayItem<T, Extra> extends SyncedIValue<T, Extra> implements WritableIValue<T, Extra> {
+    public constructor(
+        ctx: Reactive,
+        public readonly model: ArrayModel<T, Extra>,
+        public readonly index: ReadableIValue<number, Extra>,
+        ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
+    ) {
+        super(ref(model.array[index.V]!, ctx), ctx);
+    }
+
+    public get V(): T {
+        return this.sync.V;
+    }
+
+    public set V(v: T) {
+        this.up(v);
+    }
+
+    // called by user, update of the model required
+    public up(v: T, arg?: Extra) {
+        if (v !== this.sync.V) {
+            this.sync.up(v, arg);
+            this.model.replace(this.index.V, v);
+        }
+
+        return v;
+    }
+
+    // called from ArrayModelView, update of the model dues to infinite loop
+    public upSync(v: T): void {
+        this.sync.up(v);
+    }
+}
+
 export class ArrayModelViewNode<
     T,
     Node,
@@ -259,24 +241,33 @@ export class ArrayModelViewNode<
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra extends unknown,
-> extends BaseArrayView<Node, Element, TagOptions, Runner, Extra, CacheItem<Node, Element, TagOptions, Runner, Extra>> {
+> extends BaseArrayView<
+    T,
+    Node,
+    Element,
+    TagOptions,
+    Runner,
+    Extra,
+    CacheItem<T, Node, Element, TagOptions, Runner, Extra, WritableArrayItem<T, Extra>>
+> {
     private apply: ((...args: Arguments<T>) => void) | undefined;
     private readonly slot: (
         ctx: Fragment<Node, Element, TagOptions, Runner>,
-        value: T,
+        value: T | WritableIValue<T, Extra>,
         index: ReadableIValue<number, Extra>,
     ) => void;
 
     public constructor(
         runner: Runner,
         deep: number,
-        private readonly model: ArrayModel<T>,
+        private readonly model: ArrayModel<T, Extra>,
         slot: (
             ctx: Fragment<Node, Element, TagOptions, Runner>,
-            value: T,
+            value: T | WritableIValue<T, Extra>,
             index: ReadableIValue<number, Extra>,
         ) => void,
-        private readonly ref: <T>(v: T) => WritableIValue<T, Extra>,
+        private readonly writable: boolean,
+        private readonly ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
         private readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(runner, deep);
@@ -287,19 +278,31 @@ export class ArrayModelViewNode<
         const view = this;
 
         function apply(this: void, index: number, remove: number, values?: readonly T[]) {
-            const children: CacheItem<Node, Element, TagOptions, Runner, Extra>[] = view.cache;
-            const toInsert: CacheItem<Node, Element, TagOptions, Runner, Extra>[] = [];
+            const children = view.cache;
+            const toInsert: CacheItem<T, Node, Element, TagOptions, Runner, Extra, WritableArrayItem<T, Extra>>[] = [];
             const prev = children[index - 1]?.frag;
             const next = children[index + remove]?.frag;
             const length = values?.length || 0;
             const lastIndex = length - 1;
 
+            if (length === remove && view.writable) {
+                // update writable values, better performance
+                for (let i = 0; i < length; i++) {
+                    children[index + i]!.writable!.V = values![i]!;
+                }
+                return;
+            }
+
             // create new fragments
             for (let i = 0; i < length; i++) {
-                toInsert[i] = {
-                    frag: view.frag(view.runner, view.sDeep + 1),
-                    index: view.ref(i + index),
-                };
+                const ctx = view.frag(view.runner, view.sDeep + 1);
+                const inserted: CacheItem<T, Node, Element, TagOptions, Runner, Extra> = (toInsert[i] = {
+                    frag: ctx,
+                    index: view.ref(i + index, ctx),
+                });
+                if (view.writable) {
+                    inserted.writable = new WritableArrayItem(ctx, view.model, inserted.index, view.ref);
+                }
             }
             // locate new fragments
             for (let i = 0; i < length; i++) {
@@ -325,7 +328,9 @@ export class ArrayModelViewNode<
 
             // render new fragments content in reverse order
             for (let i = lastIndex; i >= 0; i--) {
-                view.slot(toInsert[i]!.frag, (values as T[])[i] as T, toInsert[i]!.index);
+                const item = toInsert[i]!;
+
+                view.slot(item.frag, view.writable ? item.writable! : ((values as T[])[i] as T), item.index);
             }
         }
 
@@ -350,7 +355,7 @@ interface KeyedCacheItem<
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra extends unknown,
-> extends CacheItem<Node, Element, TagOptions, Runner, Extra> {
+> extends CacheItem<T, Node, Element, TagOptions, Runner, Extra> {
     key: string | number;
     value: WritableIValue<T, Extra>;
     moved: boolean;
@@ -365,6 +370,7 @@ export class DiffingArrayView<
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra extends unknown,
 > extends BaseArrayView<
+    T,
     Node,
     Element,
     TagOptions,

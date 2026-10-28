@@ -9,6 +9,8 @@ import {
     ArrayViewNode,
 } from "../../classes/index.js";
 import { IRunner } from "../../classes/node/runner.js";
+import { ref } from "../../functions/index.js";
+import { devRef } from "../functions/index.js";
 import { processComponentProps } from "./components.js";
 import { ExecutionPosition, inspector, provideId, StaticPosition, processDevObject } from "./inspectable.js";
 import { DevArrayModel, DevMapModel, DevSetModelNode } from "./models.js";
@@ -35,6 +37,7 @@ export class DevArrayModelViewNode<Node, Element, TagOptions extends object, T> 
         runner: IRunner<Node, Element, TagOptions>,
         model: DevArrayModel<T>,
         slot: (ctx: Fragment<Node, Element, TagOptions>, value: T, index: IValue<number, ExecutionPosition>) => void,
+        writable: boolean,
         usage: StaticPosition,
         indexDeclaration?: StaticPosition,
     ) {
@@ -43,7 +46,8 @@ export class DevArrayModelViewNode<Node, Element, TagOptions extends object, T> 
             1,
             model,
             slot,
-            v => (indexDeclaration ? new DevReference(v, this, indexDeclaration) : new Reference(v)),
+            writable,
+            v => (indexDeclaration ? devRef(v, this, indexDeclaration) : ref(v)),
             runner => createDevFragment(runner),
         );
         this.id = provideId();
@@ -92,8 +96,8 @@ export class DevArrayViewNode<Node, Element, TagOptions extends object, T> exten
             model,
             key,
             slot,
-            v => (valueDeclaration ? new DevReference(v, this, valueDeclaration) : new Reference(v)),
-            v => (indexDeclaration ? new DevReference(v, this, indexDeclaration) : new Reference(v)),
+            v => (valueDeclaration ? devRef(v, this, valueDeclaration) : ref(v)),
+            v => (indexDeclaration ? devRef(v, this, indexDeclaration) : ref(v)),
             runner => createDevFragment(runner),
         );
 
@@ -119,7 +123,8 @@ export class DevSetViewNode<Node, Element, TagOptions extends object, T> extends
     Node,
     Element,
     TagOptions,
-    IRunner<Node, Element, TagOptions>
+    IRunner<Node, Element, TagOptions>,
+    ExecutionPosition
 > {
     public override id: number;
 
@@ -153,7 +158,8 @@ export class DevMapViewNode<Node, Element, TagOptions extends object, K, T> exte
     Node,
     Element,
     TagOptions,
-    IRunner<Node, Element, TagOptions>
+    IRunner<Node, Element, TagOptions>,
+    ExecutionPosition
 > {
     public override id: number;
 
@@ -161,6 +167,7 @@ export class DevMapViewNode<Node, Element, TagOptions extends object, K, T> exte
         runner: IRunner<Node, Element, TagOptions>,
         model: DevMapModel<K, T>,
         slot: (ctx: Fragment<Node, Element, TagOptions>, value: WritableIValue<T, ExecutionPosition>, key: K) => void,
+        writable: boolean,
         usage: StaticPosition,
         valueDeclaration: StaticPosition | undefined,
     ) {
@@ -169,7 +176,8 @@ export class DevMapViewNode<Node, Element, TagOptions extends object, K, T> exte
             1,
             model,
             slot,
-            v => (valueDeclaration ? new DevReference(v, this, valueDeclaration) : new Reference(v)),
+            writable,
+            v => (valueDeclaration ? devRef(v, this, valueDeclaration) : ref(v)),
             runner => createDevFragment(runner),
         );
         this.id = provideId();

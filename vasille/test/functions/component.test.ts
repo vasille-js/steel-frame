@@ -249,6 +249,7 @@ it("ArrayModelView", function () {
             slot(f: Fragment<Node, Element, object>, value) {
                 f.text(value.value);
             },
+            writable: false,
         },
         node,
     );
@@ -289,6 +290,7 @@ it("MapModelView", function () {
             slot(f: Fragment<Node, Element, object>, value) {
                 f.text(value.V.value);
             },
+            writable: false,
         },
         node,
     );

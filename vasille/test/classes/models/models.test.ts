@@ -1,4 +1,4 @@
-import { ArrayModel, Listener, MapModel, SetModel } from "../../../src/classes/index.js";
+import { ArrayModel, Listener, MapModel, Reference, SetModel } from "../../../src/classes/index.js";
 import { ensure } from "../../../src/index.js";
 
 it("listener", function () {
@@ -20,53 +20,42 @@ it("listener", function () {
 });
 
 it("array model", function () {
-    const array = new ArrayModel<number>([1, 2, 3]);
+    const length = new Reference(0);
+    const array = new ArrayModel<number, unknown>([1, 2, 3], undefined, length);
 
     expect(array.array.at(0)).toBe(1);
 
-    array.fill(0);
-    expect(array.array).toEqual([0, 0, 0]);
-
-    array.fill(1, 1, -1);
-    expect(array.array).toEqual([0, 1, 0]);
-
-    array.fill(2, 2, 0);
-    expect(array.array).toEqual([0, 1, 0]);
-
-    array.fill(0, -5, 5);
-    expect(array.array).toEqual([0, 0, 0]);
-
-    expect(array.pop()).toBe(0);
-    expect(array.array).toEqual([0, 0]);
+    expect(array.pop()).toBe(3);
+    expect(array.array).toEqual([1, 2]);
 
     expect(array.push(1, 2, 3)).toBe(5);
-    expect(array.array).toEqual([0, 0, 1, 2, 3]);
+    expect(array.array).toEqual([1, 2, 1, 2, 3]);
 
-    expect(array.shift()).toBe(0);
-    expect(array.array).toEqual([0, 1, 2, 3]);
+    expect(array.shift()).toBe(1);
+    expect(array.array).toEqual([2, 1, 2, 3]);
 
     expect(array.splice(1, 2, 2, 1)).toEqual([1, 2]);
-    expect(array.array).toEqual([0, 2, 1, 3]);
+    expect(array.array).toEqual([2, 2, 1, 3]);
     expect(array.splice(3)).toEqual([3]);
-    expect(array.array).toEqual([0, 2, 1]);
+    expect(array.array).toEqual([2, 2, 1]);
 
     expect(array.unshift(3)).toBe(4);
-    expect(array.array).toEqual([3, 0, 2, 1]);
+    expect(array.array).toEqual([3, 2, 2, 1]);
 
     array.push(4);
-    expect(array.array).toEqual([3, 0, 2, 1, 4]);
+    expect(array.array).toEqual([3, 2, 2, 1, 4]);
 
     array.splice(1, 0, -1);
-    expect(array.array).toEqual([3, -1, 0, 2, 1, 4]);
+    expect(array.array).toEqual([3, -1, 2, 2, 1, 4]);
 
     array.unshift(-4);
-    expect(array.array).toEqual([-4, 3, -1, 0, 2, 1, 4]);
+    expect(array.array).toEqual([-4, 3, -1, 2, 2, 1, 4]);
 
     array.splice(0, 1);
-    expect(array.array).toEqual([3, -1, 0, 2, 1, 4]);
+    expect(array.array).toEqual([3, -1, 2, 2, 1, 4]);
 
-    array.splice(array.length - 1, 1);
-    expect(array.array).toEqual([3, -1, 0, 2, 1]);
+    array.splice(length.V - 1, 1);
+    expect(array.array).toEqual([3, -1, 2, 2, 1]);
 
     array.splice(2, 1);
     expect(array.array).toEqual([3, -1, 2, 1]);
@@ -80,192 +69,213 @@ it("array model", function () {
     array.replace(1, 4);
     expect(array.array).toEqual([1, 4, 3]);
 
-    array.copyWithin(1, 0);
-    expect(array.array).toEqual([1, 1, 4]);
+    expect(length.V).toBe(3);
 
     array.splice(0);
     expect(array.array).toEqual([]);
 
-    expect(array.length).toBe(0);
-
-    array.length = 2;
-    expect(array.length).toBe(2);
-    expect(array.array[0]).toBe(undefined);
+    expect(length.V).toBe(0);
 });
 
 it("map model", function () {
-    const map = new MapModel<number, number>([
+    const map = new MapModel<number, number, unknown>([
         [1, 2],
         [2, 3],
         [3, 4],
     ]);
 
-    expect(map.get(1)).toBe(2);
+    expect(map.map.get(1)).toBe(2);
 
     map.delete(3);
-    expect(Array.from(map)).toEqual([
+    expect(Array.from(map.map)).toEqual([
         [1, 2],
         [2, 3],
     ]);
 
     map.set(2, 4);
-    expect(Array.from(map)).toEqual([
+    expect(Array.from(map.map)).toEqual([
         [1, 2],
         [2, 4],
     ]);
 
     map.clear();
-    expect(Array.from(map)).toEqual([]);
+    expect(Array.from(map.map)).toEqual([]);
 });
 
 it("set model", function () {
-    const set = new SetModel<number>([1, 2, 3]);
+    const set = new SetModel<number, unknown>([1, 2, 3]);
 
     set.add(4);
-    expect(Array.from(set)).toEqual([1, 2, 3, 4]);
+    expect(Array.from(set.set)).toEqual([1, 2, 3, 4]);
 
     set.delete(4);
-    expect(Array.from(set)).toEqual([1, 2, 3]);
+    expect(Array.from(set.set)).toEqual([1, 2, 3]);
 
     set.delete(2);
-    expect(Array.from(set)).toEqual([1, 3]);
+    expect(Array.from(set.set)).toEqual([1, 3]);
 
     set.clear();
-    expect(Array.from(set)).toEqual([]);
+    expect(Array.from(set.set)).toEqual([]);
 });
 
 it("has reactive array inside", function () {
-    const array = new ArrayModel<number>();
+    const array = new Reference([0, 0, 0] as number[]);
+    const length = new Reference(0);
+    const model = new ArrayModel<number, unknown>(array, undefined, length);
 
-    expect("r_length" in array).toBe(true);
-    expect("r_array" in array).toBe(true);
+    expect(length.V).toBe(3);
+    expect(array.V).toEqual([0, 0, 0]);
 
-    expect(ensure(undefined, array, "r_length").V).toBe(0);
-    expect(array.r_length.V).toBe(0);
+    expect(model.pop()).toBe(0);
+    expect(array.V).toEqual([0, 0]);
 
-    array.length = 3;
-    expect(array.r_length.V).toBe(3);
+    expect(model.push(1, 2, 3)).toBe(5);
+    expect(array.V).toEqual([0, 0, 1, 2, 3]);
 
-    array.fill(0);
-    expect(array.r_array.V).toEqual([0, 0, 0]);
+    expect(model.shift()).toBe(0);
+    expect(array.V).toEqual([0, 1, 2, 3]);
 
-    array.fill(1, 1, -1);
-    expect(array.r_array.V).toEqual([0, 1, 0]);
+    expect(model.splice(1, 2, 2, 1)).toEqual([1, 2]);
+    expect(array.V).toEqual([0, 2, 1, 3]);
+    expect(model.splice(3)).toEqual([3]);
+    expect(array.V).toEqual([0, 2, 1]);
 
-    array.fill(2, 2, 0);
-    expect(array.r_array.V).toEqual([0, 1, 0]);
+    expect(model.unshift(3)).toBe(4);
+    expect(array.V).toEqual([3, 0, 2, 1]);
 
-    array.fill(0, -5, 5);
-    expect(array.r_array.V).toEqual([0, 0, 0]);
+    model.push(4);
+    expect(array.V).toEqual([3, 0, 2, 1, 4]);
 
-    expect(array.pop()).toBe(0);
-    expect(array.r_array.V).toEqual([0, 0]);
+    model.splice(1, 0, -1);
+    expect(array.V).toEqual([3, -1, 0, 2, 1, 4]);
 
-    expect(array.push(1, 2, 3)).toBe(5);
-    expect(array.r_array.V).toEqual([0, 0, 1, 2, 3]);
+    model.unshift(-4);
+    expect(array.V).toEqual([-4, 3, -1, 0, 2, 1, 4]);
 
-    expect(array.shift()).toBe(0);
-    expect(array.r_array.V).toEqual([0, 1, 2, 3]);
+    model.splice(0, 1);
+    expect(array.V).toEqual([3, -1, 0, 2, 1, 4]);
 
-    expect(array.splice(1, 2, 2, 1)).toEqual([1, 2]);
-    expect(array.r_array.V).toEqual([0, 2, 1, 3]);
-    expect(array.splice(3)).toEqual([3]);
-    expect(array.r_array.V).toEqual([0, 2, 1]);
+    model.splice(length.V - 1, 1);
+    expect(array.V).toEqual([3, -1, 0, 2, 1]);
 
-    expect(array.unshift(3)).toBe(4);
-    expect(array.r_array.V).toEqual([3, 0, 2, 1]);
+    model.splice(2, 1);
+    expect(array.V).toEqual([3, -1, 2, 1]);
 
-    array.push(4);
-    expect(array.r_array.V).toEqual([3, 0, 2, 1, 4]);
+    model.splice(model.array.indexOf(-1), 1);
+    expect(array.V).toEqual([3, 2, 1]);
 
-    array.splice(1, 0, -1);
-    expect(array.r_array.V).toEqual([3, -1, 0, 2, 1, 4]);
+    model.sort();
+    expect(array.V).toEqual([1, 2, 3]);
 
-    array.unshift(-4);
-    expect(array.r_array.V).toEqual([-4, 3, -1, 0, 2, 1, 4]);
+    model.replace(1, 4);
+    expect(array.V).toEqual([1, 4, 3]);
 
-    array.splice(0, 1);
-    expect(array.r_array.V).toEqual([3, -1, 0, 2, 1, 4]);
-
-    array.splice(array.length - 1, 1);
-    expect(array.r_array.V).toEqual([3, -1, 0, 2, 1]);
-
-    array.splice(2, 1);
-    expect(array.r_array.V).toEqual([3, -1, 2, 1]);
-
-    array.splice(array.array.indexOf(-1), 1);
-    expect(array.r_array.V).toEqual([3, 2, 1]);
-
-    array.sort();
-    expect(array.r_array.V).toEqual([1, 2, 3]);
-
-    array.replace(1, 4);
-    expect(array.r_array.V).toEqual([1, 4, 3]);
-
-    array.copyWithin(1, 0);
-    expect(array.r_array.V).toEqual([1, 1, 4]);
-
-    array.splice(0);
-    expect(array.r_array.V).toEqual([]);
+    model.splice(0);
+    expect(array.V).toEqual([]);
 });
 
 it("has reactive map inside", function () {
-    const map = new MapModel<number, number>();
+    const map = new Reference(new Map<number, number>());
+    const size = new Reference(0);
+    const model = new MapModel<number, number, unknown>(map, undefined, size);
 
-    expect("r_size" in map).toBe(true);
-    expect("r_array" in map).toBe(true);
-    expect("r_map" in map).toBe(true);
+    expect(size.V).toBe(0);
 
-    expect(ensure(undefined, map, "r_size").V).toBe(0);
-    expect(map.r_size.V).toBe(0);
+    model.set(1, 2);
+    model.set(2, 3);
+    model.set(3, 4);
+    expect(size.V).toBe(3);
 
-    map.set(1, 2);
-    map.set(2, 3);
-    map.set(3, 4);
-    expect(map.r_size.V).toBe(3);
+    expect(map.V.get(1)).toBe(2);
 
-    expect(map.get(1)).toBe(2);
-
-    map.delete(3);
-    expect(Array.from(map.r_map.V)).toEqual([
+    model.delete(3);
+    expect(Array.from(map.V)).toEqual([
         [1, 2],
         [2, 3],
     ]);
 
-    map.set(2, 4);
-    expect(Array.from(map.r_map.V)).toEqual([
+    model.set(2, 4);
+    expect(Array.from(map.V)).toEqual([
         [1, 2],
         [2, 4],
     ]);
 
-    map.clear();
-    expect(Array.from(map.r_map.V)).toEqual([]);
+    model.clear();
+    expect(Array.from(map.V)).toEqual([]);
 });
 
 it("has reactive set inside", function () {
-    const set = new SetModel<number>();
+    const set = new Reference(new Set<number>());
+    const size = new Reference(0);
+    const model = new SetModel<number, unknown>(set, undefined, size);
 
-    expect("r_size" in set).toBe(true);
-    expect("r_array" in set).toBe(true);
-    expect("r_set" in set).toBe(true);
+    expect(size.V).toBe(0);
 
-    expect(ensure(undefined, set, "r_size").V).toBe(0);
-    expect(set.r_size.V).toBe(0);
+    model.add(1);
+    model.add(2);
+    model.add(3);
+    expect(size.V).toBe(3);
 
-    set.add(1);
-    set.add(2);
-    set.add(3);
-    expect(set.r_size.V).toBe(3);
+    model.add(4);
+    expect(Array.from(set.V)).toEqual([1, 2, 3, 4]);
 
-    set.add(4);
-    expect(Array.from(set.r_set.V)).toEqual([1, 2, 3, 4]);
+    model.delete(4);
+    expect(Array.from(set.V)).toEqual([1, 2, 3]);
 
-    set.delete(4);
-    expect(Array.from(set.r_set.V)).toEqual([1, 2, 3]);
+    model.delete(2);
+    expect(Array.from(set.V)).toEqual([1, 3]);
 
-    set.delete(2);
-    expect(Array.from(set.r_set.V)).toEqual([1, 3]);
+    model.clear();
+    expect(Array.from(set.V)).toEqual([]);
+});
 
-    set.clear();
-    expect(Array.from(set.r_set.V)).toEqual([]);
+it("has reactive map as array inside", function () {
+    const array = new Reference([] as [number, number][]);
+    const size = new Reference(0);
+    const model = new MapModel<number, number, unknown>(array, undefined, size);
+
+    model.set(1, 2);
+    model.set(2, 3);
+    model.set(3, 4);
+    expect(size.V).toBe(3);
+
+    expect(array.V[0]).toEqual([1, 2]);
+
+    model.delete(3);
+    expect(array.V).toEqual([
+        [1, 2],
+        [2, 3],
+    ]);
+
+    model.set(2, 4);
+    expect(array.V).toEqual([
+        [1, 2],
+        [2, 4],
+    ]);
+
+    model.clear();
+    expect(array.V).toEqual([]);
+});
+
+it("has reactive set as array inside", function () {
+    const array = new Reference([] as number[]);
+    const size = new Reference(0);
+    const model = new SetModel<number, unknown>(array, undefined, size);
+
+    model.add(1);
+    model.add(2);
+    model.add(3);
+    expect(size.V).toBe(3);
+
+    model.add(4);
+    expect(array.V).toEqual([1, 2, 3, 4]);
+
+    model.delete(4);
+    expect(array.V).toEqual([1, 2, 3]);
+
+    model.delete(2);
+    expect(array.V).toEqual([1, 3]);
+
+    model.clear();
+    expect(array.V).toEqual([]);
 });

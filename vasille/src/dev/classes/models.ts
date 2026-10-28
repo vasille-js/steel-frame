@@ -1,6 +1,6 @@
 import { WritableIValue } from "../../classes/core/ivalue.js";
 import { ArrayModel, Destroyable, MapModel, Reactive, SetModel } from "../../classes/index.js";
-import { inspector, provideId, StaticPosition, toDevValue } from "./inspectable.js";
+import { ExecutionPosition, inspector, provideId, StaticPosition, toDevValue } from "./inspectable.js";
 
 let updateId = 0;
 
@@ -22,7 +22,7 @@ function shareModelUpdate(modelId: number, method: string, args: unknown[], resu
     });
 }
 
-export class DevArrayModel<T> extends ArrayModel<T> implements Destroyable {
+export class DevArrayModel<T> extends ArrayModel<T, ExecutionPosition> implements Destroyable {
     public readonly id: number;
 
     public constructor(
@@ -58,28 +58,9 @@ export class DevArrayModel<T> extends ArrayModel<T> implements Destroyable {
         }
     }
 
-    public override get length(): number {
-        return super.length;
-    }
-
-    public override set length(value: number) {
-        shareModelUpdate(this.id, "length", [value], undefined);
-        super.length = value;
-    }
-
     public override destroy(deep: number): void {
         super.destroy(deep);
         inspector.destroy({ id: this.id, time: Date.now() });
-    }
-
-    public override copyWithin(target: number, start: number, end?: number): this {
-        shareModelUpdate(this.id, "copyWithin", [target, start, end], undefined);
-        return super.copyWithin(target, start, end);
-    }
-
-    public override fill(value: T, start?: number, end?: number): this {
-        shareModelUpdate(this.id, "fill", [value, start, end], undefined);
-        return super.fill(value, start, end);
     }
 
     public override pop(): T | undefined {
@@ -122,7 +103,7 @@ export class DevArrayModel<T> extends ArrayModel<T> implements Destroyable {
     }
 }
 
-export class DevSetModelNode<T> extends SetModel<T> implements Destroyable {
+export class DevSetModelNode<T> extends SetModel<T, ExecutionPosition> implements Destroyable {
     public readonly id: number;
 
     public constructor(usage: StaticPosition, set?: T[], ctx?: Reactive, name?: string) {
@@ -173,7 +154,7 @@ export class DevSetModelNode<T> extends SetModel<T> implements Destroyable {
     }
 }
 
-export class DevMapModel<K, T> extends MapModel<K, T> implements Destroyable {
+export class DevMapModel<K, T> extends MapModel<K, T, ExecutionPosition> implements Destroyable {
     public readonly id: number;
 
     public constructor(usage: StaticPosition, map?: [K, T][], ctx?: Reactive, name?: string) {

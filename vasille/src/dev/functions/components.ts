@@ -8,6 +8,7 @@ import {
     SlotOptions,
     SwitchOptions,
     WatchOptions,
+    WritableViewOptions,
     ZombieOptions,
 } from "../../functions/components.js";
 import {
@@ -89,6 +90,7 @@ export function DevFor<
                         index.V as K,
                     );
                 },
+                false,
                 usage,
             ),
         );
@@ -100,6 +102,7 @@ export function DevFor<
                 (ctx, value, key) => {
                     slot(ctx as Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>, value.V, key);
                 },
+                false,
                 usage,
                 undefined,
             ),
@@ -182,25 +185,41 @@ export function DevArrayView<
 }
 
 export function DevArrayModelView<Node, Element, TagOptions extends object, V>(
-    props: Required<ForOptions<Node, Element, TagOptions, DevArrayModel<V>, [V, IValue<number, ExecutionPosition>]>>,
+    props: WritableViewOptions<Node, Element, TagOptions, DevArrayModel<V>, [V, IValue<number, ExecutionPosition>]>,
     ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
     _defaultSlot: never,
     usage: StaticPosition,
     index: StaticPosition | undefined,
 ) {
-    ctx.child(new DevArrayModelViewNode<Node, Element, TagOptions, V>(ctx.runner, props.of, props.slot, usage, index));
+    ctx.child(
+        new DevArrayModelViewNode<Node, Element, TagOptions, V>(
+            ctx.runner,
+            props.of,
+            props.slot,
+            props.writable,
+            usage,
+            index,
+        ),
+    );
 }
 
 export function DevMapModelView<Node, Element, TagOptions extends object, K, V>(
-    props: Required<
-        ForOptions<Node, Element, TagOptions, DevMapModel<K, V>, [WritableIValue<V, ExecutionPosition>, K]>
-    >,
+    props: WritableViewOptions<Node, Element, TagOptions, DevMapModel<K, V>, [WritableIValue<V, ExecutionPosition>, K]>,
     ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
     _defaultSlot: never,
     usage: StaticPosition,
     value: StaticPosition | undefined,
 ) {
-    ctx.child(new DevMapViewNode<Node, Element, TagOptions, K, V>(ctx.runner, props.of, props.slot, usage, value));
+    ctx.child(
+        new DevMapViewNode<Node, Element, TagOptions, K, V>(
+            ctx.runner,
+            props.of,
+            props.slot,
+            props.writable,
+            usage,
+            value,
+        ),
+    );
 }
 
 export function DevSetModelView<Node, Element, TagOptions extends object, V>(

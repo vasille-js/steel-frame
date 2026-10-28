@@ -28,43 +28,43 @@ it("model functions", function () {
     const arr1 = arrayModel(undefined, [1, 2]);
     const arr2 = arrayModel(node, [1, 2]);
 
-    expect(set1.size).toBe(2);
-    expect(set2.size).toBe(2);
-    expect(map1.size).toBe(2);
-    expect(map2.size).toBe(2);
-    expect(arr1.length).toBe(2);
-    expect(arr2.length).toBe(2);
+    expect(set1.set.size).toBe(2);
+    expect(set2.set.size).toBe(2);
+    expect(map1.map.size).toBe(2);
+    expect(map2.map.size).toBe(2);
+    expect(arr1.array.length).toBe(2);
+    expect(arr2.array.length).toBe(2);
 
     node.destroy(node.sDeep);
 
     // lixcode update: no more cleanup on context destruction
-    expect(set1.size).toBe(2);
-    expect(set2.size).toBe(2);
-    expect(map1.size).toBe(2);
-    expect(map2.size).toBe(2);
-    expect(arr1.length).toBe(2);
-    expect(arr2.length).toBe(2);
+    expect(set1.set.size).toBe(2);
+    expect(set2.set.size).toBe(2);
+    expect(map1.map.size).toBe(2);
+    expect(map2.map.size).toBe(2);
+    expect(arr1.array.length).toBe(2);
+    expect(arr2.array.length).toBe(2);
 });
 
 it("set test", function () {
     const o = {
         a: 1,
-        $b: 2,
+        wr_b: 2,
         c: ref(3),
     };
     const arr = arrayModel(undefined);
     const c = o.c;
 
     set(undefined, o, "a", 10);
-    set(undefined, o, "$b", 20);
+    set(undefined, o, "wr_b", 20);
     set(undefined, o, "c", 30);
-    set(undefined, arr, 0, 1);
+    arr.replace(0, 1);
 
     expect(o.a).toBe(10);
-    expect(o.$b).toBeInstanceOf(IValue);
+    expect(o.wr_b).toBeInstanceOf(IValue);
     expect(o.c.V).toBe(30);
     expect(o.c).toBe(c);
-    expect(arr.length).toBe(1);
+    expect(arr.array.length).toBe(1);
     expect(arr.array[0]).toBe(1);
 });
 
@@ -90,11 +90,10 @@ it("ensure", function () {
     const t3 = ensure(undefined, o, "y");
 
     expect(t1).toBeInstanceOf(Reference);
-    expect(t1.V).toBeUndefined();
+    expect((t1 as unknown as Reference<unknown, unknown>).V).toBeUndefined();
     expect(o.x).toBe(1);
     expect(o.y).toBeInstanceOf(Reference);
     expect(t2).toBe(1);
-    // @ts-expect-error
     expect(t3.V).toBeUndefined();
 });
 
