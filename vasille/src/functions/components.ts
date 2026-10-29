@@ -205,6 +205,7 @@ export function ArrayViewFn<
             value: ReadableIValue<V, unknown>,
             index: ReadableIValue<number, unknown>,
         ) => void;
+        writable: boolean;
     },
     ctx: Fragment<Node, Element, TagOptions>,
 ) {
@@ -215,6 +216,7 @@ export function ArrayViewFn<
             props.r_of,
             props.key,
             props.slot,
+            props.writable,
             ref,
             ref,
             frag,

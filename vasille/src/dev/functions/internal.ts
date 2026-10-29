@@ -111,8 +111,8 @@ export function devSet(
     ctx: Reactive | undefined,
     declaration: StaticPosition,
 ) {
-    if (o[key] instanceof IValue && "up" in o[key]) {
-        (o[key] as WritableIValue<unknown, unknown>).up(value, executionPosition(declaration));
+    if (o[key] instanceof IValue && o[key].isWritable()) {
+        o[key].up(value, executionPosition(declaration));
         return value;
     }
 

@@ -200,7 +200,7 @@ class BaseArrayView<
     }
 }
 
-class WritableArrayItem<T, Extra> extends SyncedIValue<T, Extra> implements WritableIValue<T, Extra> {
+class WritableArrayModelItem<T, Extra> extends SyncedIValue<T, Extra> implements WritableIValue<T, Extra> {
     public constructor(
         ctx: Reactive,
         public readonly model: ArrayModel<T, Extra>,
@@ -218,7 +218,6 @@ class WritableArrayItem<T, Extra> extends SyncedIValue<T, Extra> implements Writ
         this.up(v);
     }
 
-    // called by user, update of the model required
     public up(v: T, arg?: Extra) {
         if (v !== this.sync.V) {
             this.sync.up(v, arg);
@@ -226,11 +225,6 @@ class WritableArrayItem<T, Extra> extends SyncedIValue<T, Extra> implements Writ
         }
 
         return v;
-    }
-
-    // called from ArrayModelView, update of the model dues to infinite loop
-    public upSync(v: T): void {
-        this.sync.up(v);
     }
 }
 
@@ -248,7 +242,7 @@ export class ArrayModelViewNode<
     TagOptions,
     Runner,
     Extra,
-    CacheItem<T, Node, Element, TagOptions, Runner, Extra, WritableArrayItem<T, Extra>>
+    CacheItem<T, Node, Element, TagOptions, Runner, Extra, WritableArrayModelItem<T, Extra>>
 > {
     private apply: ((...args: Arguments<T>) => void) | undefined;
     private readonly slot: (
@@ -279,7 +273,8 @@ export class ArrayModelViewNode<
 
         function apply(this: void, index: number, remove: number, values?: readonly T[]) {
             const children = view.cache;
-            const toInsert: CacheItem<T, Node, Element, TagOptions, Runner, Extra, WritableArrayItem<T, Extra>>[] = [];
+            const toInsert: CacheItem<T, Node, Element, TagOptions, Runner, Extra, WritableArrayModelItem<T, Extra>>[] =
+                [];
             const prev = children[index - 1]?.frag;
             const next = children[index + remove]?.frag;
             const length = values?.length || 0;
@@ -301,7 +296,7 @@ export class ArrayModelViewNode<
                     index: view.ref(i + index, ctx),
                 });
                 if (view.writable) {
-                    inserted.writable = new WritableArrayItem(ctx, view.model, inserted.index, view.ref);
+                    inserted.writable = new WritableArrayModelItem(ctx, view.model, inserted.index, view.ref);
                 }
             }
             // locate new fragments
@@ -362,6 +357,36 @@ interface KeyedCacheItem<
     unmounted: boolean;
 }
 
+class WritableArrayItem<T, Extra> extends SyncedIValue<T, Extra> implements WritableIValue<T, Extra> {
+    public constructor(
+        ctx: Reactive,
+        public readonly array: WritableIValue<T[], Extra>,
+        public readonly index: ReadableIValue<number, Extra>,
+        ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
+    ) {
+        super(ref(array.V[index.V]!, ctx), ctx);
+    }
+
+    public get V(): T {
+        return this.sync.V;
+    }
+
+    public set V(v: T) {
+        this.up(v);
+    }
+
+    public up(v: T, arg?: Extra) {
+        if (v !== this.sync.V) {
+            const index = this.index.V;
+            const array = this.array.V;
+            this.sync.up(v, arg);
+            this.array.up([...array.slice(0, index), v, ...array.slice(index + 1)]);
+        }
+
+        return v;
+    }
+}
+
 export class DiffingArrayView<
     T,
     Node,
@@ -395,8 +420,9 @@ export class DiffingArrayView<
             value: ReadableIValue<T, Extra>,
             index: ReadableIValue<number, Extra>,
         ) => void,
-        protected readonly vRef: <T>(v: T) => WritableIValue<T, Extra>,
-        protected readonly iRef: <T>(v: T) => WritableIValue<T, Extra>,
+        protected readonly writable: boolean,
+        protected readonly vRef: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
+        protected readonly iRef: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
         protected readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(runner, deep);
@@ -411,8 +437,11 @@ export class DiffingArrayView<
         next?: Fragment<Node, Element, TagOptions, Runner>,
     ) {
         const frag = this.frag(this.runner, this.sDeep + 1);
-        const index = this.iRef(newCache.length);
-        const value = this.vRef(modelItem);
+        const index = this.iRef(newCache.length, this);
+        const value =
+            this.writable && this.model.isWritable()
+                ? new WritableArrayItem(this, this.model, index, this.vRef)
+                : this.vRef(modelItem, this);
         const cache: KeyedCacheItem<T, Node, Element, TagOptions, Runner, Extra> = {
             frag: frag,
             key: key,

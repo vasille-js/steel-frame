@@ -69,6 +69,10 @@ export class FieldReference<Extra extends unknown>
             }
         }
     }
+
+    public override isWritable(): this is WritableIValue<unknown, Extra> {
+        return true;
+    }
 }
 
 function unwrap<T>(value: T | IValue<T, unknown>): T {

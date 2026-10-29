@@ -51,7 +51,11 @@ export function safeRef<T>(fn: () => T, ctx?: Reactive): IValue<T | undefined, u
  * create a `Set` model
  * 1. translate `setModel(#)` to `setModel(ctx, #)`
  */
-export function setModel(ctx: Reactive | undefined, data?: unknown[], size?: WritableIValue<number, unknown>) {
+export function setModel(
+    ctx: Reactive | undefined,
+    data?: unknown[] | Set<unknown> | WritableIValue<unknown[] | Set<unknown>, unknown>,
+    size?: WritableIValue<number, unknown>,
+) {
     return new SetModel(data, ctx, size);
 }
 
@@ -61,7 +65,10 @@ export function setModel(ctx: Reactive | undefined, data?: unknown[], size?: Wri
  */
 export function mapModel(
     ctx: Reactive | undefined,
-    data?: [unknown, unknown][],
+    data?:
+        | [unknown, unknown][]
+        | Map<unknown, unknown>
+        | WritableIValue<[unknown, unknown][] | Map<unknown, unknown>, unknown>,
     size?: WritableIValue<number, unknown>,
 ) {
     return new MapModel(data, ctx, size);
@@ -71,7 +78,11 @@ export function mapModel(
  * create an `Array` model
  * 1. `arrayModel([...])` to `arrayModel(ctx, [...])`
  */
-export function arrayModel(ctx: Reactive | undefined, data?: unknown[], length?: WritableIValue<number, unknown>) {
+export function arrayModel(
+    ctx: Reactive | undefined,
+    data?: unknown[] | WritableIValue<unknown[], unknown>,
+    length?: WritableIValue<number, unknown>,
+) {
     return new ArrayModel(data, ctx, length);
 }
 
@@ -129,7 +140,7 @@ export function set<Extra = unknown>(
     value: unknown,
     createRef = ref<unknown, Extra>,
 ) {
-    if (o[key] instanceof IValue && "up" in o[key]) {
+    if (o[key] instanceof IValue && o[key].isWritable()) {
         (o[key] as WritableIValue<unknown, unknown>).up(value);
     } else if (typeof key === "string" && key.startsWith("wr_")) {
         o[key] = createRef(value, ctx);

@@ -92,23 +92,15 @@ export class Reference<T, Extra extends unknown> extends IValue<T, Extra> implem
         }
     }
 
+    public override isWritable(): this is WritableIValue<T, Extra> {
+        return true;
+    }
+
     protected run(fn: (value: T, extra?: Extra) => void, value: T, extra?: Extra) {
         try {
             fn(value, extra);
         } catch (e) {
             reportError(e);
         }
-    }
-}
-
-export class ReadOnlyReference<T, Extra extends unknown> extends Reference<T, Extra> {
-    /** used in generated code */
-    public override up(): T {
-        throw new Error("This value is read-only. It can be used only to track size of collections");
-    }
-
-    /** used internally in the core library */
-    public set(value: T): void {
-        super.up(value);
     }
 }

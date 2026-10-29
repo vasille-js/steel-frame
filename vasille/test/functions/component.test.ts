@@ -229,6 +229,7 @@ it("ArrayView", function () {
             slot(f: Fragment<Node, Element, object>, value) {
                 f.text(value.V.value);
             },
+            writable: false,
         },
         node,
     );

@@ -28,7 +28,7 @@ export class SetModel<T, Extra> extends Collection<T[] | Set<T> | undefined, Set
      * Constructs a set model based on a set
      */
     public constructor(
-        data?: T[] | Set<T> | Reference<T[] | Set<T> | undefined, unknown>,
+        data?: T[] | Set<T> | WritableIValue<T[] | Set<T> | undefined, unknown>,
         ctx?: Reactive,
         size?: WritableIValue<number, Extra>,
     ) {

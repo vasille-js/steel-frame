@@ -164,6 +164,7 @@ export function DevArrayView<
         >
     > & {
         key: (value: V) => number | string;
+        writable: boolean;
     },
     ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
     usage: StaticPosition,
@@ -177,6 +178,7 @@ export function DevArrayView<
             props.of,
             props.key,
             props.slot,
+            props.writable,
             usage,
             value,
             index,

@@ -5,6 +5,7 @@ export interface ReadableIValue<T, Extra> {
     get V(): T;
     on(handler: (value: T, extra?: Extra) => void): void;
     off(handler: (value: T, extra?: Extra) => void): void;
+    isWritable(): this is WritableIValue<T, Extra>;
 }
 
 export interface WritableIValue<T, Extra> extends ReadableIValue<T, Extra> {
@@ -46,6 +47,10 @@ export abstract class IValue<T, Extra extends unknown> implements ReadableIValue
 
     public constructor(deep: number) {
         this.sDeep = this.rDeep = deep;
+    }
+
+    public isWritable(): this is WritableIValue<T, Extra> {
+        return false;
     }
 
     public toJSON(): T {

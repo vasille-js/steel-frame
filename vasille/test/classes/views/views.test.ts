@@ -110,6 +110,7 @@ it("single pass array view", function () {
                 function (f, item, index) {
                     f.text(new TestExpression((item, index) => `(${index}:${item.value})`, [item, index], tag));
                 },
+                false,
                 v => new Reference(v),
                 v => new Reference(v),
                 r => new Fragment(r, tag.sDeep + 1),
@@ -209,6 +210,7 @@ it("multiple text remount", function () {
                     f.text(new TestExpression(item => item.value, [item], tag));
                     f.text("|");
                 },
+                false,
                 v => new Reference(v),
                 v => new Reference(v),
                 r => new Fragment(r, tag.sDeep + 1),
@@ -249,6 +251,7 @@ it("multiple tag remount", function () {
                         ctx.text(new TestExpression(item => item.value, [item], ctx));
                     });
                 },
+                false,
                 v => new Reference(v),
                 v => new Reference(v),
                 r => new Fragment(r, tag.sDeep + 1),
@@ -303,12 +306,14 @@ it("array view remount", function () {
                                     ctx.text(new TestExpression(item => item.value, [item], ctx));
                                 });
                             },
+                            false,
                             v => new Reference(v),
                             v => new Reference(v),
                             r => new Fragment(r, f.sDeep + 1),
                         ),
                     );
                 },
+                false,
                 v => new Reference(v),
                 v => new Reference(v),
                 r => new Fragment(r, tag.sDeep + 1),
@@ -411,6 +416,7 @@ it("map view remount", function () {
                         ),
                     );
                 },
+                false,
                 v => new Reference(v),
                 v => new Reference(v),
                 r => new Fragment(r, tag.sDeep + 1),
@@ -541,6 +547,7 @@ it("set view remount", function () {
                         ),
                     );
                 },
+                false,
                 v => new Reference(v),
                 v => new Reference(v),
                 r => new Fragment(r, tag.sDeep + 1),
