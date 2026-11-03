@@ -7,7 +7,7 @@ import { VLine } from "../components/VLine.js";
 import { HLine } from "../components/HLine.js";
 
 export const ExperienceView = view(() => {
-  <FeatureRow>
+  <FeatureRow reverse>
     <FeatureKey>Experience</FeatureKey>
     <FeatureTitle>The Developer Experience You've Been Missing</FeatureTitle>
   </FeatureRow>;

@@ -414,15 +414,6 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
         Switch(arg) {
             return call("Switch", [arg, ctx]);
         },
-        ArrayModelView(array: types.Expression, slot: types.Expression): types.CallExpression {
-            return call("ArrayModelView", [
-                t.objectExpression([
-                    t.objectProperty(t.identifier("of"), array),
-                    t.objectProperty(t.identifier("slot"), slot),
-                ]),
-                ctx,
-            ]);
-        },
         safe: (arg: types.FunctionExpression | types.ArrowFunctionExpression) => call("safe", [arg]),
         updateIValue(area: types.Node, left: types.Expression, right: types.Expression): types.Expression {
             return t.callExpression(t.memberExpression(left, t.identifier("up")), [

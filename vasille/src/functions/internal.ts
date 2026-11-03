@@ -80,7 +80,7 @@ export function mapModel(
  */
 export function arrayModel(
     ctx: Reactive | undefined,
-    data?: unknown[] | WritableIValue<unknown[], unknown>,
+    data?: unknown[] | WritableIValue<unknown[] | undefined, unknown>,
     length?: WritableIValue<number, unknown>,
 ) {
     return new ArrayModel(data, ctx, length);

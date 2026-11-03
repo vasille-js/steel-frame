@@ -23,7 +23,7 @@ interface HalfProps {
 }
 
 export const GreatForView = view(() => {
-  <FeatureRow reverse>
+  <FeatureRow>
     <FeatureKey>Impact</FeatureKey>
     <FeatureTitle>
       Good for Business

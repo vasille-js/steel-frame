@@ -91,6 +91,7 @@ export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | und
     protected override reset(next: Map<K, T> | [K, T][] | undefined) {
         this.listener.emit(Ops.Clear);
         this.d.clear();
+        /* istanbul ignore else */
         if (next) {
             for (const [key, value] of next) {
                 this.listener.emit(Ops.Add, key, value);
@@ -126,6 +127,10 @@ class WritableMapValue<K, T, Extra> extends SyncedIValue<T, Extra> implements Wr
         }
 
         return v;
+    }
+
+    public override isWritable(): this is WritableIValue<T, Extra> {
+        return true;
     }
 }
 

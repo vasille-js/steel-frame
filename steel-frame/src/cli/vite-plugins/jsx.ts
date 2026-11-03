@@ -26,6 +26,7 @@ export function getVitePlugins(
                         {
                             replaceWeb: target,
                             devLayer: target === "vasille-web/dev",
+                            hmr: target === "vasille-web/dev",
                             reporter: options.errorsHandler,
                             v4Naming: options.v4Naming,
                         },

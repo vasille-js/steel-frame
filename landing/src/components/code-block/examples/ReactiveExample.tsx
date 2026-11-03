@@ -25,11 +25,11 @@ export const ReactiveExample = component(() => {
     {"(() => {"}
   </CodeLine>;
   <CodeLine number={2}>
-    <Comment>{"  // This is a reactive state"}</Comment>
+    <Comment>{"  // This is a writable reactive state"}</Comment>
   </CodeLine>;
   <CodeLine number={3}>
     {"  let "}
-    <Highlight>$name</Highlight>
+    <Highlight>wr_name</Highlight>
     {" = 'World';"}
   </CodeLine>;
   <CodeLine number={4}>
@@ -37,9 +37,9 @@ export const ReactiveExample = component(() => {
   </CodeLine>;
   <CodeLine number={5}>
     {"  const "}
-    <Highlight>$message</Highlight>
+    <Highlight>r_message</Highlight>
     {" = `Hello ${"}
-    <Highlight>$name</Highlight>
+    <Highlight>wr_name</Highlight>
     {"}!`;"}
   </CodeLine>;
   <CodeLine number={6}>
@@ -48,7 +48,7 @@ export const ReactiveExample = component(() => {
   <CodeLine number={7}>{"  function changeName() {"}</CodeLine>;
   <CodeLine number={8}>
     <span>{"    "}</span>
-    <Highlight>$name</Highlight>
+    <Highlight>wr_name</Highlight>
     {" = 'Steel Frame Kit';"}
   </CodeLine>;
   <CodeLine number={9}>{"  }"}</CodeLine>;
@@ -56,7 +56,7 @@ export const ReactiveExample = component(() => {
     {"  <"}
     <Keyword>h1</Keyword>
     {" onclick={changeName}>{"}
-    <Highlight>$message</Highlight>
+    <Highlight>r_message</Highlight>
     {"}</"}
     <Keyword>h1</Keyword>
     {">"}

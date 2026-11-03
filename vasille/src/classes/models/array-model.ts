@@ -22,7 +22,7 @@ export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
      * @param ctx lifetime context of model
      */
     public constructor(
-        data?: T[] | WritableIValue<T[], unknown>,
+        data?: T[] | WritableIValue<T[] | undefined, unknown>,
         ctx?: Reactive,
         length?: WritableIValue<number, Extra>,
     ) {
@@ -226,6 +226,10 @@ class WritableArrayModelItem<T, Extra> extends SyncedIValue<T, Extra> implements
 
         return v;
     }
+
+    public override isWritable(): this is WritableIValue<T, Extra> {
+        return true;
+    }
 }
 
 export class ArrayModelViewNode<
@@ -384,6 +388,10 @@ class WritableArrayItem<T, Extra> extends SyncedIValue<T, Extra> implements Writ
         }
 
         return v;
+    }
+
+    public override isWritable(): this is WritableIValue<T, Extra> {
+        return true;
     }
 }
 

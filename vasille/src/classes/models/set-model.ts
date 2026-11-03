@@ -3,7 +3,6 @@ import { WritableIValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
-import { Reference } from "../value/reference.js";
 import { Collection } from "./collection.js";
 import { Listener, removeFragmentFromTree } from "./listener.js";
 

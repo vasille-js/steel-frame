@@ -3,29 +3,11 @@ import { VisibilityTracker } from "../components/code-block/VisibilityTracker.js
 import { DescriptionView } from "./DescriptionView.js";
 import { GetStartedView } from "./GetStartedView.js";
 import { GameChangerView } from "./GameChangerView.js";
-import { ErrorsStopHereView } from "./ErrorsStopHereView.js";
 import { GreatForView } from "./GreatForView.js";
 import { ExperienceView } from "./ExperienceView.js";
 import { ReadyView } from "./ReadyView.js";
 
 export const AllView = view(() => {
-  function trackScroll() {
-    const key = "scroll";
-    const scrollTop = localStorage.getItem(key);
-    const scrolling = document.documentElement;
-
-    window.onscroll = () => {
-      localStorage.setItem(key, scrolling.scrollTop.toString());
-    };
-
-    if (scrollTop) {
-      scrolling.scroll({
-        top: parseInt(scrollTop),
-        behavior: "instant",
-      });
-    }
-  }
-
   <div class={styles.content}>
     <VisibilityTracker>
       <DescriptionView />
@@ -50,7 +32,7 @@ export const AllView = view(() => {
         <ExperienceView />
       </VisibilityTracker>
     </QueuedRender>
-    <QueuedRender callback={trackScroll}>
+    <QueuedRender>
       <VisibilityTracker>
         <ReadyView />
       </VisibilityTracker>

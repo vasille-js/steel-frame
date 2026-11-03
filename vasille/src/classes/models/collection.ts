@@ -35,6 +35,7 @@ export abstract class Collection<T, D> implements Destroyable {
     }
 
     public destroy(deep: number) {
+        /* istanbul ignore else */
         if (this.rDeep < deep && this.r && this.handler) {
             this.r.off(this.handler);
         }

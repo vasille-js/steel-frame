@@ -13,6 +13,6 @@
   },
   "dependencies": {
     "prettier": "^3.7.4",
-    "steel-frame": "^7.1.2"
+    "steel-frame": "^7.2.1"
   }
 }

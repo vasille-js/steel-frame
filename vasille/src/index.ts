@@ -29,6 +29,8 @@ export {
     SetViewNode,
     WatchNode,
     ZombieNode,
+    type ReadableIValue,
+    type WritableIValue,
 } from "./classes/index.js";
 
 export { internalError } from "./classes/core/errors.js";

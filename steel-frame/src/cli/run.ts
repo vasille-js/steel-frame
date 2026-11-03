@@ -198,7 +198,7 @@ async function run() {
                             });
                         },
                     }),
-                    inspect(),
+                    inspect({ dev: true }),
                 ],
                 resolve,
                 optimizeDeps: {

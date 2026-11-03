@@ -65,7 +65,7 @@ $ npm create steel-frame
 
 ## How SAFE is Steel Frame
 
-The safe of your application is ensured by
+The safety of your application is ensured by
 
 - `100%` coverage of code by unit tests.
   Each function, each branch is working as designed.
@@ -135,8 +135,8 @@ We respect semantic versioning:
 
 ### 7.0 - 7.2
 
-- **7.2**: Add models to reactive conversion of buildin models.
-- **7.1**: Add support for ARIA attributtes.
+- **7.2**: Add tracking of the builtin models size. Reactive array/set/map can be converted into a builtin model.
+- **7.1**: Add support for ARIA attributes.
 - Add `debounced` and `field` functions, which extend the reativity system.
 - Add `Zombie` component, it keeps HTML elements alive some time after destruction.
 - Add `abortSignal` to cancel fetch requests and timers when component is destroyed.

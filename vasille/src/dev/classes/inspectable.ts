@@ -722,16 +722,17 @@ export function processObject(obj: object, pos?: StaticPosition): number {
                 time: time,
             });
         }
-
-        Object.defineProperty(obj, objectKey, {
-            value: {
-                id: id,
-                fields: fields,
-            },
-            enumerable: false,
-            configurable: false,
-            writable: false,
-        });
+        if (Object.isExtensible(obj)) {
+            Object.defineProperty(obj, objectKey, {
+                value: {
+                    id: id,
+                    fields: fields,
+                },
+                enumerable: false,
+                configurable: false,
+                writable: false,
+            });
+        }
 
         return id;
     }
