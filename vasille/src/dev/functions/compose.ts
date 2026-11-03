@@ -1,4 +1,4 @@
-import { AppNode, Fragment, Reactive, IRunner } from "../../classes/index.js";
+import { Fragment, Reactive, IRunner } from "../../classes/index.js";
 import { CompositionProps } from "../../functions/index.js";
 import {
     DevAppNode,

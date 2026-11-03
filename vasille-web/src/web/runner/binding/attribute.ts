@@ -6,7 +6,7 @@ import { IValue, Tag } from "vasille";
  * @class AttributeBinding
  * @extends Binding
  */
-export class AttributeBinding extends Binding<string | number | boolean | null | undefined> {
+export class AttributeBinding extends Binding<string | number | boolean | string[] | null | undefined> {
     /**
      * Constructs an attribute binding description
      * @param node {INode} the vasille node
@@ -16,17 +16,21 @@ export class AttributeBinding extends Binding<string | number | boolean | null |
     public constructor(
         node: Tag<Node, Element, object>,
         name: string,
-        value: IValue<string | number | boolean | null | undefined, unknown>,
+        value: IValue<string | number | boolean | string[] | null | undefined, unknown>,
     ) {
+        const isAria = name.startsWith("aria-");
+
         super(value);
 
-        this.init((value: string | number | boolean | null | undefined) => {
+        this.init(value => {
             if (value || value === 0) {
                 if (typeof value === "boolean") {
-                    node.node!.setAttribute(name, "");
+                    node.node!.setAttribute(name, isAria ? "true" : "");
                 } else {
-                    node.node!.setAttribute(name, `${value}`);
+                    node.node!.setAttribute(name, value instanceof Array ? value.join(" ") : `${value}`);
                 }
+            } else if (isAria) {
+                node.node!.setAttribute(name, "false");
             } else {
                 node.node!.removeAttribute(name);
             }

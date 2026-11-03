@@ -47,19 +47,6 @@ export class DevWebTextNode extends WebTextNode<DevWebTagOptions, DevWebRunner> 
     }
 }
 
-export function remapObject<Before, After>(
-    obj: { [k: string]: Before } | undefined,
-    transform: (v: Before) => After,
-): { [k: string]: After } {
-    const r: { [k: string]: After } = {};
-
-    for (const key in obj) {
-        r[key] = transform(obj[key]!);
-    }
-
-    return r;
-}
-
 export class DevWebTag extends WebTag<DevWebTagOptions, DevWebRunner> {
     public override id: number;
 
@@ -130,7 +117,7 @@ export class DevWebTag extends WebTag<DevWebTagOptions, DevWebRunner> {
                             target: this.id,
                             eventName: key,
                             time: Date.now(),
-                            position: getPosition(handler[0]),
+                            position: getPosition(userHandler),
                         });
                         userHandler(ev);
                     },

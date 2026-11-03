@@ -104,3 +104,7 @@ it("safe", function () {
 it("custom model", function () {
     runTest(__dirname, "custom-model", { devLayer: true });
 });
+
+it("style sheet", function () {
+    runTest(__dirname, "style-sheet", { devLayer: true });
+});

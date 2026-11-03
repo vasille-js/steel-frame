@@ -17,6 +17,15 @@ export enum Errors {
     RulesOfVasille = 6,
 }
 
+const friendlyErrors: { [k in Errors]: string } = {
+    [Errors.IncorrectArguments]: "Incorrect arguments",
+    [Errors.IncompatibleContext]: "Incompatible context",
+    [Errors.TokenNotSupported]: "Token is not supported",
+    [Errors.Dilemma]: "Dilemma",
+    [Errors.ParserError]: "Parser error",
+    [Errors.RulesOfVasille]: "Тhe framework rule was broken",
+};
+
 export function err(e: Errors, node: NodePath<unknown>, content: string, internal: Internal, ret?: undefined): void;
 export function err<T>(e: Errors, node: NodePath<unknown>, content: string, internal: Internal, ret: T): T;
 export function err<T>(e: Errors, node: NodePath<unknown>, content: string, internal: Internal, ret: T): T {
@@ -24,7 +33,7 @@ export function err<T>(e: Errors, node: NodePath<unknown>, content: string, inte
 
     Error.stackTraceLimit = 0;
 
-    const error = node.buildCodeFrameError(`Vasille[${e}]{${Errors[e]}}: ${content}`, Error);
+    const error = node.buildCodeFrameError(`${friendlyErrors[e]}: ${content}`, Error);
 
     Error.stackTraceLimit = limit;
 

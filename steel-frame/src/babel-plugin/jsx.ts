@@ -104,43 +104,9 @@ export function transformJsxArray(
             }
         } else if (path.isJSXExpressionContainer()) {
             const conditionalJsx = tryForConditionalJsx(path, internal);
-            const expression = path.get("expression");
 
             if (conditionalJsx.length) {
                 result.push(...conditionalJsx);
-            }
-            // arrayModel.map(item => { <div>{item.x}</div> })
-            else if (
-                expression.isCallExpression() &&
-                t.isMemberExpression(expression.node.callee) &&
-                !expression.node.callee.computed &&
-                t.isIdentifier(expression.node.callee.property) &&
-                expression.node.callee.property.name === "map"
-            ) {
-                const array = expression.get("callee.object");
-                const handler = expression.get("arguments.0");
-
-                if (
-                    array.isIdentifier() &&
-                    internal.stack.get(array.node.name) === VariablesStatus.ArrayModel &&
-                    precheckSlotParams("ArrayModelView", handler, internal)
-                ) {
-                    compose(handler as NodePath<types.FunctionExpression>, internal, "compose", true, true, false);
-                    result.push(
-                        t.expressionStatement(internal.ArrayModelView(array.node, handler.node as types.Expression)),
-                    );
-                } else {
-                    err(
-                        Errors.IncorrectArguments,
-                        array,
-                        [
-                            "Mapped value must be and identifier initialized with array model.",
-                            "E.g.: `const C = component(() => { const arr = arrayModel(); <div>{arr.map(..)}</div> })`",
-                            "Use directly ArrayView or ArrayModelView for any alternative cases.",
-                        ].join("\n"),
-                        internal,
-                    );
-                }
             }
             // process text values
             else {

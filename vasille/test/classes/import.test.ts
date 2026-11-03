@@ -33,6 +33,7 @@ it("import test", function () {
         0,
         array,
         () => void 0,
+        false,
         v => new Reference(v),
         runner => new Fragment(runner, 1),
     );
@@ -41,6 +42,7 @@ it("import test", function () {
         0,
         map,
         () => {},
+        false,
         v => new Reference(v),
         runner => new Fragment(runner, 1),
     );
@@ -63,9 +65,9 @@ it("import test", function () {
     const watch = new WatchNode({ model: ref }, runner, 1);
 
     expect(ref instanceof IValue).toBe(true);
-    expect(array instanceof Array).toBe(true);
-    expect(map instanceof Map).toBe(true);
-    expect(set instanceof Set).toBe(true);
+    expect(array instanceof Array).toBe(false);
+    expect(map instanceof Map).toBe(false);
+    expect(set instanceof Set).toBe(false);
     expect(arrayView instanceof Fragment).toBe(true);
     expect(mapView instanceof Fragment).toBe(true);
     expect(setView instanceof Fragment).toBe(true);

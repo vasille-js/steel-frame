@@ -2,11 +2,11 @@ import { IValue, Reactive, Reference } from "../../../src/classes/index.js";
 import { TestExpression } from "../page.js";
 
 class CoreTest extends Reactive {
-    ref0: IValue<number, unknown>;
+    ref0: Reference<number, unknown>;
 
     watch_test = 0;
     handler_test = 0;
-    handler_ref: IValue<number, unknown>;
+    handler_ref: Reference<number, unknown>;
     bind0: IValue<number, unknown>;
 
     freeze_test: IValue<boolean, unknown>;

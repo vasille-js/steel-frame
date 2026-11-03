@@ -38,7 +38,7 @@ export function throwTest(
             filename: opts.filename ?? fileName,
         });
         // @ts-ignore
-    }).toThrow(new RegExp(`Vasille\\\[\\d+]\{\\w+}: ${RegExp.escape(err)}`));
+    }).toThrow(new RegExp(`^.*?: ${RegExp.escape(err)}`));
 }
 
 export function runJsxTest(dir: string, name: string, opts: Partial<Options> & { filename?: string } = {}) {

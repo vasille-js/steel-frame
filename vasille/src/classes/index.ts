@@ -1,6 +1,6 @@
 export type { Destroyable } from "./core/destroyable.js";
 export { Reactive } from "./core/core.js";
-export { IValue } from "./core/ivalue.js";
+export { IValue, type WritableIValue, type ReadableIValue } from "./core/ivalue.js";
 export { reportError, setErrorHandler, safe } from "./functional/safety.js";
 export { ArrayModel, ArrayViewNode, ArrayModelViewNode } from "./models/array-model.js";
 export { Listener } from "./models/listener.js";

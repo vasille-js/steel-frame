@@ -1,16 +1,16 @@
 import { Reactive } from "../core/core.js";
 import { Destroyable } from "../core/destroyable.js";
-import { IValue } from "../core/ivalue.js";
+import { ReadableIValue, WritableIValue } from "../core/ivalue.js";
 import { SyncedIValue } from "./synced.js";
 
 export class DebounceReference<T, Extra extends unknown> extends SyncedIValue<T, Extra> implements Destroyable {
-    protected readonly target: IValue<T, Extra>;
+    protected readonly target: ReadableIValue<T, Extra>;
     protected readonly handler: (v: T) => void;
     protected timer: ReturnType<typeof setTimeout> | undefined;
 
     public constructor(
-        createRef: (v: T, ctx?: Reactive) => IValue<T, Extra>,
-        target: IValue<T, Extra>,
+        createRef: (v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
+        target: ReadableIValue<T, Extra>,
         delay: number,
         ctx: Reactive,
     ) {
@@ -34,13 +34,6 @@ export class DebounceReference<T, Extra extends unknown> extends SyncedIValue<T,
 
     public get V(): T {
         return this.sync.V;
-    }
-    public set V(value: T) {
-        this.target.V = value;
-    }
-
-    public up(value: T, extra?: Extra): T {
-        return this.target.up(value, extra);
     }
 
     public destroy(): void {

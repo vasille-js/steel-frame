@@ -46,6 +46,10 @@ export class CssStyleInjector {
             insertRule(0, rule.replace("{}", className));
         }
     }
+
+    public toString(): string {
+        return this.inject();
+    }
 }
 
 export class SafeCssStyleInjector extends CssStyleInjector {

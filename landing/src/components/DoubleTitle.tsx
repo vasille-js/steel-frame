@@ -1,7 +1,16 @@
-import { component, dark, Slot, styleSheet } from "steel-frame";
+import {
+  component,
+  CssStyleInjector,
+  dark,
+  Slot,
+  styleSheet,
+} from "steel-frame";
 
 interface Props {
-  title?(props: { classes: string[]; isDark: boolean }): void;
+  title?(props: {
+    classes: (string | CssStyleInjector)[];
+    isDark: boolean;
+  }): void;
 }
 
 export const DoubleTitle = component(({ title }: Props) => {

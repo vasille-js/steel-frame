@@ -1,9 +1,10 @@
 import { Reactive } from "../core/core.js";
-import { IValue } from "../core/ivalue.js";
+import { WritableIValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
-import { ReadOnlyReference } from "../value/reference.js";
+import { SyncedIValue } from "../value/synced.js";
+import { Collection } from "./collection.js";
 import { Listener, removeFragmentFromTree } from "./listener.js";
 
 const enum Ops {
@@ -19,33 +20,39 @@ type Arguments<K, T> = [Ops.Clear] | [Ops.Remove, K] | [Ops.Add, K, T];
  * @class MapModel
  * @extends Map
  */
-export class MapModel<K, T> extends Map<K, T> {
+export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | undefined, Map<K, T>> {
     public readonly listener: Listener<Arguments<K, T>>;
-    public readonly rDeep: number;
-    public readonly $size: ReadOnlyReference<number, unknown>;
+    public readonly size?: WritableIValue<number, unknown>;
 
     /**
      * Constructs a map model
-     * @param map {[*, *][]} input data
+     * @param data {[*, *][]} input data
      * @param ctx lifetime context
      */
-    public constructor(map?: [K, T][], ctx?: Reactive) {
-        super();
+    public constructor(
+        data?: [K, T][] | Map<K, T> | WritableIValue<[K, T][] | Map<K, T> | undefined, unknown>,
+        ctx?: Reactive,
+        size?: WritableIValue<number, Extra>,
+    ) {
+        super(v => new Map(v), data, ctx);
         this.listener = new Listener();
 
-        map?.forEach(([key, value]) => {
-            super.set(key, value);
-        });
-        this.rDeep = ctx?.sDeep || 0;
-        this.$size = new ReadOnlyReference(this.size, ctx);
+        if (size) {
+            this.size = size;
+            size.up(this.d.size);
+        }
+    }
+
+    public get map(): ReadonlyMap<K, T> {
+        return this.d;
     }
 
     /**
      * Calls `Map.clear` and notify about changes
      */
-    public override clear() {
+    public clear(): void {
         this.listener.emit(Ops.Clear);
-        this.run(() => super.clear());
+        this.run(() => this.d.clear());
     }
 
     /**
@@ -53,9 +60,9 @@ export class MapModel<K, T> extends Map<K, T> {
      * @param key {*} key
      * @return {boolean} true if removed something, otherwise false
      */
-    public override delete(key: K): boolean {
+    public delete(key: K): boolean {
         this.listener.emit(Ops.Remove, key);
-        return this.run(() => super.delete(key));
+        return this.run(() => this.d.delete(key));
     }
 
     /**
@@ -64,15 +71,66 @@ export class MapModel<K, T> extends Map<K, T> {
      * @param value {*} value
      * @return {MapModel} a pointer to this
      */
-    public override set(key: K, value: T): this {
+    public set(key: K, value: T): this {
         this.listener.emit(Ops.Add, key, value);
-        return this.run(() => super.set(key, value));
+        return this.run(() => {
+            this.d.set(key, value);
+            return this;
+        });
     }
 
     protected run<T>(fn: () => T): T {
         const result = fn();
-        this.$size.set(this.size);
+        const r = this.r;
+
+        this.size?.up(this.d.size);
+        r?.up((this.last = r.V instanceof Array ? [...this.d] : new Map(this.d)));
         return result;
+    }
+
+    protected override reset(next: Map<K, T> | [K, T][] | undefined) {
+        this.listener.emit(Ops.Clear);
+        this.d.clear();
+        /* istanbul ignore else */
+        if (next) {
+            for (const [key, value] of next) {
+                this.listener.emit(Ops.Add, key, value);
+                this.d.set(key, value);
+            }
+        }
+        this.size?.up(this.d.size);
+    }
+}
+
+class WritableMapValue<K, T, Extra> extends SyncedIValue<T, Extra> implements WritableIValue<T, Extra> {
+    public constructor(
+        ctx: Reactive,
+        public readonly model: MapModel<K, T, Extra>,
+        public readonly key: K,
+        ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
+    ) {
+        super(ref(model.map.get(key)!, ctx), ctx);
+    }
+
+    public get V(): T {
+        return this.sync.V;
+    }
+
+    public set V(v: T) {
+        this.up(v);
+    }
+
+    public up(v: T, arg?: Extra) {
+        if (v !== this.sync.V) {
+            this.sync.up(v, arg);
+            this.model.set(this.key, v);
+        }
+
+        return v;
+    }
+
+    public override isWritable(): this is WritableIValue<T, Extra> {
+        return true;
     }
 }
 
@@ -83,27 +141,29 @@ export class MapViewNode<
     Element,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
+    Extra,
 > extends Fragment<Node, Element, TagOptions, Runner> {
     private map = new Map<
         K,
         {
             frag: Fragment<Node, Element, TagOptions, Runner>;
-            value: IValue<T, unknown>;
+            value: WritableIValue<T, unknown>;
         }
     >();
     private acceptUpdate: ((...args: Arguments<K, T>) => void) | undefined;
     private readonly slot: (
         ctx: Fragment<Node, Element, TagOptions, Runner>,
-        value: IValue<T, unknown>,
+        value: WritableIValue<T, unknown>,
         key: K,
     ) => void;
 
     public constructor(
         runner: Runner,
         deep: number,
-        private readonly model: MapModel<K, T>,
-        slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: IValue<T, unknown>, key: K) => void,
-        private readonly ref: <T>(v: T) => IValue<T, unknown>,
+        private readonly model: MapModel<K, T, Extra>,
+        slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: WritableIValue<T, unknown>, key: K) => void,
+        private readonly writable: boolean,
+        private readonly ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, unknown>,
         private readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(runner, deep);
@@ -115,7 +175,7 @@ export class MapViewNode<
 
         function create(this: void, key: K, value: T) {
             const frag = view.frag(view.runner, view.sDeep + 1);
-            const ref = view.ref(value);
+            const ref = view.writable ? new WritableMapValue(frag, view.model, key, view.ref) : view.ref(value, frag);
 
             frag.link(view, view.last, undefined);
             view.slot(frag, ref, key);
@@ -127,7 +187,7 @@ export class MapViewNode<
                 const existing = view.map.get(key!);
 
                 if (existing) {
-                    existing.value.V = value!;
+                    existing.value.up(value!);
                 } else {
                     create(key!, value!);
                 }
@@ -147,7 +207,7 @@ export class MapViewNode<
             }
         }
 
-        this.model.forEach((value, key) => create(key, value));
+        this.model.map.forEach((value, key) => create(key, value));
         this.model.listener.on(acceptUpdate);
         this.acceptUpdate = acceptUpdate;
     }

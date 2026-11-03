@@ -17,88 +17,45 @@ import { Keyword } from "../Keyword.js";
  * });
  * */
 export const TemplateExample = component(() => {
-  <CodeLine
-    number={1}
-    content={({ isDark }) => {
-      <Comment isDark={isDark}>
-        // Data from any source can be passed to the template
-      </Comment>;
-    }}
-  />;
-  <CodeLine
-    number={2}
-    content={({ isDark }) => {
-      <>
-        {"const "}
-        <Highlight isDark={isDark}>name</Highlight>
-        {" = 'World';"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={3}
-    content={({ isDark }) => {
-      <Comment isDark={isDark}>// Example of a hello world component</Comment>;
-    }}
-  />;
-  <CodeLine
-    number={4}
-    content={({ isDark }) => {
-      <>
-        {"const HelloWorld = "}
-        <Keyword isDark={isDark}>component</Keyword>
-        {"(() => {"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={5}
-    content={({ isDark }) => {
-      <Comment isDark={isDark}>
-        {"  // Data can be local in the component"}
-      </Comment>;
-    }}
-  />;
-  <CodeLine
-    number={6}
-    content={({ isDark }) => {
-      <>
-        {"  const "}
-        <Highlight isDark={isDark}>adjective</Highlight>
-        {" = 'Beautiful';"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={7}
-    content={({ isDark }) => {
-      <Comment isDark={isDark}>
-        {"  // Passing adjective and name to the template"}
-      </Comment>;
-    }}
-  />;
+  <CodeLine number={1}>
+    <Comment>// Data from any source can be passed to the template</Comment>
+  </CodeLine>;
+  <CodeLine number={2}>
+    {"const "}
+    <Highlight>name</Highlight>
+    {" = 'World';"}
+  </CodeLine>;
+  <CodeLine number={3}>
+    <Comment>// Example of a hello world component</Comment>
+  </CodeLine>;
+  <CodeLine number={4}>
+    {"const HelloWorld = "}
+    <Keyword>component</Keyword>
+    {"(() => {"}
+  </CodeLine>;
+  <CodeLine number={5}>
+    <Comment>{"  // Data can be local in the component"}</Comment>
+  </CodeLine>;
+  <CodeLine number={6}>
+    {"  const "}
+    <Highlight>adjective</Highlight>
+    {" = 'Beautiful';"}
+  </CodeLine>;
+  <CodeLine number={7}>
+    <Comment>{"  // Passing adjective and name to the template"}</Comment>
+  </CodeLine>;
   // <h1>Hello {adjective} {name}!</h1>;
-  <CodeLine
-    number={8}
-    content={({ isDark }) => {
-      <>
-        {"  <"}
-        <Keyword isDark={isDark}>h1</Keyword>
-        {">Hello {"}
-        <Highlight isDark={isDark}>adjective</Highlight>
-        {"} {"}
-        <Highlight isDark={isDark}>name</Highlight>
-        {"}!</"}
-        <Keyword isDark={isDark}>h1</Keyword>
-        {">"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={9}
-    content={() => {
-      <>{"});"}</>;
-    }}
-  />;
-  <CodeLine number={10} content={() => {}} />;
+  <CodeLine number={8}>
+    {"  <"}
+    <Keyword>h1</Keyword>
+    {">Hello {"}
+    <Highlight>adjective</Highlight>
+    {"} {"}
+    <Highlight>name</Highlight>
+    {"}!</"}
+    <Keyword>h1</Keyword>
+    {">"}
+  </CodeLine>;
+  <CodeLine number={9}>{"});"}</CodeLine>;
+  <CodeLine number={10} />;
 });

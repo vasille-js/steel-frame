@@ -301,9 +301,9 @@ import {ArrayView} from "./index";
 
 export const MyApp = component(() => {
     let wr_arr = [1, 2, 3];
-    const arr = [1, 2, 3];
-    const set = new Set([2, 3]);
-    const map = new Map([[1, 2], [2, 3]]);
+    const arr = arrayModel([1, 2, 3]);
+    const set = setModel([2, 3]);
+    const map = mapModel([[1, 2], [2, 3]]);
 
     <ArrayView r_of={wr_arr} key={item => item} slot={(r_item, r_index) => {
         <div>{r_item}</div>;

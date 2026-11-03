@@ -689,7 +689,14 @@ export function ignoreParams(
     // param is object destruction
     else if (path.isObjectPattern()) {
         if (restrictDestruction) {
-            err(Errors.RulesOfVasille, path, "Move destruction inside the function body", internal);
+            for (const element of path.get("properties")) {
+                const key = element.get("key");
+
+                /* istanbul ignore else */
+                if (key.isIdentifier() && isReactiveName(key.node.name, internal)) {
+                    err(Errors.RulesOfVasille, key, "Extract reactive fields inside the function body", internal);
+                }
+            }
         }
         ignoreObjectPattern(path, internal);
     }

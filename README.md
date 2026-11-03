@@ -23,7 +23,7 @@ but it hasn't changed what it cost to be wrong, `Steel Frame` do it.
   - [How POWERFUL is Steel Frame](#how-powerful-is-steel-frame)
   - [Road map](#road-map)
   - [Change log](#change-log)
-    - [7.0](#70)
+    - [7.0 - 7.2](#70---72)
     - [6.0 RC (never released)](#60-rc-never-released)
     - [5.0 - 5.1](#50---51)
     - [4.0 - 4.3](#40---43)
@@ -65,7 +65,7 @@ $ npm create steel-frame
 
 ## How SAFE is Steel Frame
 
-The safe of your application is ensured by
+The safety of your application is ensured by
 
 - `100%` coverage of code by unit tests.
   Each function, each branch is working as designed.
@@ -133,8 +133,10 @@ We respect semantic versioning:
 - A minor version is increased when we add functionality.
 - Patch version is increased when we fix bugs.
 
-### 7.0
+### 7.0 - 7.2
 
+- **7.2**: Add tracking of the builtin models size. Reactive array/set/map can be converted into a builtin model.
+- **7.1**: Add support for ARIA attributes.
 - Add `debounced` and `field` functions, which extend the reativity system.
 - Add `Zombie` component, it keeps HTML elements alive some time after destruction.
 - Add `abortSignal` to cancel fetch requests and timers when component is destroyed.

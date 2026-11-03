@@ -1,83 +1,60 @@
 import { Reactive } from "../core/core.js";
-import { IValue } from "../core/ivalue.js";
+import { ReadableIValue, WritableIValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
 import { Fragment } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
-import { ReadOnlyReference } from "../value/reference.js";
+import { SyncedIValue } from "../value/synced.js";
+import { Collection } from "./collection.js";
 import { Listener } from "./listener.js";
 
 type Arguments<T> = [number, number, T[]] | [number, number];
-
-function fixedIndex(index: number | undefined, length: number, defaultValue: number) {
-    return typeof index === "number"
-        ? index < 0
-            ? index < -length
-                ? 0
-                : length + index
-            : index > length
-              ? length
-              : index
-        : defaultValue;
-}
 
 /**
  * Model based on Array class
  * @extends Array
  */
-export class ArrayModel<T> extends Array<T> {
+export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
     public readonly listener: Listener<Arguments<T>>;
-    public readonly rDeep: number;
-    public readonly $length: ReadOnlyReference<number, unknown>;
-
-    [k: number]: never;
+    public readonly length?: WritableIValue<number, unknown>;
 
     /**
      * @param data {Array} input data
      * @param ctx lifetime context of model
      */
-    public constructor(data?: Array<T> | number, ctx?: Reactive) {
-        super(typeof data === "number" ? data : 0);
+    public constructor(
+        data?: T[] | WritableIValue<T[] | undefined, unknown>,
+        ctx?: Reactive,
+        length?: WritableIValue<number, Extra>,
+    ) {
+        super(arr => (arr ? [...arr] : []), data, ctx);
         this.listener = new Listener();
-        this.rDeep = ctx?.sDeep || 0;
+        ctx?.bind(this);
 
-        if (data instanceof Array) {
-            super.push(...data);
+        if (length) {
+            this.length = length;
+            length.up(this.d.length);
         }
-        this.$length = new ReadOnlyReference(this.length, ctx);
     }
-
-    /* Array members */
 
     /**
-     * Calls `Array.fill` and notify about changes
-     * @param value {*} value to fill with
-     * @param start {?number} begin index
-     * @param end {?number} end index
+     * Give read access to the encapsulated array
      */
-    public override fill(value: T, start?: number, end?: number): this {
-        const length = this.length;
-        const from = fixedIndex(start, length, 0);
-        const to = fixedIndex(end, length, length);
-
-        if (from >= to) {
-            return this;
-        }
-
-        super.fill(value, start, end);
-        this.listener.emit(from, to - from, this.slice(from, to));
-        return this;
+    public get array(): readonly T[] {
+        return this.d;
     }
+
+    /* Array mutate members */
 
     /**
      * Calls `Array.pop` and notify about changes
      * @return {*} removed value
      */
-    public override pop(): T | undefined {
+    public pop(): T | undefined {
         /* istanbul ignore else */
-        if (this.length > 0) {
-            this.listener.emit(this.length - 1, 1);
+        if (this.d.length > 0) {
+            this.listener.emit(this.d.length - 1, 1);
 
-            return this.run(() => super.pop());
+            return this.run(() => this.d.pop());
         }
     }
 
@@ -86,21 +63,37 @@ export class ArrayModel<T> extends Array<T> {
      * @param items {...*} values to push
      * @return {number} new length of the array
      */
-    public override push(...items: Array<T>): number {
-        this.listener.emit(this.length, 0, items);
-        return this.run(() => super.push(...items));
+    public push(...items: Array<T>): number {
+        this.listener.emit(this.d.length, 0, items);
+        return this.run(() => this.d.push(...items));
     }
 
     /**
      * Calls `Array.shift` and notify about changed
      * @return {*} the shifted value
      */
-    public override shift(): T | undefined {
+    public shift(): T | undefined {
         /* istanbul ignore else */
-        if (this.length > 0) {
+        if (this.d.length > 0) {
             this.listener.emit(0, 1);
-            return this.run(() => super.shift());
+            return this.run(() => this.d.shift());
         }
+    }
+
+    /**
+     * Calls `Array.sort` and notify about changed
+     * `a - b` in ascending order
+     * `b - a` in descending order
+     * @param compareFn {?function} compare function
+     * @return {ArrayModel} a pointer to this
+     */
+    public sort(compareFn?: (a: T, b: T) => number): this {
+        return this.run(() => {
+            const data = this.d;
+            data.sort(compareFn);
+            this.listener.emit(0, data.length, data);
+            return this;
+        });
     }
 
     /**
@@ -110,12 +103,13 @@ export class ArrayModel<T> extends Array<T> {
      * @param items {...*}
      * @return {ArrayModel} a pointer to this
      */
-    public override splice(start: number, deleteCount?: number, ...items: Array<T>): T[] {
-        start = Math.min(start, this.length);
-        deleteCount = typeof deleteCount === "number" ? deleteCount : this.length - start;
-        this.listener.emit(start, deleteCount, items);
-
-        return this.run(() => super.splice(start, deleteCount, ...items));
+    public splice(start: number, deleteCount?: number, ...items: Array<T>): T[] {
+        return this.run(() => {
+            const startIndex = Math.min(start, this.d.length);
+            const removeCount = typeof deleteCount === "number" ? deleteCount : this.d.length - startIndex;
+            this.listener.emit(startIndex, removeCount, items);
+            return this.d.splice(startIndex, removeCount, ...items);
+        });
     }
 
     /**
@@ -123,46 +117,64 @@ export class ArrayModel<T> extends Array<T> {
      * @param items {...*} values to insert
      * @return {number} the length after prepending
      */
-    public override unshift(...items: Array<T>): number {
+    public unshift(...items: Array<T>): number {
         this.listener.emit(0, 0, items);
-        return this.run(() => super.unshift(...items));
+        return this.run(() => this.d.unshift(...items));
     }
 
-    public get(at: number): T | undefined {
-        return (this as unknown as { [k: number]: T })[at];
-    }
-
+    /**
+     * Replace item at index `at` with `with_`
+     * @param at {number} index of item to replace
+     * @param with_ {*} new value
+     * @return {ArrayModel} a pointer to this
+     */
     public replace(at: number, with_: T): this {
-        this.listener.emit(at, 1, [with_]);
-        (this as unknown as { [k: number]: T })[at] = with_;
-        return this;
+        return this.run(() => {
+            this.listener.emit(at, 1, [with_]);
+            this.d[at] = with_;
+            return this;
+        });
     }
 
     protected run<T>(fn: () => T): T {
         const result = fn();
-        this.$length.set(this.length);
+        this.length?.up(this.d.length);
+        this.r?.up((this.last = [...this.d]));
         return result;
+    }
+
+    protected override reset(arr: T[] | undefined) {
+        const newArr = arr ? [...arr] : [];
+        const length = this.d.length;
+
+        this.listener.emit(0, length, newArr);
+        this.d.splice(0, length, ...newArr);
+        this.length?.up(newArr.length);
     }
 }
 
 interface CacheItem<
+    T,
     Node,
     Element,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
-    Extra extends unknown,
+    Extra,
+    Writable extends WritableIValue<T, Extra> = WritableIValue<T, Extra>,
 > {
     frag: Fragment<Node, Element, TagOptions, Runner>;
-    index: IValue<number, Extra>;
+    index: WritableIValue<number, Extra>;
+    writable?: Writable;
 }
 
 class BaseArrayView<
+    T,
     Node,
     Element,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra extends unknown,
-    CacheItemType extends CacheItem<Node, Element, TagOptions, Runner, Extra>,
+    CacheItemType extends CacheItem<T, Node, Element, TagOptions, Runner, Extra>,
 > extends Fragment<Node, Element, TagOptions, Runner> {
     protected cache: CacheItemType[] = [];
 
@@ -188,6 +200,38 @@ class BaseArrayView<
     }
 }
 
+class WritableArrayModelItem<T, Extra> extends SyncedIValue<T, Extra> implements WritableIValue<T, Extra> {
+    public constructor(
+        ctx: Reactive,
+        public readonly model: ArrayModel<T, Extra>,
+        public readonly index: ReadableIValue<number, Extra>,
+        ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
+    ) {
+        super(ref(model.array[index.V]!, ctx), ctx);
+    }
+
+    public get V(): T {
+        return this.sync.V;
+    }
+
+    public set V(v: T) {
+        this.up(v);
+    }
+
+    public up(v: T, arg?: Extra) {
+        if (v !== this.sync.V) {
+            this.sync.up(v, arg);
+            this.model.replace(this.index.V, v);
+        }
+
+        return v;
+    }
+
+    public override isWritable(): this is WritableIValue<T, Extra> {
+        return true;
+    }
+}
+
 export class ArrayModelViewNode<
     T,
     Node,
@@ -195,20 +239,33 @@ export class ArrayModelViewNode<
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra extends unknown,
-> extends BaseArrayView<Node, Element, TagOptions, Runner, Extra, CacheItem<Node, Element, TagOptions, Runner, Extra>> {
+> extends BaseArrayView<
+    T,
+    Node,
+    Element,
+    TagOptions,
+    Runner,
+    Extra,
+    CacheItem<T, Node, Element, TagOptions, Runner, Extra, WritableArrayModelItem<T, Extra>>
+> {
     private apply: ((...args: Arguments<T>) => void) | undefined;
     private readonly slot: (
         ctx: Fragment<Node, Element, TagOptions, Runner>,
-        value: T,
-        index: IValue<number, Extra>,
+        value: T | WritableIValue<T, Extra>,
+        index: ReadableIValue<number, Extra>,
     ) => void;
 
     public constructor(
         runner: Runner,
         deep: number,
-        private readonly model: ArrayModel<T>,
-        slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T, index: IValue<number, Extra>) => void,
-        private readonly ref: <T>(v: T) => IValue<T, Extra>,
+        private readonly model: ArrayModel<T, Extra>,
+        slot: (
+            ctx: Fragment<Node, Element, TagOptions, Runner>,
+            value: T | WritableIValue<T, Extra>,
+            index: ReadableIValue<number, Extra>,
+        ) => void,
+        private readonly writable: boolean,
+        private readonly ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
         private readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(runner, deep);
@@ -218,20 +275,33 @@ export class ArrayModelViewNode<
     public override compose() {
         const view = this;
 
-        function apply(this: void, index: number, remove: number, values?: T[]) {
-            const children: CacheItem<Node, Element, TagOptions, Runner, Extra>[] = view.cache;
-            const toInsert: CacheItem<Node, Element, TagOptions, Runner, Extra>[] = [];
+        function apply(this: void, index: number, remove: number, values?: readonly T[]) {
+            const children = view.cache;
+            const toInsert: CacheItem<T, Node, Element, TagOptions, Runner, Extra, WritableArrayModelItem<T, Extra>>[] =
+                [];
             const prev = children[index - 1]?.frag;
             const next = children[index + remove]?.frag;
             const length = values?.length || 0;
             const lastIndex = length - 1;
 
+            if (length === remove && view.writable) {
+                // update writable values, better performance
+                for (let i = 0; i < length; i++) {
+                    children[index + i]!.writable!.V = values![i]!;
+                }
+                return;
+            }
+
             // create new fragments
             for (let i = 0; i < length; i++) {
-                toInsert[i] = {
-                    frag: view.frag(view.runner, view.sDeep + 1),
-                    index: view.ref(i + index),
-                };
+                const ctx = view.frag(view.runner, view.sDeep + 1);
+                const inserted: CacheItem<T, Node, Element, TagOptions, Runner, Extra> = (toInsert[i] = {
+                    frag: ctx,
+                    index: view.ref(i + index, ctx),
+                });
+                if (view.writable) {
+                    inserted.writable = new WritableArrayModelItem(ctx, view.model, inserted.index, view.ref);
+                }
             }
             // locate new fragments
             for (let i = 0; i < length; i++) {
@@ -257,11 +327,13 @@ export class ArrayModelViewNode<
 
             // render new fragments content in reverse order
             for (let i = lastIndex; i >= 0; i--) {
-                view.slot(toInsert[i]!.frag, (values as T[])[i] as T, toInsert[i]!.index);
+                const item = toInsert[i]!;
+
+                view.slot(item.frag, view.writable ? item.writable! : ((values as T[])[i] as T), item.index);
             }
         }
 
-        apply(0, 0, this.model);
+        apply(0, 0, this.model.array);
         this.model.listener.on(apply);
         this.apply = apply;
     }
@@ -282,11 +354,45 @@ interface KeyedCacheItem<
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra extends unknown,
-> extends CacheItem<Node, Element, TagOptions, Runner, Extra> {
+> extends CacheItem<T, Node, Element, TagOptions, Runner, Extra> {
     key: string | number;
-    value: IValue<T, Extra>;
+    value: WritableIValue<T, Extra>;
     moved: boolean;
     unmounted: boolean;
+}
+
+class WritableArrayItem<T, Extra> extends SyncedIValue<T, Extra> implements WritableIValue<T, Extra> {
+    public constructor(
+        ctx: Reactive,
+        public readonly array: WritableIValue<T[], Extra>,
+        public readonly index: ReadableIValue<number, Extra>,
+        ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
+    ) {
+        super(ref(array.V[index.V]!, ctx), ctx);
+    }
+
+    public get V(): T {
+        return this.sync.V;
+    }
+
+    public set V(v: T) {
+        this.up(v);
+    }
+
+    public up(v: T, arg?: Extra) {
+        if (v !== this.sync.V) {
+            const index = this.index.V;
+            const array = this.array.V;
+            this.sync.up(v, arg);
+            this.array.up([...array.slice(0, index), v, ...array.slice(index + 1)]);
+        }
+
+        return v;
+    }
+
+    public override isWritable(): this is WritableIValue<T, Extra> {
+        return true;
+    }
 }
 
 export class DiffingArrayView<
@@ -297,6 +403,7 @@ export class DiffingArrayView<
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra extends unknown,
 > extends BaseArrayView<
+    T,
     Node,
     Element,
     TagOptions,
@@ -307,22 +414,23 @@ export class DiffingArrayView<
     protected match: ((model: T[]) => void) | undefined;
     protected slot: (
         ctx: Fragment<Node, Element, TagOptions, Runner>,
-        value: IValue<T, Extra>,
-        index: IValue<number, Extra>,
+        value: ReadableIValue<T, Extra>,
+        index: ReadableIValue<number, Extra>,
     ) => void;
 
     public constructor(
         runner: Runner,
         deep: number,
-        protected readonly model: IValue<T[], Extra>,
+        protected readonly model: ReadableIValue<T[], Extra>,
         protected readonly key: (item: T) => number | string,
         slot: (
             ctx: Fragment<Node, Element, TagOptions, Runner>,
-            value: IValue<T, Extra>,
-            index: IValue<number, Extra>,
+            value: ReadableIValue<T, Extra>,
+            index: ReadableIValue<number, Extra>,
         ) => void,
-        protected readonly vRef: <T>(v: T) => IValue<T, Extra>,
-        protected readonly iRef: <T>(v: T) => IValue<T, Extra>,
+        protected readonly writable: boolean,
+        protected readonly vRef: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
+        protected readonly iRef: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
         protected readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(runner, deep);
@@ -337,8 +445,11 @@ export class DiffingArrayView<
         next?: Fragment<Node, Element, TagOptions, Runner>,
     ) {
         const frag = this.frag(this.runner, this.sDeep + 1);
-        const index = this.iRef(newCache.length);
-        const value = this.vRef(modelItem);
+        const index = this.iRef(newCache.length, this);
+        const value =
+            this.writable && this.model.isWritable()
+                ? new WritableArrayItem(this, this.model, index, this.vRef)
+                : this.vRef(modelItem, this);
         const cache: KeyedCacheItem<T, Node, Element, TagOptions, Runner, Extra> = {
             frag: frag,
             key: key,

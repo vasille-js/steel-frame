@@ -1,0 +1,7 @@
+/coverage
+/src
+/test
+jest.config.js
+/.*
+tsconfig.*
+*.tgz

@@ -1,4 +1,4 @@
-import { component, Slot, watch, beforeDestroy, styleSheet } from "steel-frame";
+import { component, Slot, beforeDestroy, styleSheet } from "steel-frame";
 
 interface Props {
   slot?(): void;
@@ -8,18 +8,8 @@ export const VisibilityTracker = component<Props>(({ slot }) => {
   let $visible = true;
   let $height = 0;
 
-  let observer: IntersectionObserver | null = new IntersectionObserver(
-    (entries) => {
-      $visible = entries[0].isIntersecting;
-    },
-  );
-  let resizeObserver: ResizeObserver = new ResizeObserver((entries) => {
-    const height = entries[0].contentRect.height;
-
-    if (height) {
-      $height = height;
-    }
-  });
+  let observer: IntersectionObserver = newIntersectionObserver({ $visible });
+  let resizeObserver: ResizeObserver = newResizeObserver({ $height });
 
   <div
     class={styles.div}
@@ -45,6 +35,22 @@ export const VisibilityTracker = component<Props>(({ slot }) => {
     resizeObserver.disconnect();
   });
 });
+
+function newIntersectionObserver({ $visible }: { $visible: boolean }) {
+  return new IntersectionObserver((entries) => {
+    $visible = entries[0].isIntersecting;
+  });
+}
+
+function newResizeObserver({ $height }: { $height: number }) {
+  return new ResizeObserver((entries) => {
+    const height = entries[0].contentRect.height;
+
+    if (height) {
+      $height = height;
+    }
+  });
+}
 
 const styles = styleSheet({
   div: {

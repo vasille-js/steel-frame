@@ -1,11 +1,13 @@
 import {
+  bypassWriteRestriction,
   component,
   dark,
-  Delay,
   For,
   mobile,
+  QueuedRender,
   styleSheet,
   tablet,
+  unwrap,
   watch,
 } from "steel-frame";
 import { MAX_WIDTH } from "./lib/limits.js";
@@ -48,7 +50,7 @@ export const CodeTabs = component<Props>(({ tabs, storageKey }) => {
                     $currentTab = item.class;
                   }
                 }}
-                tabindex={$currentTab === item.class ? "-1" : "0"}
+                tabindex={$currentTab === item.class ? -1 : 0}
               >
                 {item.label}
               </div>;
@@ -56,60 +58,58 @@ export const CodeTabs = component<Props>(({ tabs, storageKey }) => {
           />
         </div>
       </div>
-      <Delay time={100}>
-        <div
-          class={styles.code}
-          style={{ "min-height": $minHeight > 0 ? $minHeight : 304 }}
-        >
-          <For
-            of={tabs}
-            slot={(item) => {
-              const Content = item.content();
-              const $visible = item.class === $currentTab;
-              let $display = "flex";
-              let $opacity = "1";
+      <div
+        class={styles.code}
+        style={{ "min-height": $minHeight > 0 ? $minHeight : 304 }}
+      >
+        <For
+          of={tabs}
+          slot={(item) => {
+            const Content = item.content();
+            const $visible = item.class === $currentTab;
+            let wr_display = "flex";
+            let wr_opacity = "1";
 
-              watch(() => {
-                if ($visible) {
-                  $display = "flex";
-                  requestAnimationFrame(() => {
-                    $opacity = "1";
-                  });
-                } else {
-                  $opacity = "0";
-                }
-              });
+            watch(() => {
+              if ($visible) {
+                bypassWriteRestriction(wr_display, "flex");
+                requestAnimationFrame(() => {
+                  bypassWriteRestriction(wr_opacity, "1");
+                });
+              } else {
+                bypassWriteRestriction(wr_opacity, "0");
+              }
+            });
 
-              <Delay time={1000}>
-                <div
-                  class={[styles.snippet, $visible && styles.active]}
-                  ontransitionend={() => {
-                    if (!$visible) {
-                      $display = "none";
-                    }
-                  }}
-                  style={{ display: $display, opacity: $opacity }}
-                >
-                  <VisibilityTracker>
-                    <div
-                      style={{
-                        "flex-direction": "column",
-                        "align-self": "stretch",
-                      }}
-                      callback={(div) => {
-                        $minHeight = Math.max(div.offsetHeight, $minHeight);
-                        $display = $visible ? "flex" : "none";
-                      }}
-                    >
-                      <Content />
-                    </div>
-                  </VisibilityTracker>
-                </div>
-              </Delay>;
-            }}
-          />
-        </div>
-      </Delay>
+            <QueuedRender priority={unwrap($visible) ? "high" : "low"}>
+              <div
+                class={[styles.snippet, $visible && styles.active]}
+                ontransitionend={() => {
+                  if (!$visible) {
+                    wr_display = "none";
+                  }
+                }}
+                style={{ display: wr_display, opacity: wr_opacity }}
+              >
+                <VisibilityTracker>
+                  <div
+                    style={{
+                      "flex-direction": "column",
+                      "align-self": "stretch",
+                    }}
+                    callback={(div) => {
+                      $minHeight = Math.max(div.offsetHeight, $minHeight);
+                      wr_display = $visible ? "flex" : "none";
+                    }}
+                  >
+                    <Content />
+                  </div>
+                </VisibilityTracker>
+              </div>
+            </QueuedRender>;
+          }}
+        />
+      </div>
     </div>
   </div>;
 });

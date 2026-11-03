@@ -20,5 +20,5 @@ const C = compose(Vasille => {
   const $n = ref(new Map([[1, [2]]]), Vasille);
   const z = arrayModel(Vasille);
   VasilleSafe(() => console.log($a.V, b[0], c.has($a.V), d.get(1), e.$g.V))();
-  VasilleSafe(() => console.log(f.$a.V, g[0], h.has(2), i.get(1), $k.V[0], $m.V.has(2), $n.V.get(1)))();
+  VasilleSafe(() => console.log(f.$a.V, g[0], h.set.has(2), i.map.get(1), $k.V[0], $m.V.has(2), $n.V.get(1)))();
 });

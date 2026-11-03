@@ -1,4 +1,5 @@
-import { IValue, KindOfIValue, Reactive } from "../../classes/index.js";
+import { WritableIValue } from "../../classes/core/ivalue.js";
+import { IValue, KindOfIValue, Reactive, Reference } from "../../classes/index.js";
 import { match, set } from "../../functions/index.js";
 import {
     DevArrayModel,
@@ -43,7 +44,7 @@ export function devRef<T>(
     ctx: Reactive | undefined,
     declaration: StaticPosition,
     name?: string,
-): IValue<T, ExecutionPosition> {
+): Reference<T, ExecutionPosition> {
     return new DevReference(v, ctx, declaration, name);
 }
 
@@ -82,12 +83,7 @@ export function devMapModel(
     return new DevMapModel(usage, data, ctx, name);
 }
 
-export function devArrayModel(
-    usage: StaticPosition,
-    ctx: Reactive | undefined,
-    data?: unknown[] | number,
-    name?: string,
-) {
+export function devArrayModel(usage: StaticPosition, ctx: Reactive | undefined, data?: unknown[], name?: string) {
     return new DevArrayModel(usage, data, ctx, name);
 }
 
@@ -105,7 +101,7 @@ export function devEnsure<T extends object>(
 }
 
 export function devMatch(name: string | number | symbol, data: unknown, declaration: StaticPosition, ctx?: Reactive) {
-    return match(ctx, name, data, v => devRef(v, ctx, declaration));
+    return match<ExecutionPosition>(ctx, name, data, (v, ctx) => devRef(v, ctx, declaration));
 }
 
 export function devSet(
@@ -115,12 +111,12 @@ export function devSet(
     ctx: Reactive | undefined,
     declaration: StaticPosition,
 ) {
-    if (o[key] instanceof IValue) {
+    if (o[key] instanceof IValue && o[key].isWritable()) {
         o[key].up(value, executionPosition(declaration));
         return value;
     }
 
-    return set(ctx, o, key, value, v => devRef(v, ctx, declaration));
+    return set(ctx, o, key, value, (v, ctx) => devRef(v, ctx, declaration));
 }
 
 function createRef<T>(declaration: StaticPosition, name?: string): (value: T, ctx?: Reactive) => DevReference<T> {
@@ -139,7 +135,7 @@ export function devDebounceRef<T>(
 
 export function toDevFieldRef(
     ctx: Reactive,
-    o: IValue<object | undefined | null, ExecutionPosition>,
+    o: WritableIValue<object | undefined | null, ExecutionPosition>,
     key: string | symbol,
     declaration: StaticPosition,
     name?: string,
@@ -149,7 +145,7 @@ export function toDevFieldRef(
 
 export function toDevDeepFieldRef(
     ctx: Reactive,
-    o: IValue<object | undefined | null, ExecutionPosition>,
+    o: WritableIValue<object | undefined | null, ExecutionPosition>,
     key: (string | symbol)[],
     declaration: StaticPosition,
     name?: string,

@@ -1,5 +1,5 @@
 import { page } from "../page.ts";
-import { AppNode, ArrayView, ArrayViewNode, Fragment, Reference } from "vasille";
+import { AppNode, ArrayView, ReadableIValue, Fragment, Reference } from "vasille";
 import { WebRunner, WebTagOptions } from "../../src/web/runner/runner.ts";
 
 it("runs on destroy", function () {
@@ -48,7 +48,7 @@ it("tag reorder test", function () {
             {
                 r_of: arr,
                 key: i => i,
-                slot: (ctx, item) => {
+                slot: (ctx, item: ReadableIValue<number, unknown>) => {
                     ctx.tag("div", {}, ctx => {
                         ctx.text(item);
                     });
@@ -56,6 +56,7 @@ it("tag reorder test", function () {
                         ctx.text(3 + item.V);
                     });
                 },
+                writable: false,
             },
             ctx,
         );
@@ -92,6 +93,7 @@ it("text reorder test", function () {
                     ctx.text(item);
                     ctx.text(3 + item.V);
                 },
+                writable: false,
             },
             ctx,
         );

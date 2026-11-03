@@ -13,71 +13,37 @@ import { Keyword } from "../Keyword.js";
  * */
 
 export const ComponentExample = component(() => {
-  <CodeLine
-    number={1}
-    content={({ isDark }) => {
-      <>
-        <Comment isDark={isDark}>
-          // Wrap a function in a "component" call to use it as a custom element
-        </Comment>
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={2}
-    content={({ isDark }) => {
-      <>
-        {"const "}
-        <Highlight isDark={isDark}>MyComponent</Highlight>
-        {" = "}
-        <Keyword isDark={isDark}>component</Keyword>
-        {"(() => {"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={3}
-    content={({ isDark }) => {
-      <>
-        <Comment isDark={isDark}>{"  // Paste any valid HTML here"}</Comment>
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={4}
-    content={({ isDark }) => {
-      <>
-        {"  <"}
-        <Keyword isDark={isDark}>h1</Keyword>
-        {">Hello World</"}
-        <Keyword isDark={isDark}>h1</Keyword>
-        {">"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={5}
-    content={({}) => {
-      <>{"});"}</>;
-    }}
-  />;
-  <CodeLine
-    number={6}
-    content={({ isDark }) => {
-      <>
-        <Comment isDark={isDark}>{"// Mount the component"}</Comment>
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={7}
-    content={({ isDark }) => {
-      <>
-        {"mount(document.body, "}
-        <Highlight isDark={isDark}>MyComponent</Highlight>
-        {", {});"}
-      </>;
-    }}
-  />;
-  <CodeLine number={8} content={() => {}} />;
+  <CodeLine number={1}>
+    <Comment>
+      // Wrap a function in a "component" call to use it as a custom element
+    </Comment>
+  </CodeLine>;
+
+  <CodeLine number={2}>
+    {"const "}
+    <Highlight>MyComponent</Highlight>
+    {" = "}
+    <Keyword>component</Keyword>
+    {"(() => {"}
+  </CodeLine>;
+  <CodeLine number={3}>
+    <Comment>{"  // Paste any valid HTML here"}</Comment>
+  </CodeLine>;
+  <CodeLine number={4}>
+    {"  <"}
+    <Keyword>h1</Keyword>
+    {">Hello World</"}
+    <Keyword>h1</Keyword>
+    {">"}
+  </CodeLine>;
+  <CodeLine number={5}>{"});"}</CodeLine>;
+  <CodeLine number={6}>
+    <Comment>{"// Mount the component"}</Comment>
+  </CodeLine>;
+  <CodeLine number={7}>
+    {"mount(document.body, "}
+    <Highlight>MyComponent</Highlight>
+    {", {});"}
+  </CodeLine>;
+  <CodeLine number={8} />;
 });

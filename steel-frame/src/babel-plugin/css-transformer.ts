@@ -4,6 +4,7 @@ import { calledFn, calls, FnNames, styleOnly } from "./call.js";
 import { Internal } from "./internal.js";
 import { err, Errors } from "./lib.js";
 import { stringify } from "./utils.js";
+import { nodeToStaticPosition } from "./transformer.js";
 
 const pureNumbersProperties = new Set([
     "opacity",
@@ -355,7 +356,11 @@ export function findStyleInNode(path: NodePath<types.Node | null | undefined>, i
                 }
             }
 
-            valuePath.replaceWith(t.arrayExpression(expressions));
+            valuePath.replaceWith(
+                internal.devLayer
+                    ? t.arrayExpression([t.arrayExpression(expressions), nodeToStaticPosition(path.node)])
+                    : t.arrayExpression(expressions),
+            );
         }
 
         return true;

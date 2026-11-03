@@ -267,7 +267,6 @@ export interface Internal {
 
     // components
     Switch(arg: types.ObjectExpression): types.CallExpression;
-    ArrayModelView(array: types.Expression, arg: types.Expression): types.CallExpression;
 
     // safety
     safe(arg: types.FunctionExpression | types.ArrowFunctionExpression): types.CallExpression;

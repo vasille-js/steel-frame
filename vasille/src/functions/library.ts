@@ -1,13 +1,14 @@
 import { IValue, Reactive } from "../classes/index.js";
 import { ref } from "./internal.js";
 
-export function awaited<T>(
+export function awaited<T, Extra>(
     target: ((signal: AbortSignal) => Promise<T>) | IValue<(signal: AbortSignal) => Promise<T>, unknown>,
     ctx: Reactive,
-    createRef = ref,
+    createErrorRef = ref<unknown, Extra>,
+    createValueRef = ref<T | undefined, Extra>,
 ): [IValue<unknown, unknown>, IValue<unknown, unknown>, () => void] {
-    const err = createRef<unknown>(undefined);
-    const value = createRef<unknown>(undefined);
+    const err = createErrorRef(undefined);
+    const value = createValueRef(undefined);
     let controller: AbortController | undefined;
     let lastResultKey = 0;
 

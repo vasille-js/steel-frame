@@ -6,6 +6,7 @@ export async function processArgs() {
         return argv.indexOf(name) >= 2;
     }
 
+    const v4Naming = checkArg("v4-naming");
     let dev = checkArg("dev");
     let build = checkArg("build");
     let spa = checkArg("spa");
@@ -95,5 +96,5 @@ export async function processArgs() {
         help = true;
     }
 
-    return { dev, build, spa, ssg, help, lib, components, md, mdHtml };
+    return { dev, build, spa, ssg, help, lib, components, md, mdHtml, v4Naming };
 }

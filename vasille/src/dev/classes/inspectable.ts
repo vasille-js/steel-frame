@@ -248,7 +248,7 @@ export interface ProtocolEventTrigger extends Timed {
 }
 
 export interface ProtocolObject extends Inspectable, Timed {
-    constructor: string;
+    constructor?: string;
     position?: StaticPosition;
 }
 
@@ -708,7 +708,7 @@ export function processObject(obj: object, pos?: StaticPosition): number {
 
         inspector.newObject({
             id: id,
-            constructor: obj.constructor.name,
+            constructor: obj?.constructor?.name,
             time: time,
             position: pos,
         });
@@ -722,16 +722,17 @@ export function processObject(obj: object, pos?: StaticPosition): number {
                 time: time,
             });
         }
-
-        Object.defineProperty(obj, objectKey, {
-            value: {
-                id: id,
-                fields: fields,
-            },
-            enumerable: false,
-            configurable: false,
-            writable: false,
-        });
+        if (Object.isExtensible(obj)) {
+            Object.defineProperty(obj, objectKey, {
+                value: {
+                    id: id,
+                    fields: fields,
+                },
+                enumerable: false,
+                configurable: false,
+                writable: false,
+            });
+        }
 
         return id;
     }

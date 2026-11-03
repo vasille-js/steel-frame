@@ -15,89 +15,44 @@ import { Keyword } from "../Keyword.js";
  * });
  * */
 export const PropertiesExample = component(() => {
-  <CodeLine
-    number={1}
-    content={() => {
-      <>{"interface Props {"}</>;
-    }}
-  />;
-  <CodeLine
-    number={2}
-    content={({ isDark }) => {
-      <>
-        <span>{"  "}</span>
-        <Highlight isDark={isDark}>name</Highlight>
-        {" : string;"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={3}
-    content={() => {
-      <>{"}"}</>;
-    }}
-  />;
-  <CodeLine
-    number={4}
-    content={({ isDark }) => {
-      <>
-        {"const "}
-        <Keyword isDark={isDark}>Hello</Keyword>
-        {" = "}
-        <Keyword isDark={isDark}>component</Keyword>
-        {"<Props>(({"}
-        <Highlight isDark={isDark}>name</Highlight>
-        {"}) => {"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={5}
-    content={({ isDark }) => {
-      <>
-        {"  <"}
-        <Keyword isDark={isDark}>h1</Keyword>
-        {">Hello {"}
-        <Highlight isDark={isDark}>name</Highlight>
-        {"}!</"}
-        <Keyword isDark={isDark}>h1</Keyword>
-        {">;"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={6}
-    content={() => {
-      <>{"});"}</>;
-    }}
-  />;
-  <CodeLine
-    number={7}
-    content={({ isDark }) => {
-      <>
-        {"const App = "}
-        <Keyword isDark={isDark}>component</Keyword>
-        {"(() => {"}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={8}
-    content={({ isDark }) => {
-      <>
-        {"  <"}
-        <Keyword isDark={isDark}>Hello</Keyword>
-        <span>{"\xa0"}</span>
-        <Highlight isDark={isDark}>name</Highlight>
-        {'="World"/>;'}
-      </>;
-    }}
-  />;
-  <CodeLine
-    number={9}
-    content={() => {
-      <>{"});"}</>;
-    }}
-  />;
-  <CodeLine number={10} content={() => {}} />;
+  <CodeLine number={1}>{"interface Props {"}</CodeLine>;
+  <CodeLine number={2}>
+    <span>{"  "}</span>
+    <Highlight>name</Highlight>
+    {" : string;"}
+  </CodeLine>;
+  <CodeLine number={3}>{"}"}</CodeLine>;
+  <CodeLine number={4}>
+    {"const "}
+    <Keyword>Hello</Keyword>
+    {" = "}
+    <Keyword>component</Keyword>
+    {"<Props>(({"}
+    <Highlight>name</Highlight>
+    {"}) => {"}
+  </CodeLine>;
+  <CodeLine number={5}>
+    {"  <"}
+    <Keyword>h1</Keyword>
+    {">Hello {"}
+    <Highlight>name</Highlight>
+    {"}!</"}
+    <Keyword>h1</Keyword>
+    {">;"}
+  </CodeLine>;
+  <CodeLine number={6}>{"});"}</CodeLine>;
+  <CodeLine number={7}>
+    {"const App = "}
+    <Keyword>component</Keyword>
+    {"(() => {"}
+  </CodeLine>;
+  <CodeLine number={8}>
+    {"  <"}
+    <Keyword>Hello</Keyword>
+    <span>{"\xa0"}</span>
+    <Highlight>name</Highlight>
+    {'="World"/>;'}
+  </CodeLine>;
+  <CodeLine number={9}>{"});"}</CodeLine>;
+  <CodeLine number={10} />;
 });

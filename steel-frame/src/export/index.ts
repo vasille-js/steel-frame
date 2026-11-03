@@ -1,6 +1,7 @@
-import { AppNode, ArrayModel, MapModel, SetModel, ScreenProps } from "vasille";
+import { AppNode, ScreenProps } from "vasille";
 import type { VasilleSlot } from "vasille-web/jsx-runtime";
 import { WebRouter, WebTagOptions, CssStyleInjector, StyleSheetProps } from "vasille-web/types";
+import { ArrayModel, MapModel, SetModel } from "./models.js";
 
 export { safe } from "vasille";
 /** Set a handler for component errors */
@@ -199,19 +200,19 @@ export declare function ElseIf(props: { $condition: unknown; "vasille:slot"?: Va
 /** Renders content conditionally, use strict after `<If/>` or `<ElseIf/>` */
 export declare function Else(props: { slot?: () => void; "vasille:slot"?: VasilleSlot }): void;
 
-/** Renders content several times using a model (array, map or set) */
+/** Renders content several times using a model (array, map, or set) */
 export declare function For<T>(props: {
-    of: ReadonlyArray<T>;
+    of: ReadonlyArray<T> | ArrayModel<T>;
     slot?: (value: T) => void;
     "vasille:slot"?: VasilleSlot;
 }): void;
 export declare function For<T>(props: {
-    of: ReadonlySet<T>;
+    of: ReadonlySet<T> | SetModel<T>;
     slot?: (value: T) => void;
     "vasille:slot"?: VasilleSlot;
 }): void;
 export declare function For<K, T>(props: {
-    of: ReadonlyMap<K, T>;
+    of: ReadonlyMap<K, T> | MapModel<K, T>;
     slot?: (value: T, index: K) => void;
     "vasille:slot"?: VasilleSlot;
 }): void;
@@ -232,15 +233,15 @@ export declare function ArrayView<T>(props: {
 
 /** Renders content of an `array model`, which can be updated via `push`, `pull`, ... */
 export declare function ArrayModelView<T>(props: {
-    of: ReadonlyArray<T>;
+    of: ArrayModel<T>;
     slot: (value: T, r_index: number) => void;
 }): void;
 
 /** Renders content of a `map model`, which can be updated via `set`, `delete`, ... */
-export declare function MapModelView<K, T>(props: { of: ReadonlyMap<K, T>; slot: (r_value: T, key: K) => void }): void;
+export declare function MapModelView<K, T>(props: { of: MapModel<K, T>; slot: (r_value: T, key: K) => void }): void;
 
 /** Renders content of a `set model`, which can be updated via `add`, `delete`, ... */
-export declare function SetModelView<T>(props: { of: ReadonlySet<T>; slot: (value: T) => void }): void;
+export declare function SetModelView<T>(props: { of: SetModel<T>; slot: (value: T) => void }): void;
 
 /** Will be translated to for (let value of value) { slot(item) } */
 export declare function Iterate<
@@ -480,4 +481,8 @@ export type {
     NavigationMode,
     ClassItem,
     WebRouterInitialization,
+    CssStyleInjector,
+    StyleSheetProps,
 } from "vasille-web/types";
+
+export type { ArrayModel, MapModel, SetModel } from "./models.js";

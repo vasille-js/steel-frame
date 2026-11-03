@@ -1,7 +1,16 @@
-import { component, dark, Slot, styleSheet } from "steel-frame";
+import {
+  component,
+  CssStyleInjector,
+  dark,
+  Slot,
+  styleSheet,
+} from "steel-frame";
 
 interface Props {
-  description?(props: { classes: string[]; isDark: boolean }): void;
+  description?(props: {
+    classes: (string | CssStyleInjector)[];
+    isDark: boolean;
+  }): void;
 }
 
 export const DoubleDescription = component(({ description }: Props) => {

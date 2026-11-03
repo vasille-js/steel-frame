@@ -1,11 +1,17 @@
-import { component, dark, Slot, styleSheet } from "steel-frame";
+import { component, dark, share, Slot, styleSheet } from "steel-frame";
 
 interface Props {
   number: number;
-  content(props: { isDark: boolean }): void;
+  slot?(): void;
 }
 
-export const CodeLine = component<Props>(({ content, number }) => {
+interface DarkProps {
+  isDark: boolean;
+  slot?(): void;
+}
+
+export const CodeLine = component<Props>((props) => {
+  const { number, slot } = props;
   const reverse = number % 2 === 0;
 
   <div class={styles.line}>
@@ -16,7 +22,7 @@ export const CodeLine = component<Props>(({ content, number }) => {
         {number}
       </div>
       <div class={[styles.text, reverse ? styles.light : styles.dark]}>
-        <Slot model={content} isDark={!reverse} />
+        <Dark slot={slot} isDark={!reverse} />
       </div>
     </div>
     <div class={[styles.inner, styles.abs, reverse && styles.absR]}>
@@ -24,10 +30,16 @@ export const CodeLine = component<Props>(({ content, number }) => {
         {number}
       </div>
       <div class={[styles.text, reverse ? styles.dark : styles.light]}>
-        <Slot model={content} isDark={reverse} />
+        <Dark slot={slot} isDark={reverse} />
       </div>
     </div>
   </div>;
+});
+
+const Dark = component<DarkProps>((props) => {
+  share("dark", props.isDark ? "dark" : "");
+
+  <Slot model={props.slot} />;
 });
 
 const styles = styleSheet({

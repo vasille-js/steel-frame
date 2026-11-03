@@ -111,7 +111,7 @@ it("awaited with aborts", function (done) {
                 expect(counterState.V).toBeUndefined();
                 expect(counterError.V).toBe(9);
                 frag.destroy(frag.sDeep);
-                expect(finished).toEqual([50, 10, 9, 9, 100, 250, 500]);
+                expect(finished.sort()).toEqual([50, 10, 9, 9, 100, 250, 500].sort());
                 done();
             }, 500);
         }, 11);

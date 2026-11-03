@@ -1,3 +1,4 @@
+import { WritableIValue } from "../classes/core/ivalue.js";
 import {
     ArrayModel,
     DebounceReference,
@@ -34,7 +35,7 @@ export function safeExpr<T, Args extends unknown[]>(
  * It transforms a non-reactive value to a reactive one.
  * 1. `let a = 0` to `const a = ref(0)`
  */
-export function ref<T>(v: T, ctx?: Reactive): IValue<T, unknown> {
+export function ref<T, Extra = unknown>(v: T, ctx?: Reactive): Reference<T, Extra> {
     return new Reference(v, ctx);
 }
 
@@ -50,36 +51,57 @@ export function safeRef<T>(fn: () => T, ctx?: Reactive): IValue<T | undefined, u
  * create a `Set` model
  * 1. translate `setModel(#)` to `setModel(ctx, #)`
  */
-export function setModel(ctx: Reactive | undefined, data?: unknown[]) {
-    return new SetModel(data, ctx);
+export function setModel(
+    ctx: Reactive | undefined,
+    data?: unknown[] | Set<unknown> | WritableIValue<unknown[] | Set<unknown>, unknown>,
+    size?: WritableIValue<number, unknown>,
+) {
+    return new SetModel(data, ctx, size);
 }
 
 /**
  * create a `Map` model
  * 1. `mapModel(#)` to `mapModel(ctx, #)`
  */
-export function mapModel(ctx: Reactive | undefined, data?: [unknown, unknown][]) {
-    return new MapModel(data, ctx);
+export function mapModel(
+    ctx: Reactive | undefined,
+    data?:
+        | [unknown, unknown][]
+        | Map<unknown, unknown>
+        | WritableIValue<[unknown, unknown][] | Map<unknown, unknown>, unknown>,
+    size?: WritableIValue<number, unknown>,
+) {
+    return new MapModel(data, ctx, size);
 }
 
 /**
  * create an `Array` model
  * 1. `arrayModel([...])` to `arrayModel(ctx, [...])`
  */
-export function arrayModel(ctx: Reactive | undefined, data?: unknown[] | number) {
-    return new ArrayModel(data, ctx);
+export function arrayModel(
+    ctx: Reactive | undefined,
+    data?: unknown[] | WritableIValue<unknown[] | undefined, unknown>,
+    length?: WritableIValue<number, unknown>,
+) {
+    return new ArrayModel(data, ctx, length);
 }
 
 /**
  * Use when a value must be IValue but can be undefined
  * 1. `let $a = obj.$key` to `const $a = ensure(ctx, obj, "$key")`
  */
-export function ensure<T extends object>(ctx: Reactive | undefined, obj: T | null | undefined, key: keyof T) {
+export function ensure<T extends object, K extends keyof T>(
+    ctx: Reactive | undefined,
+    obj: T | null | undefined,
+    key: keyof T,
+): T[K] extends IValue<unknown, unknown> ? T[K] : IValue<T[K], unknown> {
     return !obj
-        ? ref(undefined, ctx)
+        ? (ref(undefined, ctx) as unknown as T[K] extends IValue<unknown, unknown> ? T[K] : IValue<T[K], unknown>)
         : key in obj
-          ? obj[key]
-          : (obj[key] = ref(undefined, ctx) as unknown as T[keyof T]);
+          ? (obj[key] as T[K] extends IValue<unknown, unknown> ? T[K] : IValue<T[K], unknown>)
+          : ((obj[key] = ref(undefined, ctx) as unknown as T[keyof T]) as T[K] extends IValue<unknown, unknown>
+                ? T[K]
+                : IValue<T[K], unknown>);
 }
 
 /**
@@ -87,7 +109,12 @@ export function ensure<T extends object>(ctx: Reactive | undefined, obj: T | nul
  * 1. `{[a]: a1} = {x: 2}` to `{[a]: a1 = match("a1")} = {x: 2}`
  * 1. `{[a]: a1 = 3} = {x: 2}` to `{[a]: a1 = match("a1", 3)} = {x: 2}`
  */
-export function match(ctx: Reactive | undefined, name: string | number | symbol, data?: unknown, createRef = ref) {
+export function match<Extra = unknown>(
+    ctx: Reactive | undefined,
+    name: string | number | symbol,
+    data?: unknown,
+    createRef = ref<unknown, Extra>,
+) {
     const iValueRequired = typeof name === "string" && name.startsWith("$");
     const isIValue = data instanceof IValue;
 
@@ -106,18 +133,16 @@ export function match(ctx: Reactive | undefined, name: string | number | symbol,
  * 1. `obj.$key = 23` to `set(obj, "$key", 23)`
  * 2. `arr[0] = 23` to `set(arr, 0, 23)`
  */
-export function set(
+export function set<Extra = unknown>(
     ctx: Reactive | undefined,
     o: object,
     key: string | symbol | number,
     value: unknown,
-    createRef = ref,
+    createRef = ref<unknown, Extra>,
 ) {
-    if (o[key] instanceof IValue) {
-        o[key].V = value;
-    } else if (o instanceof ArrayModel && typeof key === "number") {
-        o.replace(key, value);
-    } else if (typeof key === "string" && key.startsWith("$")) {
+    if (o[key] instanceof IValue && o[key].isWritable()) {
+        (o[key] as WritableIValue<unknown, unknown>).up(value);
+    } else if (typeof key === "string" && key.startsWith("wr_")) {
         o[key] = createRef(value, ctx);
     } else {
         o[key] = value;
@@ -151,7 +176,7 @@ export function debounceRef<T>(ctx: Reactive, target: IValue<T, unknown>, delay:
  */
 export function toFieldRef(
     ctx: Reactive,
-    o: IValue<object | undefined | null, unknown>,
+    o: WritableIValue<object | undefined | null, unknown>,
     key: string | symbol,
     createRef = ref,
 ) {
@@ -164,7 +189,7 @@ export function toFieldRef(
  */
 export function toDeepFieldRef(
     ctx: Reactive,
-    o: IValue<object | undefined | null, unknown>,
+    o: WritableIValue<object | undefined | null, unknown>,
     key: (string | symbol)[],
     createRef = ref,
 ) {

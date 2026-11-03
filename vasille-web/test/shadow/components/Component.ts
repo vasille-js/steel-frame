@@ -1,8 +1,8 @@
-import { expr, IValue, ref, Switch } from "vasille";
+import { expr, IValue, ref, Switch, WritableIValue } from "vasille";
 import { shadow } from "../../../src/shadow/lib.ts";
 
 interface Props {
-    $idNumber: IValue<number, unknown>;
+    $idNumber: WritableIValue<number, unknown>;
     $name: IValue<string, unknown>;
     $visible: IValue<boolean, unknown>;
     $prop: IValue<number, unknown>;

@@ -1,4 +1,12 @@
-import { component, dark, mobile, styleSheet, watch } from "steel-frame";
+import {
+  bypassWriteRestriction,
+  component,
+  CssStyleInjector,
+  dark,
+  mobile,
+  styleSheet,
+  watch,
+} from "steel-frame";
 import docsSvg from "../assets/docs.svg";
 import githubSvg from "../assets/github.svg";
 import playgroundSvg from "../assets/playground.svg";
@@ -14,123 +22,31 @@ interface ItemProps {
   accessKey: string;
 }
 
-const Item = component(({ src, text, href, $active, accessKey }: ItemProps) => {
-  <a
-    class={[styles.panelItem, "panel-item"]}
-    href={href}
-    accesskey={$active ? accessKey : undefined}
-    tabindex={$active ? "0" : "-1"}
-  >
-    <div
-      class={[styles.panelItemIcon, "panel-item-icon"]}
-      style={{ mask: `url("${src}")` }}
-    />
-    <div class={styles.panelItemText}>{text}</div>
-  </a>;
-});
-
-const Switcher = component(() => {
-  <button
-    type={"button"}
-    class={[styles.switcher]}
-    onclick={() => {
-      document.body.classList.toggle("dark");
-    }}
-  >
-    <div class={styles.switcherTrack}>
-      <div class={styles.switcherKnob} />
-    </div>
-    <div class={styles.switcherIcon}>
-      <img
-        class={[styles.switcherIconSvg, styles.switcherIconDark]}
-        src={lightSvg}
-        alt={"light"}
-      />
-      <img
-        class={[styles.switcherIconSvg, styles.switcherIconLight]}
-        src={darkSvg}
-        alt={"dark"}
-      />
-    </div>
-  </button>;
-});
-
 interface InternalPanelProps {
   fg: string;
   bg: string;
   border: string;
   accent: string;
-  className: string;
-  activeClassName: string;
+  className: string | CssStyleInjector;
+  activeClassName: string | CssStyleInjector;
   lightZ: number;
   darkZ: number;
   $active: boolean;
 }
 
-const InternalPanel = component(
-  ({
-    fg,
-    border,
-    bg,
-    accent,
-    className,
-    lightZ,
-    darkZ,
-    $active,
-    activeClassName,
-  }: InternalPanelProps) => {
-    <nav
-      role={"navigation"}
-      aria-hidden={$active ? "false" : "true"}
-      class={[styles.panel, className, $active && activeClassName]}
-      style={{
-        "--fg": fg,
-        "--bg": bg,
-        "--border": border,
-        "--accent": accent,
-        "--light-z": `${lightZ}`,
-        "--dark-z": `${darkZ}`,
-      }}
-    >
-      <div class={[styles.logo, "logo"]} />
-      <Item
-        src={docsSvg}
-        text={"Docs"}
-        href={"https://deepwiki.com/vasille-js/steel-frame"}
-        $active={$active}
-        accessKey={"d"}
-      />
-      <Item
-        src={playgroundSvg}
-        text={"Playground"}
-        href={"#"}
-        $active={$active}
-        accessKey={"p"}
-      />
-      <Item
-        src={githubSvg}
-        text={"GitHub"}
-        href={"https://github.com/vasille-js/steel-frame"}
-        $active={$active}
-        accessKey={"g"}
-      />
-    </nav>;
-  },
-);
-
 export const Panel = component(() => {
   let $active = false;
-  let $overlayDisplay = false;
-  let $overlayActive = false;
+  let wr_overlayDisplay = false;
+  let wr_overlayActive = false;
 
   watch(() => {
     if ($active) {
-      $overlayDisplay = true;
+      bypassWriteRestriction(wr_overlayDisplay, true);
       requestAnimationFrame(() => {
-        $overlayActive = true;
+        bypassWriteRestriction(wr_overlayActive, true);
       });
     } else {
-      $overlayActive = false;
+      bypassWriteRestriction(wr_overlayActive, false);
     }
   });
 
@@ -138,13 +54,13 @@ export const Panel = component(() => {
     type="button"
     class={[
       styles.overlay,
-      $overlayActive && styles.overlayActive,
-      $overlayDisplay && styles.overlayDisplay,
+      wr_overlayActive && styles.overlayActive,
+      wr_overlayDisplay && styles.overlayDisplay,
     ]}
     onclick={() => ($active = false)}
     ontransitionend={() => {
       if (!$active) {
-        $overlayDisplay = false;
+        wr_overlayDisplay = false;
       }
     }}
   />;
@@ -185,6 +101,104 @@ export const Panel = component(() => {
     <Switcher />
   </div>;
 });
+
+const Item = component(
+  ({ src, text, href, accessKey, ...props }: ItemProps) => {
+    const $active = props.$active;
+
+    <a
+      class={[styles.panelItem, "panel-item"]}
+      href={href}
+      accesskey={$active ? accessKey : undefined}
+      tabindex={$active ? 0 : -1}
+    >
+      <div
+        class={[styles.panelItemIcon, "panel-item-icon"]}
+        style={{ mask: `url("${src}")` }}
+      />
+      <div class={styles.panelItemText}>{text}</div>
+    </a>;
+  },
+);
+
+const Switcher = component(() => {
+  <button
+    type={"button"}
+    class={[styles.switcher]}
+    onclick={() => {
+      document.body.classList.toggle("dark");
+    }}
+  >
+    <div class={styles.switcherTrack}>
+      <div class={styles.switcherKnob} />
+    </div>
+    <div class={styles.switcherIcon}>
+      <img
+        class={[styles.switcherIconSvg, styles.switcherIconDark]}
+        src={lightSvg}
+        alt={"light"}
+      />
+      <img
+        class={[styles.switcherIconSvg, styles.switcherIconLight]}
+        src={darkSvg}
+        alt={"dark"}
+      />
+    </div>
+  </button>;
+});
+
+const InternalPanel = component(
+  ({
+    fg,
+    border,
+    bg,
+    accent,
+    className,
+    lightZ,
+    darkZ,
+    activeClassName,
+    ...props
+  }: InternalPanelProps) => {
+    const $active = props.$active;
+
+    <nav
+      role={"navigation"}
+      aria-hidden={$active ? "false" : "true"}
+      class={[styles.panel, className, $active && activeClassName]}
+      style={{
+        "--fg": fg,
+        "--bg": bg,
+        "--border": border,
+        "--accent": accent,
+        "--light-z": `${lightZ}`,
+        "--dark-z": `${darkZ}`,
+      }}
+    >
+      <div class={[styles.logo, "logo"]} />
+      <Item
+        src={docsSvg}
+        text={"Docs"}
+        href={"https://deepwiki.com/vasille-js/steel-frame"}
+        $active={$active}
+        accessKey={"d"}
+      />
+      <Item
+        src={playgroundSvg}
+        text={"Playground"}
+        href={"#"}
+        $active={$active}
+        accessKey={"p"}
+      />
+      <Item
+        src={githubSvg}
+        text={"GitHub"}
+        href={"https://github.com/vasille-js/steel-frame"}
+        $active={$active}
+        accessKey={"g"}
+      />
+    </nav>;
+  },
+);
 
 const styles = styleSheet({
   panel: {
