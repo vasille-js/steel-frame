@@ -8,7 +8,7 @@ import { ExperienceView } from "./ExperienceView.js";
 import { ReadyView } from "./ReadyView.js";
 
 export const AllView = view(() => {
-  <div class={styles.content}>
+  <div class={css.content}>
     <VisibilityTracker>
       <DescriptionView />
     </VisibilityTracker>
@@ -40,7 +40,7 @@ export const AllView = view(() => {
   </div>;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   content: {
     flex: "9999",
     // "max-width": 1025,

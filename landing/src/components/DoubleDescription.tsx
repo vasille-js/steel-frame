@@ -14,21 +14,13 @@ interface Props {
 }
 
 export const DoubleDescription = component(({ description }: Props) => {
-  <div class={[styles.container]}>
-    <Slot
-      model={description}
-      classes={[styles.dark, styles.text]}
-      isDark={true}
-    />
-    <Slot
-      model={description}
-      classes={[styles.light, styles.text]}
-      isDark={false}
-    />
+  <div class={[css.container]}>
+    <Slot model={description} classes={[css.dark, css.text]} isDark={true} />
+    <Slot model={description} classes={[css.light, css.text]} isDark={false} />
   </div>;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   container: {
     position: "relative",
     width: "fit-content",

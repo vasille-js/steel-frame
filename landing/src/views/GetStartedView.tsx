@@ -23,7 +23,7 @@ export const GetStartedView = view(() => {
 
         <>
           Scaffold your first project via{" "}
-          <span class={styles.code} style={{ color }}>
+          <span class={css.code} style={{ color }}>
             npm create steel-frame
           </span>{" "}
           and open it in your favorite editor!
@@ -66,7 +66,7 @@ export const GetStartedView = view(() => {
   <HLine />;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   code: {
     "font-family": "FM, monospace",
     "font-size": 13,

@@ -5,6 +5,7 @@ import {
   For,
   mobile,
   QueuedRender,
+  receive,
   styleSheet,
   tablet,
   unwrap,
@@ -12,6 +13,7 @@ import {
 } from "steel-frame";
 import { MAX_WIDTH } from "./lib/limits.js";
 import { VisibilityTracker } from "./VisibilityTracker.js";
+import { noTransitions } from "../../context/noTransitions.js";
 
 interface TabItem {
   label: string;
@@ -27,22 +29,25 @@ interface Props {
 export const CodeTabs = component<Props>(({ tabs, storageKey }) => {
   let $currentTab = localStorage.getItem(storageKey) ?? tabs[0].class;
   let $minHeight = 0;
+  const noTransition = receive(noTransitions);
+  const r_none = noTransition.r_class;
 
   watch(() => {
     localStorage.setItem(storageKey, $currentTab);
   });
 
-  <div class={styles.padding}>
-    <div class={[styles.container]} style={{ "max-width": MAX_WIDTH }}>
-      <div class={styles.tabsContainer}>
-        <div class={styles.tabs}>
+  <div class={css.padding}>
+    <div class={[css.container, r_none]} style={{ "max-width": MAX_WIDTH }}>
+      <div class={css.tabsContainer}>
+        <div class={css.tabs}>
           <For
             of={tabs}
             slot={(item) => {
               <div
                 class={[
-                  styles.tab,
-                  item.class === $currentTab && styles.activeTab,
+                  css.tab,
+                  item.class === $currentTab && css.activeTab,
+                  r_none,
                 ]}
                 onclick={() => ($currentTab = item.class)}
                 onkeydown={(ev) => {
@@ -59,7 +64,7 @@ export const CodeTabs = component<Props>(({ tabs, storageKey }) => {
         </div>
       </div>
       <div
-        class={styles.code}
+        class={[css.code, r_none]}
         style={{ "min-height": $minHeight > 0 ? $minHeight : 304 }}
       >
         <For
@@ -83,7 +88,7 @@ export const CodeTabs = component<Props>(({ tabs, storageKey }) => {
 
             <QueuedRender priority={unwrap($visible) ? "high" : "low"}>
               <div
-                class={[styles.snippet, $visible && styles.active]}
+                class={[css.snippet, $visible && css.active, r_none]}
                 ontransitionend={() => {
                   if (!$visible) {
                     wr_display = "none";
@@ -114,7 +119,7 @@ export const CodeTabs = component<Props>(({ tabs, storageKey }) => {
   </div>;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   container: {
     display: "flex",
     "border-radius": 16,

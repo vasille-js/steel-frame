@@ -9,6 +9,7 @@ import {
   If,
   QueuedRender,
   raw,
+  receive,
   styleSheet,
   watch,
 } from "steel-frame";
@@ -16,6 +17,7 @@ import { Row as ViewRow } from "./code-block/lib/Row.js";
 import { Button } from "./Button.js";
 import itemSvg from "../assets/item.svg";
 import devStepsSvg from "../assets/devSteps.svg";
+import { noTransitions } from "../context/noTransitions.js";
 
 interface GridProps {
   $active: boolean;
@@ -63,14 +65,16 @@ interface ItemContentProps {
 
 export const Accordion = component<Props>(({ items, id }) => {
   let $current = localStorage.getItem(id) ?? items[0].id;
+  const noTransition = receive(noTransitions);
+  const r_none = noTransition.r_class;
 
   watch(() => {
     localStorage.setItem(id, $current);
   });
 
-  <ViewRow class={styles.bg}>
-    <div class={[styles.image]}>
-      <div class={[styles.gridsContainer]}>
+  <ViewRow class={css.bg}>
+    <div class={[css.image]}>
+      <div class={[css.gridsContainer]}>
         <For
           of={items}
           slot={(item) => {
@@ -83,7 +87,7 @@ export const Accordion = component<Props>(({ items, id }) => {
         />
       </div>
     </div>
-    <div class={styles.items}>
+    <div class={css.items}>
       <For
         of={items}
         slot={(item) => {
@@ -116,9 +120,9 @@ export const Accordion = component<Props>(({ items, id }) => {
             }
           });
 
-          <div class={styles.item}>
+          <div class={css.item}>
             <div
-              class={[styles.itemTitle, $isCurrent && styles.active]}
+              class={[css.itemTitle, $isCurrent && css.active, r_none]}
               onclick={() => ($current = item.id)}
               onkeydown={(ev) => {
                 if (ev.key === "Enter" || ev.key === " ") {
@@ -134,24 +138,25 @@ export const Accordion = component<Props>(({ items, id }) => {
               <div style={{ flex: "1" }}>// {item.title}</div>
               <div
                 class={[
-                  styles.round,
-                  styles.roundBg,
-                  $isCurrent && styles.activeBg,
+                  css.round,
+                  css.roundBg,
+                  $isCurrent && css.activeBg,
+                  r_none,
                 ]}
                 style={{
                   transform: $isCurrent ? "rotate(45deg)" : "rotate(-45deg)",
                 }}
               >
-                <div class={styles.roundRow}>
+                <div class={[css.roundRow, r_none]}>
                   <div
-                    class={[styles.round, styles.roundFg]}
+                    class={[css.round, css.roundFg, r_none]}
                     style={{
                       "mask-image": `url("${itemSvg}")`,
                       "background-color": "#191919",
                     }}
                   />
                   <div
-                    class={[styles.round, styles.roundFg]}
+                    class={[css.round, css.roundFg, r_none]}
                     style={{
                       "mask-image": `url("${itemSvg}")`,
                       "background-color": "#FFFFFF",
@@ -189,7 +194,7 @@ export const Accordion = component<Props>(({ items, id }) => {
               </QueuedRender>
             </Else>
             <div
-              class={styles.hr}
+              class={[css.hr, r_none]}
               style={{ width: $isCurrent || isLast ? 0 : "100%" }}
             ></div>
           </div>;
@@ -217,15 +222,17 @@ const Cell = component<CellProps>(
   ({ row, col, maskPosX, maskPosY, ontransitionend, color, ...props }) => {
     const $active = props.$active;
     const inactiveClass =
-      col % 2 === 0 ? styles.cellInactiveEven : styles.cellInactiveOdd;
+      col % 2 === 0 ? css.cellInactiveEven : css.cellInactiveOdd;
     let wr_class = $active ? "active" : inactiveClass;
+    const noTransition = receive(noTransitions);
+    const r_none = noTransition.r_class;
 
     watch(() => {
       bypassWriteRestriction(wr_class, $active ? "active" : inactiveClass);
     });
 
     <div
-      class={[styles.cell, wr_class]}
+      class={[css.cell, wr_class, r_none]}
       style={{
         top: 0,
         left: `${(col / 4) * 100}%`,
@@ -246,10 +253,12 @@ const Cell = component<CellProps>(
 const Row = component<RowProps>(
   ({ row, maskPosX, maskPosY, ontransitionend, color, classes, ...props }) => {
     const $active = props.$active;
+    const noTransition = receive(noTransitions);
+    const r_none = noTransition.r_class;
 
     <div
       style={{ top: `${row * 25}%`, "transition-delay": `${row * 0.5}s` }}
-      class={[styles.line, classes[row % 2]]}
+      class={[css.line, classes[row % 2], r_none]}
     >
       <For
         of={[0, 1, 2, 3]}
@@ -291,7 +300,7 @@ const Grid = component<GridProps>(({ maskPosX, maskPosY, ...props }) => {
     }
   }
 
-  <div class={styles.grid} style={{ display: wr_display }}>
+  <div class={css.grid} style={{ display: wr_display }}>
     <For
       of={[0, 1, 2, 3]}
       slot={(row) => {
@@ -303,7 +312,7 @@ const Grid = component<GridProps>(({ maskPosX, maskPosY, ...props }) => {
             maskPosX={maskPosX}
             maskPosY={maskPosY}
             ontransitionend={onTransitionEnd}
-            classes={[styles.rowLightOdd, styles.rowLightEven]}
+            classes={[css.rowLightOdd, css.rowLightEven]}
           />
           <Row
             row={row}
@@ -312,7 +321,7 @@ const Grid = component<GridProps>(({ maskPosX, maskPosY, ...props }) => {
             maskPosX={maskPosX}
             maskPosY={maskPosY}
             ontransitionend={onTransitionEnd}
-            classes={[styles.rowDarkOdd, styles.rowDarkEven]}
+            classes={[css.rowDarkOdd, css.rowDarkEven]}
           />
         </QueuedRender>;
       }}
@@ -331,6 +340,9 @@ const ItemContent = component<ItemContentProps>(
       $current,
       $isCurrent,
     } = props;
+    const noTransition = receive(noTransitions);
+    const r_none = noTransition.r_class;
+
     <div
       style={{
         height: $current === item.id ? ($inited ? $bodyHeight : "auto") : 0,
@@ -370,23 +382,26 @@ const ItemContent = component<ItemContentProps>(
         >
           <Button text={"Learn More"} primary />
         </div>
-        <div class={styles.itemDesc}>
-          <div class={styles.itemDescTitle}>
-            <div class={styles.double}>
-              <div class={styles.half} style={{ color: "#FFFFFF" }}>
+        <div class={[css.itemDesc, r_none]}>
+          <div class={css.itemDescTitle}>
+            <div class={[css.double, r_none]}>
+              <div class={css.half} style={{ color: "#FFFFFF" }}>
                 {item.descTitle}
               </div>
-              <div class={styles.half} style={{ color: "#191919" }}>
+              <div class={css.half} style={{ color: "#191919" }}>
                 {item.descTitle}
               </div>
             </div>
           </div>
-          <div class={styles.itemDescBody}>
-            <div class={styles.double} style={{ "transition-delay": "0.5s" }}>
-              <div class={styles.half} style={{ color: "#C5C5C5" }}>
+          <div class={css.itemDescBody}>
+            <div
+              class={[css.double, r_none]}
+              style={{ "transition-delay": "0.5s" }}
+            >
+              <div class={css.half} style={{ color: "#C5C5C5" }}>
                 {item.descBody}
               </div>
-              <div class={styles.half} style={{ color: "#605F5F" }}>
+              <div class={css.half} style={{ color: "#605F5F" }}>
                 {item.descBody}
               </div>
             </div>
@@ -397,7 +412,7 @@ const ItemContent = component<ItemContentProps>(
   },
 );
 
-const styles = styleSheet({
+const css = styleSheet({
   bg: {
     flex: "1",
     display: "flex",

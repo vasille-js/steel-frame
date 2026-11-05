@@ -1,5 +1,7 @@
+import { CssStyleInjector } from "steel-frame";
+
 export interface DoubleData {
-  classes: string[];
+  classes: (string | CssStyleInjector)[];
   isDark: boolean;
 }
 

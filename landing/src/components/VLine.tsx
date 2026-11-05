@@ -1,4 +1,5 @@
-import { component, dark, styleSheet } from "steel-frame";
+import { component, dark, receive, styleSheet } from "steel-frame";
+import { noTransitions } from "../context/noTransitions.js";
 
 interface Props {
   reverse?: boolean;
@@ -9,8 +10,11 @@ interface Props {
 
 export const VLine = component(
   ({ reverse, height, marginBottom, marginTop }: Props) => {
+    const noTransition = receive(noTransitions);
+    const r_none = noTransition.r_class;
+
     <div
-      class={[styles.line]}
+      class={[css.line]}
       style={{
         height,
         "margin-top": marginTop,
@@ -19,18 +23,18 @@ export const VLine = component(
       }}
     >
       <div
-        class={[styles.inner, styles.light]}
+        class={[css.inner, css.light, r_none]}
         style={reverse ? "bottom:0" : "top:0"}
       />
       <div
-        class={[styles.inner, styles.dark]}
+        class={[css.inner, css.dark, r_none]}
         style={reverse ? "top:0" : "bottom:0"}
       />
     </div>;
   },
 );
 
-const styles = styleSheet({
+const css = styleSheet({
   line: {
     width: 1,
     position: "relative",

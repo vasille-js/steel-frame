@@ -1,4 +1,11 @@
-import { CssStyleInjector, dark, For, styleSheet, view } from "steel-frame";
+import {
+  CssStyleInjector,
+  dark,
+  For,
+  receive,
+  styleSheet,
+  view,
+} from "steel-frame";
 import { FeatureRow } from "../components/feature/FeatureRow.js";
 import { FeatureKey } from "../components/feature/FeatureKey.js";
 import { FeatureTitle } from "../components/feature/FeatureTitle.js";
@@ -10,6 +17,7 @@ import codeDarkAvif from "../assets/codeDark.avif";
 import itemSvg from "../assets/item.svg";
 import { VLine } from "../components/VLine.js";
 import { HLine } from "../components/HLine.js";
+import { noTransitions } from "../context/noTransitions.js";
 
 interface HalfProps {
   number: string;
@@ -31,7 +39,7 @@ export const GreatForView = view(() => {
       Great for Developers
     </FeatureTitle>
   </FeatureRow>;
-  <Row class={styles.columnOnTablet}>
+  <Row class={css.columnOnTablet}>
     <HalfView
       number={"01"}
       why={"Why It Matters for Your Business"}
@@ -41,12 +49,12 @@ export const GreatForView = view(() => {
         "Faster time-to-market for new features",
         "Reduced onboarding costs for new hires",
       ]}
-      color={styles.blueColor}
-      bg={styles.blueBg}
-      border={styles.blueBorder}
-      imageClass={styles.imageLeft}
+      color={css.blueColor}
+      bg={css.blueBg}
+      border={css.blueBorder}
+      imageClass={css.imageLeft}
     />
-    <div class={styles.delimiter} />
+    <div class={css.delimiter} />
     <HalfView
       number={"02"}
       why={"Why Developers Love It"}
@@ -56,10 +64,10 @@ export const GreatForView = view(() => {
         "Code confidently without breaking production",
         "Focus on business logic instead of framework complexities",
       ]}
-      color={styles.yellowColor}
-      bg={styles.yellowBg}
-      border={styles.yellowBorder}
-      imageClass={styles.imageRight}
+      color={css.yellowColor}
+      bg={css.yellowBg}
+      border={css.yellowBorder}
+      imageClass={css.imageRight}
     />
   </Row>;
   <VLine reverse height={50} />;
@@ -68,28 +76,31 @@ export const GreatForView = view(() => {
 
 const HalfView = view<HalfProps>(
   ({ why, list, color, imageClass, images, border, bg, number }: HalfProps) => {
-    <div class={styles.half}>
-      <div class={[styles.number, color]}>{number}</div>
-      <div class={styles.hr} />
-      <div class={styles.why}>{why}</div>
-      <div class={[styles.container, border]}>
-        <div class={[styles.innerContainer, border]}>
+    const noTransition = receive(noTransitions);
+    const r_none = noTransition.r_class;
+
+    <div class={[css.half, r_none]}>
+      <div class={[css.number, color, r_none]}>{number}</div>
+      <div class={[css.hr, r_none]} />
+      <div class={css.why}>{why}</div>
+      <div class={[css.container, border, r_none]}>
+        <div class={[css.innerContainer, border, r_none]}>
           <div
-            class={[styles.image, imageClass]}
+            class={[css.image, imageClass, r_none]}
             style={{
               "background-image": `url("${images[0]}"), url("${images[1]}")`,
             }}
           />
-          <div class={styles.list}>
+          <div class={css.list}>
             <For
               of={list}
               slot={(item) => {
-                <div class={styles.listItem}>
+                <div class={css.listItem}>
                   <div
-                    class={[styles.itemIcon, bg]}
+                    class={[css.itemIcon, bg, r_none]}
                     style={{ "mask-image": `url("${itemSvg}")` }}
                   />
-                  <div class={styles.itemText}>{item}</div>
+                  <div class={[css.itemText, r_none]}>{item}</div>
                 </div>;
               }}
             />
@@ -100,7 +111,7 @@ const HalfView = view<HalfProps>(
   },
 );
 
-const styles = styleSheet({
+const css = styleSheet({
   half: {
     flex: "1",
     "border-radius": 16,

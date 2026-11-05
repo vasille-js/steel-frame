@@ -2,6 +2,7 @@ import {
   CssStyleInjector,
   dark,
   For,
+  receive,
   styleSheet,
   tablet,
   view,
@@ -17,6 +18,7 @@ import itemSvg from "../assets/item.svg";
 import { VLine } from "../components/VLine.js";
 import { HLine } from "../components/HLine.js";
 import { Row } from "../components/code-block/lib/Row.js";
+import { noTransitions } from "../context/noTransitions.js";
 
 interface CardProps {
   title: string;
@@ -37,7 +39,7 @@ export const GameChangerView = view(() => {
       feel instant from the very first click, without the bloat.
     </FeatureDescription>
   </FeatureRow>;
-  <Row class={styles.columnOnMobile}>
+  <Row class={css.columnOnMobile}>
     <CardView
       title={"Find Code Instantly"}
       image={laptopPng}
@@ -49,7 +51,7 @@ export const GameChangerView = view(() => {
       ease={"ease-in"}
       originY={60}
     />
-    <div class={styles.separator} />
+    <div class={css.separator} />
     <CardView
       title={"Fix Bugs at Lightspeed"}
       image={bugPng}
@@ -61,9 +63,9 @@ export const GameChangerView = view(() => {
       ease={"ease-in-out"}
       originY={40}
     />
-    <div class={[styles.separator, styles.noOnTablet]} />
+    <div class={[css.separator, css.noOnTablet]} />
     <CardView
-      adoptionClass={styles.noOnTablet}
+      adoptionClass={css.noOnTablet}
       title={"Build Blazing-Fast Experiences"}
       image={timePng}
       features={[
@@ -81,49 +83,52 @@ export const GameChangerView = view(() => {
 
 const CardView = view<CardProps>(
   ({ title, image, features, originY, ease, adoptionClass }: CardProps) => {
-    <div class={[styles.card, adoptionClass ?? "nope"]}>
-      <div class={styles.doubleContainer}>
-        <div class={[styles.title, styles.light]}>{title}</div>
-        <div class={[styles.title, styles.dark]}>{title}</div>
+    const noTransition = receive(noTransitions);
+    const r_none = noTransition.r_class;
+
+    <div class={[css.card, adoptionClass ?? "nope", r_none]}>
+      <div class={css.doubleContainer}>
+        <div class={[css.title, css.light, r_none]}>{title}</div>
+        <div class={[css.title, css.dark, r_none]}>{title}</div>
       </div>
       <div
-        class={styles.image}
+        class={css.image}
         style={{
-          transition: `background-color 3.5s ${ease}, transform 2s ${ease}, border-color 1s ${ease}`,
+          transition: r_none
+            ? "none"
+            : `background-color 3.5s ${ease}, transform 2s ${ease}, border-color 1s ${ease}`,
           "transform-origin": `50% ${originY}%`,
         }}
       >
         <img src={image} alt={title} width={140} height={140} />
       </div>
-      <div class={styles.list}>
+      <div class={css.list}>
         <For
           of={features}
           slot={(feature) => {
-            <div class={styles.listItem}>
+            <div class={[css.listItem, r_none]}>
               <div
-                class={[styles.listItemIcon]}
+                class={[css.listItemIcon, r_none]}
                 style={{ "mask-image": `url("${itemSvg}")` }}
               />
-              <div class={styles.listItemText}>{feature}</div>
+              <div class={css.listItemText}>{feature}</div>
             </div>;
           }}
         />
       </div>
-      <a href={"#"}>
-        <div class={styles.overlay}>
-          <div class={[styles.title, styles.overlayTitle]}>{title}</div>
-          <div class={[styles.overlayIcon, styles.overlayIconBg]} />
-          <div
-            class={styles.overlayIcon}
-            style={{ "mask-image": `url("${itemSvg}")` }}
-          />
-        </div>
+      <a href={"#"} class={[css.overlay, r_none]}>
+        <div class={[css.title, css.overlayTitle]}>{title}</div>
+        <div class={[css.overlayIcon, css.overlayIconBg]} />
+        <div
+          class={css.overlayIcon}
+          style={{ "mask-image": `url("${itemSvg}")` }}
+        />
       </a>
     </div>;
   },
 );
 
-const styles = styleSheet({
+const css = styleSheet({
   card: {
     display: "flex",
     "flex-direction": "column",
@@ -191,6 +196,9 @@ const styles = styleSheet({
     transition: "opacity 0.2s ease-in-out",
     opacity: "0",
     ":hover": {
+      opacity: "1",
+    },
+    ":focus-visible": {
       opacity: "1",
     },
   },

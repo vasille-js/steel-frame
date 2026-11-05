@@ -1,40 +1,44 @@
-import { dark, styleSheet, view } from "steel-frame";
+import { dark, receive, styleSheet, view } from "steel-frame";
 import { VLine } from "../components/VLine.js";
 import { Row } from "../components/code-block/lib/Row.js";
 import { DoubleTitle } from "../components/DoubleTitle.js";
 import { Button } from "../components/Button.js";
 import unknownSvg from "../assets/unknown.svg";
+import { noTransitions } from "../context/noTransitions.js";
 
 export const ReadyView = view(() => {
+  const noTransition = receive(noTransitions);
+  const r_none = noTransition.r_class;
+
   <VLine height={40} />;
-  <Row class={styles.container}>
+  <Row class={css.container}>
     <DoubleTitle
       title={({ classes, isDark }) => {
         <div
-          class={[...classes, styles.title]}
+          class={[...classes, css.title, r_none]}
           style={{ color: isDark ? "#F9F9F9" : "#2a2a2a" }}
         >
           Ready to Build Great Applications?
         </div>;
       }}
     ></DoubleTitle>
-    <div class={styles.row}>
+    <div class={css.row}>
       <Button text={"Get Started"} primary minWidth={113} />
       <Button text={"See live demo"} minWidth={113} />
     </div>
     <div
-      class={[styles.img, styles.img1]}
+      class={[css.img, css.img1, r_none]}
       style={{ "mask-image": `url("${unknownSvg}")` }}
     />
     <div
-      class={[styles.img, styles.img2]}
+      class={[css.img, css.img2, r_none]}
       style={{ "mask-image": `url("${unknownSvg}")` }}
     />
   </Row>;
   <div style={{ height: 35 }} />;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   container: {
     "flex-direction": "column",
     padding: 95,

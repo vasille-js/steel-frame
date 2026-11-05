@@ -18,11 +18,11 @@ export default page(async () => {
   const [r_err, r_next] = awaited(() => import("./../views/AllView.js"));
   const r_AllView = r_next?.AllView;
 
-  <div class={styles.page}>
+  <div class={css.page}>
     <VisibilityTracker>
       <HeroView />
     </VisibilityTracker>
-    <main role="main" class={styles.bigScreen}>
+    <main role="main" class={css.bigScreen}>
       <If
         $condition={r_AllView}
         slot={(AllView) => {
@@ -60,7 +60,7 @@ export default page(async () => {
   </div>;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   page: {
     display: "flex",
     "align-items": "stretch",

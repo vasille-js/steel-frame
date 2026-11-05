@@ -1,4 +1,4 @@
-import { dark, mobile, styleSheet, view } from "steel-frame";
+import { dark, mobile, receive, styleSheet, view } from "steel-frame";
 import { VLine } from "../components/VLine.js";
 import { Button } from "../components/Button.js";
 import { DoubleTitle } from "../components/DoubleTitle.js";
@@ -12,27 +12,36 @@ import {
   orangeDark,
   orangeLight,
 } from "../style/text.js";
+import { noTransitions } from "../context/noTransitions.js";
 
 export const HeroView = view(() => {
-  <header role="banner" class={styles.hero}>
+  const noTransition = receive(noTransitions);
+  const r_none = noTransition.r_class;
+
+  <header role="banner" class={css.hero}>
     <img
-      class={[styles.metal, styles.topRight]}
+      class={[css.metal, css.topRight, r_none]}
       src={metalPng}
       alt={"metal"}
       fetchpriority={"high"}
     />
     <img
-      class={[styles.metal, styles.leftBottom]}
+      class={[css.metal, css.leftBottom, r_none]}
       src={metalPng}
       alt={"metal"}
     />
     <VLine />
-    <span class={styles.title}>SteelFrame</span>
+    <span class={[css.title, r_none]}>SteelFrame</span>
     <div style={{ height: 32 }} />
     <DoubleTitle
       title={({ classes, isDark }) => {
-        <h1 class={[h1, centerText, ...classes]} style={{ "max-width": 427 }}>
-          <span class={isDark ? orangeDark : blueLight}>Carefree</span>
+        <h1
+          class={[h1, centerText, ...classes, r_none]}
+          style={{ "max-width": 427 }}
+        >
+          <span class={[isDark ? orangeDark : blueLight, r_none]}>
+            Carefree
+          </span>
           {" Web\xA0Applications Development"}
         </h1>;
       }}
@@ -45,7 +54,7 @@ export const HeroView = view(() => {
       }}
     >
       <a
-        class={styles.a}
+        class={css.a}
         href="https://www.npmjs.com/package/steel-frame"
         rel="nofollow"
         aria-label="See Steel Frame NPM package"
@@ -56,7 +65,7 @@ export const HeroView = view(() => {
         />
       </a>
       <a
-        class={styles.a}
+        class={css.a}
         href="https://deepwiki.com/vasille-js/steel-frame"
         rel="nofollow"
         aria-label="See Steel Frame documentation on DeepWiki"
@@ -64,7 +73,7 @@ export const HeroView = view(() => {
         <img alt="Ask DeepWiki" src="https://deepwiki.com/badge.svg" />
       </a>
       <a
-        class={styles.a}
+        class={css.a}
         href="https://coveralls.io/github/vasille-js/steel-frame?branch=v5"
         rel="nofollow"
         aria-label="See Steel Frame test coverage on Coveralls"
@@ -75,7 +84,7 @@ export const HeroView = view(() => {
         />
       </a>
       <a
-        class={styles.a}
+        class={css.a}
         href="https://github.com/vasille-js/steel-frame"
         rel="nofollow"
         aria-label="See Steel Frame source code on GitHub"
@@ -89,7 +98,7 @@ export const HeroView = view(() => {
     <DoubleDescription
       description={({ classes }) => {
         <div
-          class={[description, centerText, ...classes]}
+          class={[description, centerText, ...classes, r_none]}
           style={{ "max-width": 432 }}
         >
           Fault-tolerant by design, with compile-time safety, predictable
@@ -100,7 +109,7 @@ export const HeroView = view(() => {
         </div>;
       }}
     />
-    <div class={styles.cta}>
+    <div class={css.cta}>
       <Button text={"Get started"} primary minWidth={161} accessKey={"s"} />
       <Button text={"See Live Demo"} minWidth={161} />
     </div>
@@ -108,7 +117,7 @@ export const HeroView = view(() => {
   </header>;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   hero: {
     "min-height": "100vh",
     display: "flex",

@@ -14,13 +14,13 @@ interface Props {
 }
 
 export const DoubleTitle = component(({ title }: Props) => {
-  <div class={[styles.container]}>
-    <Slot model={title} classes={[styles.dark]} isDark={true} />
-    <Slot model={title} classes={[styles.light]} isDark={false} />
+  <div class={[css.container]}>
+    <Slot model={title} classes={[css.dark]} isDark={true} />
+    <Slot model={title} classes={[css.light]} isDark={false} />
   </div>;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   container: {
     position: "relative",
     width: "fit-content",
