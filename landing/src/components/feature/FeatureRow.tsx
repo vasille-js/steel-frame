@@ -9,25 +9,25 @@ interface Props {
 
 export const FeatureRow = component<Props>(({ reverse, slot }) => {
   <div
-    class={styles.row}
+    class={css.row}
     style={{
       "flex-direction": reverse ? "row-reverse" : "row",
       "max-width": MAX_WIDTH + 20,
     }}
   >
     <div
-      class={[styles.cell, styles.left]}
+      class={[css.cell, css.left]}
       style={{
         "padding-left": reverse ? 16 : 10,
       }}
     >
       <Slot model={slot} />
     </div>
-    <div class={styles.delimiter}>
+    <div class={css.delimiter}>
       <VLine />
     </div>
     <div
-      class={[styles.cell, styles.right]}
+      class={[css.cell, css.right]}
       style={{
         "padding-left": reverse ? 16 : 10,
       }}
@@ -35,7 +35,7 @@ export const FeatureRow = component<Props>(({ reverse, slot }) => {
   </div>;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   row: {
     display: "flex",
     "align-items": "stretch",

@@ -1,4 +1,5 @@
-import { component, dark, share, Slot, styleSheet } from "steel-frame";
+import { component, dark, receive, share, Slot, styleSheet } from "steel-frame";
+import { noTransitions } from "../../context/noTransitions.js";
 
 interface Props {
   number: number;
@@ -13,23 +14,25 @@ interface DarkProps {
 export const CodeLine = component<Props>((props) => {
   const { number, slot } = props;
   const reverse = number % 2 === 0;
+  const noTransition = receive(noTransitions);
+  const r_none = noTransition.r_class;
 
-  <div class={styles.line}>
+  <div class={css.line}>
     <div
-      class={[styles.inner, styles.placeholder, reverse && styles.placeholderR]}
+      class={[css.inner, css.placeholder, reverse && css.placeholderR, r_none]}
     >
-      <div class={styles.lineNumber} aria-hidden="true" role="none">
+      <div class={css.lineNumber} aria-hidden="true" role="none">
         {number}
       </div>
-      <div class={[styles.text, reverse ? styles.light : styles.dark]}>
+      <div class={[css.text, reverse ? css.light : css.dark]}>
         <Dark slot={slot} isDark={!reverse} />
       </div>
     </div>
-    <div class={[styles.inner, styles.abs, reverse && styles.absR]}>
-      <div class={styles.lineNumber} aria-hidden="true" role="none">
+    <div class={[css.inner, css.abs, reverse && css.absR, r_none]}>
+      <div class={css.lineNumber} aria-hidden="true" role="none">
         {number}
       </div>
-      <div class={[styles.text, reverse ? styles.dark : styles.light]}>
+      <div class={[css.text, reverse ? css.dark : css.light]}>
         <Dark slot={slot} isDark={reverse} />
       </div>
     </div>
@@ -42,7 +45,7 @@ const Dark = component<DarkProps>((props) => {
   <Slot model={props.slot} />;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   line: {
     overflow: "hidden",
     "white-space": "pre-wrap",

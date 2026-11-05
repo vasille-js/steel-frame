@@ -1,15 +1,19 @@
-import { component, dark, styleSheet } from "steel-frame";
+import { component, dark, receive, styleSheet } from "steel-frame";
+import { noTransitions } from "../context/noTransitions.js";
 
 export const HLine = component(() => {
-  <div class={[styles.line]}>
-    <div class={[styles.inner, styles.light]} style={{ left: "50%" }} />
-    <div class={[styles.inner, styles.light]} style={{ right: "50%" }} />
-    <div class={[styles.inner, styles.dark]} style={{ left: 0 }} />
-    <div class={[styles.inner, styles.dark]} style={{ right: 0 }} />
+  const noTransition = receive(noTransitions);
+  const r_none = noTransition.r_class;
+
+  <div class={[css.line]}>
+    <div class={[css.inner, css.light, r_none]} style={{ left: "50%" }} />
+    <div class={[css.inner, css.light, r_none]} style={{ right: "50%" }} />
+    <div class={[css.inner, css.dark, r_none]} style={{ left: 0 }} />
+    <div class={[css.inner, css.dark, r_none]} style={{ right: 0 }} />
   </div>;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   line: {
     display: "flex",
     height: 1,

@@ -1,4 +1,4 @@
-import { dark, styleSheet, view } from "steel-frame";
+import { dark, receive, styleSheet, view } from "steel-frame";
 import { VLine } from "../components/VLine.js";
 import { DoubleTitle } from "../components/DoubleTitle.js";
 import {
@@ -10,30 +10,34 @@ import {
 } from "../style/text.js";
 import { DoubleDescription } from "../components/DoubleDescription.js";
 import { HLine } from "../components/HLine.js";
+import { noTransitions } from "../context/noTransitions.js";
 
 export const DescriptionView = view(() => {
+  const noTransition = receive(noTransitions);
+  const r_none = noTransition.r_class;
+
   <HLine />;
-  <div class={styles.center}>
+  <div class={css.center}>
     <VLine height={40} marginBottom={40} />
     <DoubleTitle
       title={({ classes, isDark }) => {
         const className = isDark ? orangeDark : blueLight;
 
         <h2
-          class={[h1, centerText, ...classes]}
+          class={[h1, centerText, ...classes, r_none]}
           style={{ "max-width": 1000, "text-transform": "none" }}
         >
           SteelFrame is a Web Dev Kit that prioritizes{" "}
-          <span class={className}>safety</span>,{" "}
-          <span class={className}>predictability</span>, and{" "}
-          <span class={className}>developer experience</span>.
+          <span class={[className, r_none]}>safety</span>,{" "}
+          <span class={[className, r_none]}>predictability</span>, and{" "}
+          <span class={[className, r_none]}>developer experience</span>.
         </h2>;
       }}
     />
     <DoubleDescription
       description={({ classes, isDark }) => {
         <div
-          class={[description, centerText, ...classes]}
+          class={[description, centerText, ...classes, r_none]}
           style={{ "max-width": 800 }}
         >
           Dev Kit straight points are: fault-tolerance out of the box,
@@ -47,7 +51,7 @@ export const DescriptionView = view(() => {
   <HLine />;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   center: {
     display: "flex",
     "flex-direction": "column",

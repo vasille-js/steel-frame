@@ -1,38 +1,30 @@
-import { component, Slot, beforeDestroy, styleSheet } from "steel-frame";
+import { component, Slot, beforeDestroy, styleSheet, share } from "steel-frame";
+import { noTransitions } from "../../context/noTransitions.js";
 
 interface Props {
   slot?(): void;
 }
 
 export const VisibilityTracker = component<Props>(({ slot }) => {
-  let $visible = true;
-  let $height = 0;
-
+  let $visible = false;
+  const r_class = !$visible && css.none;
   let observer: IntersectionObserver = newIntersectionObserver({ $visible });
-  let resizeObserver: ResizeObserver = newResizeObserver({ $height });
+
+  share(noTransitions, { r_class });
 
   <div
-    class={styles.div}
+    class={css.div}
     callback={(div) => {
       observer.observe(div);
     }}
-    style={{ "min-height": $height }}
   >
-    <div
-      class={[styles.div, styles.inner]}
-      style={{ display: $visible ? "flex" : "none" }}
-      callback={(div) => {
-        $height = div.offsetHeight;
-        resizeObserver.observe(div);
-      }}
-    >
+    <div class={[css.div, css.inner]}>
       <Slot model={slot} />
     </div>
   </div>;
 
   beforeDestroy(() => {
     observer.disconnect();
-    resizeObserver.disconnect();
   });
 });
 
@@ -42,22 +34,16 @@ function newIntersectionObserver({ $visible }: { $visible: boolean }) {
   });
 }
 
-function newResizeObserver({ $height }: { $height: number }) {
-  return new ResizeObserver((entries) => {
-    const height = entries[0].contentRect.height;
-
-    if (height) {
-      $height = height;
-    }
-  });
-}
-
-const styles = styleSheet({
+const css = styleSheet({
   div: {
     width: "100%",
   },
   inner: {
     "flex-direction": "column",
     "align-items": "center",
+    display: "flex",
+  },
+  none: {
+    transition: "none !important",
   },
 });

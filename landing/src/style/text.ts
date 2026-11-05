@@ -1,6 +1,6 @@
 import { dark, styleSheet } from "steel-frame";
 
-export const styles = styleSheet({
+export const css = styleSheet({
   h1: {
     "font-size": 35,
     "letter-spacing": "-1.05px",
@@ -35,10 +35,10 @@ export const styles = styleSheet({
   },
 });
 
-export const h1 = styles.h1;
-export const description = styles.description;
-export const centerText = styles.centerText;
-export const orangeDark = styles.orangeDark;
-export const orangeLight = styles.orangeLight;
-export const blueDark = styles.blueDark;
-export const blueLight = styles.blueLight;
+export const h1 = css.h1;
+export const description = css.description;
+export const centerText = css.centerText;
+export const orangeDark = css.orangeDark;
+export const orangeLight = css.orangeLight;
+export const blueDark = css.blueDark;
+export const blueLight = css.blueLight;

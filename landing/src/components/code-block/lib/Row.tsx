@@ -3,24 +3,28 @@ import {
   CssStyleInjector,
   dark,
   mobile,
+  receive,
   Slot,
   styleSheet,
   tablet,
 } from "steel-frame";
-import { MAX_WIDTH } from "./limits.js";
+import { noTransitions } from "../../../context/noTransitions.js";
 
 export const Row = component<{
   slot?(): void;
   class?: string | CssStyleInjector;
 }>((props) => {
-  <div class={styles.container}>
-    <div class={[styles.row, props.class ?? "noop"]}>
+  const noTransition = receive(noTransitions);
+  const r_none = noTransition.r_class;
+
+  <div class={css.container}>
+    <div class={[css.row, props.class ?? "noop", r_none]}>
       <Slot model={props.slot} />
     </div>
   </div>;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   row: {
     display: "flex",
     width: "100%",

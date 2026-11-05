@@ -1,4 +1,5 @@
 import {
+  beforeMount,
   bypassWriteRestriction,
   component,
   CssStyleInjector,
@@ -13,6 +14,7 @@ import playgroundSvg from "../assets/playground.svg";
 import lightSvg from "../assets/light.svg";
 import darkSvg from "../assets/dark.svg";
 import menuSvg from "../assets/menu.svg";
+import { wr_screenWidth } from "./code-block/lib/screen.js";
 
 interface ItemProps {
   src: string;
@@ -34,10 +36,16 @@ interface InternalPanelProps {
   $active: boolean;
 }
 
+interface SwitcherProps {
+  wr_dark: boolean;
+}
+
 export const Panel = component(() => {
   let $active = false;
   let wr_overlayDisplay = false;
   let wr_overlayActive = false;
+  let wr_dark = true;
+  const r_notMobile = wr_screenWidth > 440;
 
   watch(() => {
     if ($active) {
@@ -53,9 +61,9 @@ export const Panel = component(() => {
   <button
     type="button"
     class={[
-      styles.overlay,
-      wr_overlayActive && styles.overlayActive,
-      wr_overlayDisplay && styles.overlayDisplay,
+      css.overlay,
+      wr_overlayActive && css.overlayActive,
+      wr_overlayDisplay && css.overlayDisplay,
     ]}
     onclick={() => ($active = false)}
     ontransitionend={() => {
@@ -66,11 +74,11 @@ export const Panel = component(() => {
   />;
   <button
     type="button"
-    class={styles.burgerButton}
+    class={css.burgerButton}
     onclick={() => ($active = true)}
   >
     <div
-      class={styles.burgerButtonIcon}
+      class={css.burgerButtonIcon}
       style={{ "mask-image": `url("${menuSvg}")` }}
     />
     SteelFrameKit
@@ -80,9 +88,9 @@ export const Panel = component(() => {
     border={"#B2B2B2"}
     bg={"#FFFFFFED"}
     accent={"#0302DF"}
-    $active={$active}
-    className={styles.lightPanel}
-    activeClassName={styles.lightPanelActive}
+    $active={($active || r_notMobile) && !wr_dark}
+    className={css.lightPanel}
+    activeClassName={css.lightPanelActive}
     lightZ={998}
     darkZ={999}
   />;
@@ -91,14 +99,14 @@ export const Panel = component(() => {
     bg={"#191919"}
     border={"#4D4D4DED"}
     accent={"#ff946a"}
-    $active={$active}
-    className={styles.darkPanel}
-    activeClassName={styles.darkPanelActive}
+    $active={($active || r_notMobile) && wr_dark}
+    className={css.darkPanel}
+    activeClassName={css.darkPanelActive}
     lightZ={999}
     darkZ={998}
   />;
-  <div class={styles.panelSwitcher}>
-    <Switcher />
+  <div class={css.panelSwitcher}>
+    <Switcher wr_dark={wr_dark} />
   </div>;
 });
 
@@ -107,39 +115,44 @@ const Item = component(
     const $active = props.$active;
 
     <a
-      class={[styles.panelItem, "panel-item"]}
+      class={[css.panelItem, "panel-item"]}
       href={href}
       accesskey={$active ? accessKey : undefined}
       tabindex={$active ? 0 : -1}
     >
       <div
-        class={[styles.panelItemIcon, "panel-item-icon"]}
+        class={[css.panelItemIcon, "panel-item-icon"]}
         style={{ mask: `url("${src}")` }}
       />
-      <div class={styles.panelItemText}>{text}</div>
+      <div class={css.panelItemText}>{text}</div>
     </a>;
   },
 );
 
-const Switcher = component(() => {
+const Switcher = component<SwitcherProps>((props) => {
+  beforeMount(() => {
+    props.wr_dark = document.body.classList.contains("dark");
+  });
+
   <button
     type={"button"}
-    class={[styles.switcher]}
+    class={[css.switcher]}
     onclick={() => {
       document.body.classList.toggle("dark");
+      props.wr_dark = document.body.classList.contains("dark");
     }}
   >
-    <div class={styles.switcherTrack}>
-      <div class={styles.switcherKnob} />
+    <div class={css.switcherTrack}>
+      <div class={css.switcherKnob} />
     </div>
-    <div class={styles.switcherIcon}>
+    <div class={css.switcherIcon}>
       <img
-        class={[styles.switcherIconSvg, styles.switcherIconDark]}
+        class={[css.switcherIconSvg, css.switcherIconDark]}
         src={lightSvg}
         alt={"light"}
       />
       <img
-        class={[styles.switcherIconSvg, styles.switcherIconLight]}
+        class={[css.switcherIconSvg, css.switcherIconLight]}
         src={darkSvg}
         alt={"dark"}
       />
@@ -163,8 +176,8 @@ const InternalPanel = component(
 
     <nav
       role={"navigation"}
-      aria-hidden={$active ? "false" : "true"}
-      class={[styles.panel, className, $active && activeClassName]}
+      aria-hidden={!$active}
+      class={[css.panel, className, $active && activeClassName]}
       style={{
         "--fg": fg,
         "--bg": bg,
@@ -174,7 +187,7 @@ const InternalPanel = component(
         "--dark-z": `${darkZ}`,
       }}
     >
-      <div class={[styles.logo, "logo"]} />
+      <div class={[css.logo, "logo"]} />
       <Item
         src={docsSvg}
         text={"Docs"}
@@ -200,7 +213,7 @@ const InternalPanel = component(
   },
 );
 
-const styles = styleSheet({
+const css = styleSheet({
   panel: {
     position: "fixed",
     width: 96,
@@ -316,10 +329,10 @@ const styles = styleSheet({
   },
   switcherIconDark: {
     transform: ["rotate(180deg)", dark("rotate(0deg)")],
-    opacity: [0, dark(1)],
+    opacity: [1, dark(0)],
   },
   switcherIconLight: {
-    opacity: [1, dark(0)],
+    opacity: [0, dark(1)],
     transform: ["rotate(0deg)", dark("rotate(720deg)")],
   },
   overlay: {

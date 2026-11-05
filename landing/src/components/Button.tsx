@@ -1,4 +1,5 @@
-import { component, dark, styleSheet } from "steel-frame";
+import { component, dark, receive, styleSheet } from "steel-frame";
+import { noTransitions } from "../context/noTransitions.js";
 
 interface Props {
   text: string;
@@ -10,9 +11,12 @@ interface Props {
 
 export const Button = component(
   ({ primary, text, minWidth, accessKey, action }: Props) => {
+    const noTransition = receive(noTransitions);
+    const r_none = noTransition.r_class;
+
     <a
       href={"#"}
-      class={[styles.btn, primary ? styles.primary : styles.secondary]}
+      class={[css.btn, primary ? css.primary : css.secondary, r_none]}
       type={"button"}
       style={{ "min-width": minWidth }}
       accesskey={accessKey}
@@ -30,15 +34,15 @@ export const Button = component(
         }
       }}
     >
-      <div class={[styles.text]}>
-        <div class={[styles.dark, styles.item]}>{text}</div>
-        <div class={[styles.light, styles.item]}>{text}</div>
+      <div class={[css.text, r_none]}>
+        <div class={[css.dark, css.item]}>{text}</div>
+        <div class={[css.light, css.item]}>{text}</div>
       </div>
     </a>;
   },
 );
 
-const styles = styleSheet({
+const css = styleSheet({
   btn: {
     padding: [0, 24],
     height: 47,

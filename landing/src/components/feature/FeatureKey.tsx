@@ -1,19 +1,23 @@
-import { component, dark, Slot, styleSheet } from "steel-frame";
+import { component, dark, receive, Slot, styleSheet } from "steel-frame";
+import { noTransitions } from "../../context/noTransitions.js";
 
 interface Props {
   slot?(): void;
 }
 
 export const FeatureKey = component(({ slot }: Props) => {
-  <div class={styles.row}>
-    <div class={styles.circle} />
-    <div class={styles.text}>
+  const noTransition = receive(noTransitions);
+  const r_none = noTransition.r_class;
+
+  <div class={css.row}>
+    <div class={[css.circle, r_none]} />
+    <div class={[css.text, r_none]}>
       <Slot model={slot} />
     </div>
   </div>;
 });
 
-const styles = styleSheet({
+const css = styleSheet({
   row: {
     display: "flex",
     "align-items": "center",
