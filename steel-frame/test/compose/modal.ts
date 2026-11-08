@@ -1,13 +1,13 @@
 import { modal, ref } from "steel-frame";
 
 const TestModal = modal((props: { $a: boolean }) => {
-  let $b = props.$a;
+    let $b = props.$a;
 });
 
 const NoPropsModal = modal(() => {});
 
 TestModal({
-  $a: ref(true),
+    $a: ref(true),
 });
 
 NoPropsModal({});

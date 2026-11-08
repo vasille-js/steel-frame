@@ -23,5 +23,5 @@ const C = compose(() => {
     const z = arrayModel();
 
     beforeMount(() => console.log($a, b[0], c.has($a), d.get(1), e.$g));
-    beforeMount(() => console.log(f.$a, g[0], h.set.has(2), i.map.get(1), $k[0], $m.has(2), $n.get(1)));
+    beforeMount(() => console.log(f.$a, g.array[0], h.set.has(2), i.map.get(1), $k[0], $m.has(2), $n.get(1)));
 });

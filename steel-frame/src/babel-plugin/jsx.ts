@@ -1,6 +1,6 @@
 import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
-import { ctx, Internal, VariablesStatus } from "./internal.js";
+import { ctx, Internal } from "./internal.js";
 import { bodyHasJsx } from "./jsx-detect.js";
 import {
     checkNonReactiveName,
@@ -12,12 +12,14 @@ import {
     isReadableName,
     isWritableName,
     nodeIsUnsafe,
+    reactivityTypeByName,
     reactivityTypeOfNode,
+    reactivityTypeOfNodePath,
+    replaceReactivityMark,
     toKebabCase,
 } from "./lib.js";
 import { compose, meshExpression, processRefCall } from "./mesh.js";
 import { nodeToStaticPosition } from "./transformer.js";
-import { memberIsIValue } from "./expression.js";
 import { processFieldRefCall, toFieldRef } from "./field-reference.js";
 import { calls } from "./call.js";
 import { validateRouterPath } from "./router.js";
@@ -32,10 +34,10 @@ export interface ConditionCollection {
         | null;
 }
 
-const strongSlotMap: Record<string, ("reactive" | "passive")[]> = {
-    ArrayView: ["reactive", "reactive"],
-    ArrayModelView: ["passive", "reactive"],
-    MapModelView: ["reactive", "passive"],
+const strongSlotMap: Record<string, ("readable" | "writable or passive" | "any" | "passive")[]> = {
+    ArrayView: ["any", "readable"],
+    ArrayModelView: ["writable or passive", "readable"],
+    MapModelView: ["any", "passive"],
 };
 
 export function transformJsx(
@@ -759,7 +761,7 @@ function transformJsxElement(
                     let valueIsWritable =
                         nameIsWritable &&
                         valuePath.isJSXExpressionContainer() &&
-                        reactivityTypeOfNode(valuePath.get("expression"), internal) === "writable";
+                        reactivityTypeOfNodePath(valuePath.get("expression"), internal) === "writable";
 
                     if (nameIsWritable !== valueIsWritable) {
                         let fieldRef: types.Expression | null | undefined;
@@ -1039,6 +1041,35 @@ function transformJsxElement(
                 err(Errors.RulesOfVasille, path, "Malformed JSX ForEach tag must have value and slot", internal);
             }
         }
+        if (mapped && ["ArrayView", "ArrayModelView", "MapModelView"].includes(mapped)) {
+            const model = props.find(
+                item => t.isObjectProperty(item) && t.isIdentifier(item.key) && item.key.name === "r_of",
+            ) as types.ObjectProperty | undefined;
+            const slot = props.find(
+                item => t.isObjectProperty(item) && t.isIdentifier(item.key) && item.key.name === "slot",
+            ) as types.ObjectProperty | undefined;
+
+            if (
+                slot &&
+                (t.isArrowFunctionExpression(slot.value) || t.isFunctionExpression(slot.value)) &&
+                t.isIdentifier(slot.value.params[1]) &&
+                reactivityTypeByName(slot.value.params[1].name, internal) === "writable"
+            ) {
+                if (mapped === "ArrayView" && !(model && reactivityTypeOfNode(model.value, internal) === "writable")) {
+                    const fixedName = replaceReactivityMark(slot.value.params[1].name, "");
+                    err(
+                        Errors.RulesOfVasille,
+                        path,
+                        `Malformed ${mapped}: writable item in slot requires a writable collection. ` +
+                            `Renaming ${slot.value.params[1].name} parameter to "${fixedName}" will fix this error.`,
+                        internal,
+                    );
+                }
+
+                // add writable param to properties
+                props.push(t.objectProperty(t.identifier("writable"), t.booleanLiteral(true)));
+            }
+        }
 
         function addAwait(node: types.CallExpression): types.Expression {
             if (internal.asyncComposing) {
@@ -1094,8 +1125,14 @@ function precheckSlotParams(
 
         for (let i = 0; i < params.length && i < args.length; i++) {
             const param = params[i];
+            const expected = args[i];
 
-            if (args[i] === "reactive") {
+            if (expected === "passive") {
+                /* istanbul ignore else */
+                if (param.isIdentifier()) {
+                    checkNonReactiveName(param, internal);
+                }
+            } else {
                 if (!param.isIdentifier()) {
                     err(
                         Errors.ParserError,
@@ -1104,12 +1141,15 @@ function precheckSlotParams(
                         internal,
                     );
                 } else {
-                    checkReactiveName(param, "readable", internal);
-                }
-            } else {
-                /* istanbul ignore else */
-                if (param.isIdentifier()) {
-                    checkNonReactiveName(param, internal);
+                    if (expected === "writable or passive") {
+                        const type = reactivityTypeByName(param.node.name, internal);
+
+                        if (type !== "writable" && type !== false) {
+                            err(Errors.RulesOfVasille, param, "Expected writable or non reactive parameter.", internal);
+                        }
+                    } else {
+                        checkReactiveName(param, expected, internal);
+                    }
                 }
             }
         }

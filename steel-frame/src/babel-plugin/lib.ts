@@ -4,7 +4,7 @@ import * as t from "@babel/types";
 import { checkNode, Dependency, exprIsSure, idIsIValue, memberIsIValue } from "./expression.js";
 import { Internal, ctx } from "./internal.js";
 import { bindFunctions, calledFn, calls, hintFunctions, safeFunctions } from "./call.js";
-import { meshAllUnknown } from "./mesh.js";
+import { meshAllUnknown, meshExpression } from "./mesh.js";
 import { nodeToStaticPosition } from "./transformer.js";
 import { hasBreakPoint } from "./field-reference.js";
 
@@ -258,7 +258,7 @@ export function arrayModel(
     internal: Internal,
     name?: string,
 ) {
-    return internal.arrayModel(args[0], usage, name);
+    return internal.arrayModel(args[0], args[1], usage, name);
 }
 
 export function setModel(
@@ -267,7 +267,7 @@ export function setModel(
     internal: Internal,
     name?: string,
 ) {
-    return internal.setModel(args[0], usage, name);
+    return internal.setModel(args[0], args[1], usage, name);
 }
 
 export function mapModel(
@@ -276,7 +276,23 @@ export function mapModel(
     internal: Internal,
     name?: string,
 ) {
-    return internal.mapModel(args[0], usage, name);
+    return internal.mapModel(args[0], args[1], usage, name);
+}
+
+export function checkBuildInModelArgs(
+    path: NodePath<types.CallExpression | types.OptionalCallExpression | types.NewExpression>,
+    internal: Internal,
+) {
+    const args = path.get("arguments");
+
+    if (args.length > 0) {
+        forcePathIsWritable(args[0], internal, "any");
+        if (args.length > 1) {
+            forcePathIsWritable(args[1], internal, "undefined");
+        }
+    }
+
+    return path.node.arguments;
 }
 
 export function processModelCall(
@@ -287,12 +303,12 @@ export function processModelCall(
     internal: Internal,
     name?: string,
 ) {
-    const args = path.node.arguments;
+    const args = checkBuildInModelArgs(path, internal);
 
     if (!isConst) {
         err(Errors.RulesOfVasille, path, `${type} models must be declared as constants`, internal);
     }
-    meshAllUnknown(path.get("arguments"), internal, true);
+
     path.replaceWith(
         type === "Map"
             ? mapModel(args, usage, internal, name)
@@ -335,12 +351,12 @@ export function toKebabCase(name: string) {
 }
 
 export function pathIsReactiveValue(
-    path: NodePath<unknown>,
+    path: NodePath<types.Node | null | undefined>,
     _type: "any",
     internal: Internal,
     checkForBreakpoints = true,
 ): path is NodePath<types.MemberExpression | types.OptionalMemberExpression | types.Identifier> {
-    return reactivityTypeOfNode(path, internal, checkForBreakpoints) !== false;
+    return reactivityTypeOfNodePath(path, internal, checkForBreakpoints) !== false;
 }
 
 export function removeExtension(name: string) {
@@ -371,19 +387,25 @@ export function reactivityTypeByName(name: string, internal: Internal) {
             : false;
 }
 
-export function reactivityTypeOfNode(
-    node: NodePath<unknown>,
+export function reactivityTypeOfNode(node: types.Node, internal: Internal): ReactiveType | false {
+    return (
+        (t.isIdentifier(node) && reactivityTypeByName(node.name, internal)) ||
+        ((t.isMemberExpression(node) || t.isOptionalMemberExpression(node)) &&
+            ((!node.computed && t.isIdentifier(node.property) && reactivityTypeByName(node.property.name, internal)) ||
+                (t.isStringLiteral(node.property) && reactivityTypeByName(node.property.value, internal))))
+    );
+}
+
+export function reactivityTypeOfNodePath(
+    path: NodePath<types.Node | null | undefined>,
     internal: Internal,
     checkForBreakpoints = true,
 ): ReactiveType | false {
+    const node = path.node;
+
     return (
-        (node.isIdentifier() && reactivityTypeByName(node.node.name, internal)) ||
-        ((node.isMemberExpression() || node.isOptionalMemberExpression()) &&
-            ((!node.node.computed &&
-                t.isIdentifier(node.node.property) &&
-                reactivityTypeByName(node.node.property.name, internal)) ||
-                (t.isStringLiteral(node.node.property) && reactivityTypeByName(node.node.property.value, internal)) ||
-                (checkForBreakpoints && hasBreakPoint(node, internal) && "readable")))
+        (node && reactivityTypeOfNode(node, internal)) ||
+        (checkForBreakpoints && path.isExpression() && hasBreakPoint(path, internal) && "readable")
     );
 }
 
@@ -420,6 +442,57 @@ export function forceReactiveName(name: string, type: ReactiveType, path: NodePa
     );
 }
 
+export function forcePathIsWritable(
+    path: NodePath<types.SpreadElement | types.ArgumentPlaceholder | types.Expression | null>,
+    internal: Internal,
+    accepts?: "undefined" | "any",
+) {
+    if (path.isIdentifier() && isWritableName(path.node.name, internal)) {
+        return true;
+    }
+    if (
+        path.isMemberExpression() &&
+        !path.node.computed &&
+        t.isIdentifier(path.node.property) &&
+        isWritableName(path.node.property.name, internal)
+    ) {
+        meshExpression(path.get("object"), internal, false);
+        return true;
+    }
+    /* istanbul ignore else */
+    if (accepts === "undefined" || accepts === "any") {
+        if (
+            path.isOptionalMemberExpression() &&
+            !path.node.computed &&
+            t.isIdentifier(path.node.property) &&
+            isWritableName(path.node.property.name, internal)
+        ) {
+            meshExpression(path.get("object"), internal, false);
+            return true;
+        }
+        if (path.isReferencedIdentifier() && path.node.name === "undefined") {
+            return true;
+        }
+    }
+
+    if (path.isExpression() && exprCall(path, path.node, internal, {}, path.node, false)) {
+        err(
+            Errors.RulesOfVasille,
+            path,
+            "Unexpected readonly reactive value. Expected a writable one." +
+                (accepts === "any" ? " Use `unwrap` to take the current value of reactive value in runtime." : ""),
+            internal,
+        );
+    }
+
+    if (accepts === "any") {
+        meshAllUnknown([path], internal, false);
+        return true;
+    }
+
+    err(Errors.RulesOfVasille, path, "Expected writable reactive value here.", internal);
+}
+
 export function leftIsThisInConstructor(left: NodePath<unknown>) {
     if (left.isMemberExpression()) {
         let iterator: NodePath<unknown> = left;
@@ -438,4 +511,19 @@ export function leftIsThisInConstructor(left: NodePath<unknown>) {
         return inConstructor && t.isThisExpression(left.node.object);
     }
     return false;
+}
+
+export type ReactivityMarks = "" | "wr_" | "r_" | "$";
+
+const newReactivityMarks: ReactivityMarks[] = ["wr_", "r_"];
+const allReactivityMarks: ReactivityMarks[] = [...newReactivityMarks, "$"];
+
+export function replaceReactivityMark(name: string, with_: ReactivityMarks, v4?: boolean) {
+    const start = (v4 ? allReactivityMarks : newReactivityMarks).find(s => name.startsWith(s));
+
+    return with_ + name.substring(start ? start.length : 0);
+}
+
+export function extractReactivityMark(name: string, v4?: boolean): ReactivityMarks {
+    return (v4 ? allReactivityMarks : newReactivityMarks).find(s => name.startsWith(s)) ?? "";
 }

@@ -278,6 +278,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     }
 
     const reports: CompilationErrorReport[] = [];
+    const errors: string[] = [];
     const relativePath = filename.substring(process.cwd().length);
     const internal: Internal = {
         appData: opts.appData,
@@ -355,35 +356,50 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
             }
             return call("toDeepFieldRef", [getCtx(), obj, t.arrayExpression(fields)]);
         },
-        setModel(arg, usage, name) {
+        setModel(arg, size, usage, name) {
             if (opts.devLayer) {
                 return named(
-                    call("setModel", [nodeToStaticPosition(usage), getCtx(), arg ?? t.buildUndefinedNode()]),
+                    call("setModel", [
+                        nodeToStaticPosition(usage),
+                        getCtx(),
+                        arg ?? t.buildUndefinedNode(),
+                        size ?? t.buildUndefinedNode(),
+                    ]),
                     name,
                 );
             }
 
-            return call("setModel", arg ? [getCtx(), arg] : [getCtx()]);
+            return call("setModel", [getCtx(), ...(arg ? [arg] : []), ...(arg && size ? [size] : [])]);
         },
-        mapModel(arg, usage, name) {
+        mapModel(arg, size, usage, name) {
             if (opts.devLayer) {
                 return named(
-                    call("mapModel", [nodeToStaticPosition(usage), getCtx(), arg ?? t.buildUndefinedNode()]),
+                    call("mapModel", [
+                        nodeToStaticPosition(usage),
+                        getCtx(),
+                        arg ?? t.buildUndefinedNode(),
+                        size ?? t.buildUndefinedNode(),
+                    ]),
                     name,
                 );
             }
 
-            return call("mapModel", arg ? [getCtx(), arg] : [getCtx()]);
+            return call("mapModel", [getCtx(), ...(arg ? [arg] : []), ...(arg && size ? [size] : [])]);
         },
-        arrayModel(arg, usage, name) {
+        arrayModel(arg, length, usage, name) {
             if (opts.devLayer) {
                 return named(
-                    call("arrayModel", [nodeToStaticPosition(usage), getCtx(), arg ?? t.buildUndefinedNode()]),
+                    call("arrayModel", [
+                        nodeToStaticPosition(usage),
+                        getCtx(),
+                        arg ?? t.buildUndefinedNode(),
+                        length ?? t.buildUndefinedNode(),
+                    ]),
                     name,
                 );
             }
 
-            return call("arrayModel", arg ? [getCtx(), arg] : [getCtx()]);
+            return call("arrayModel", [getCtx(), ...(arg ? [arg] : []), ...(arg && length ? [length] : [])]);
         },
         ensure(arg: types.MemberExpression | types.OptionalMemberExpression, area) {
             const object = arg.object;
@@ -475,9 +491,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
                 if (opts.throwAtFirstError) {
                     throw e;
                 }
-                process.stderr.write(`in ${filename}:${pos?.start.line}:${pos?.start.column}\n`);
-                process.stderr.write(e.message);
-                process.stderr.write(`\n\n`);
+                errors.push(`\nin file://${filename}:${pos?.start.line}:${pos?.start.column}\n${e.message}\n`);
             } else {
                 console.warn(message);
             }
@@ -540,7 +554,8 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
     });
 
     if (reports.some(item => item.class === "error")) {
-        throw new Error("Compilation failed");
+        Error.stackTraceLimit = 1;
+        throw new Error(errors.join(""));
     }
 
     if (opts.devLayer) {

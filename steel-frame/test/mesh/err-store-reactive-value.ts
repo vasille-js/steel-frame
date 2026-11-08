@@ -1,7 +1,7 @@
 import { store } from "steel-frame";
 
 const sStore = store(() => {
-  let $a = 3;
+    let $a = 3;
 
-  return { a: $a };
+    return { a: $a };
 });

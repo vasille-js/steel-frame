@@ -1,10 +1,10 @@
 import { compose } from "steel-frame";
 
 const C = compose((props: { a: unknown }) => {
-  <div />;
+    <div />;
 });
 
 const D = compose(() => {
-  // @ts-expect-error
-  <C bind:a />;
+    // @ts-expect-error
+    <C bind:a />;
 });

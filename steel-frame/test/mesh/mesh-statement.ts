@@ -3,59 +3,59 @@ import { compose } from "steel-frame";
 let a = 1;
 
 do {
-  compose(() => {});
+    compose(() => {});
 } while (a < 1);
 
 compose(() => {});
 
 for (const key in {}) {
-  compose(() => {});
+    compose(() => {});
 }
 
 for (const value of []) {
-  compose(() => {});
+    compose(() => {});
 }
 
 for (let i = 0; i < 10; i++) {
-  compose(() => {});
+    compose(() => {});
 }
 
 for (a = 0; a < 10; a++) {
-  compose(() => {});
+    compose(() => {});
 }
 
 function fn() {
-  return compose(() => {});
+    return compose(() => {});
 }
 
 if (a < 1) {
-  compose(() => {});
+    compose(() => {});
 } else {
-  compose(() => {});
+    compose(() => {});
 }
 
 label: compose(() => {});
 
 switch (a) {
-  case 1:
-    compose(() => {});
-    break;
+    case 1:
+        compose(() => {});
+        break;
 
-  default:
-    compose(() => {});
+    default:
+        compose(() => {});
 }
 
 try {
-  throw compose(() => {});
+    throw compose(() => {});
 } catch (e) {
-  compose(() => {});
+    compose(() => {});
 } finally {
-  compose(() => {});
+    compose(() => {});
 }
 
 let L = compose(() => {});
 const F = compose(() => {});
 
 while (a < 1) {
-  compose(() => {});
+    compose(() => {});
 }

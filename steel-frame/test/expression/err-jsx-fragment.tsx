@@ -1,9 +1,9 @@
 import { calculate, compose } from "steel-frame";
 
 const C = compose(() => {
-  const c = calculate(() => {
-    <></>;
+    const c = calculate(() => {
+        <></>;
 
-    return 0;
-  });
+        return 0;
+    });
 });

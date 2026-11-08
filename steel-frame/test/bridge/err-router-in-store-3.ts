@@ -1,12 +1,12 @@
 import { calculate, router, store } from "steel-frame";
 
 const sStore = store(() => {
-  let $a = 2;
-  const b = calculate(() => {
-    router()?.goTo("/1");
+    let $a = 2;
+    const b = calculate(() => {
+        router()?.goTo("/1");
 
-    return $a + 1;
-  });
+        return $a + 1;
+    });
 
-  return {};
+    return {};
 });

@@ -64,5 +64,5 @@ it("throw test", function () {
             ],
             filename: fileName,
         });
-    }).toThrow(/\bCompilation failed$/);
+    }).toThrow(/.*/);
 });

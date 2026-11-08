@@ -3,6 +3,6 @@ import { component, set as VasilleSet, wrapFn as VasilleWrap, safe as VasilleSaf
 const C = component(Vasille => {
   const arr = {};
   VasilleSafe(VasilleWrap(() => {
-    VasilleSet(arr, "$x", 1, Vasille, [VasilleFilePath, 7, 4, 7, 14]);
-  }, [VasilleFilePath, 6, 14, 8, 3]))();
+    VasilleSet(arr, "$x", 1, Vasille, [VasilleFilePath, 7, 8, 7, 18]);
+  }, [VasilleFilePath, 6, 16, 8, 5]))();
 }, [VasilleFilePath, 3, 10, 9, 2], "C");

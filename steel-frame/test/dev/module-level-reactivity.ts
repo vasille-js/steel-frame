@@ -1,4 +1,4 @@
-import { arrayModel, bind, mapModel, ref, setModel } from "steel-frame";
+import { arrayModel, mapModel, ref, setModel } from "steel-frame";
 
 let $a = ref(2);
 

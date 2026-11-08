@@ -1,7 +1,7 @@
 import { store } from "steel-frame";
 
 const sStore = store(() => {
-  <div />;
+    <div />;
 
-  return {};
+    return {};
 });

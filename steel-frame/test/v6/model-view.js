@@ -2,7 +2,7 @@ import { arrayModel, ArrayModelView, ArrayView, compose, mapModel, MapModelView,
 const C = compose(Vasille => {
   const $arr = VasilleRef([1, 2, 3], Vasille);
   const am = arrayModel(Vasille, [1, 2, 3]);
-  const sm = setModel(Vasille, $arr.V);
+  const sm = setModel(Vasille, $arr);
   const mm = mapModel(Vasille, [[1, 2], [3, 4]]);
   ArrayView({
     r_of: $arr,

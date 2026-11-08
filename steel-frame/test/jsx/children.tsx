@@ -1,11 +1,11 @@
 import { compose } from "steel-frame";
 
 const C = compose(() => {
-  let $a = "text";
+    let $a = "text";
 
-  <div>
-    text1 Hello {"world"}
-    {$a} is text
-    <div />
-  </div>;
+    <div>
+        text1 Hello {"world"}
+        {$a} is text
+        <div />
+    </div>;
 });

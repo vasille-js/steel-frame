@@ -70,21 +70,34 @@ export function devSafeRef<T>(
     return ref;
 }
 
-export function devSetModel(usage: StaticPosition, ctx: Reactive | undefined, data?: unknown[], name?: string) {
-    return new DevSetModelNode(usage, data, ctx, name);
+export function devSetModel(
+    usage: StaticPosition,
+    ctx: Reactive | undefined,
+    data?: unknown[],
+    size?: WritableIValue<number, ExecutionPosition>,
+    name?: string,
+) {
+    return new DevSetModelNode(usage, data, size, ctx, name);
 }
 
 export function devMapModel(
     usage: StaticPosition,
     ctx: Reactive | undefined,
     data?: [unknown, unknown][],
+    size?: WritableIValue<number, ExecutionPosition>,
     name?: string,
 ) {
-    return new DevMapModel(usage, data, ctx, name);
+    return new DevMapModel(usage, data, size, ctx, name);
 }
 
-export function devArrayModel(usage: StaticPosition, ctx: Reactive | undefined, data?: unknown[], name?: string) {
-    return new DevArrayModel(usage, data, ctx, name);
+export function devArrayModel(
+    usage: StaticPosition,
+    ctx: Reactive | undefined,
+    data?: unknown[],
+    length?: WritableIValue<number, ExecutionPosition>,
+    name?: string,
+) {
+    return new DevArrayModel(usage, data, length, ctx, name);
 }
 
 export function devEnsure<T extends object>(

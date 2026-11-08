@@ -28,10 +28,11 @@ export class DevArrayModel<T> extends ArrayModel<T, ExecutionPosition> implement
     public constructor(
         usage: StaticPosition,
         data?: T[] | WritableIValue<T[], unknown>,
+        length?: WritableIValue<number, ExecutionPosition>,
         ctx?: Reactive,
         name?: string,
     ) {
-        super(data, ctx);
+        super(data, ctx, length);
 
         this.id = provideId();
 
@@ -106,8 +107,14 @@ export class DevArrayModel<T> extends ArrayModel<T, ExecutionPosition> implement
 export class DevSetModelNode<T> extends SetModel<T, ExecutionPosition> implements Destroyable {
     public readonly id: number;
 
-    public constructor(usage: StaticPosition, set?: T[], ctx?: Reactive, name?: string) {
-        super(set, ctx);
+    public constructor(
+        usage: StaticPosition,
+        set?: T[],
+        size?: WritableIValue<number, ExecutionPosition>,
+        ctx?: Reactive,
+        name?: string,
+    ) {
+        super(set, ctx, size);
         this.id = provideId();
 
         ctx?.bind(this);
@@ -157,8 +164,14 @@ export class DevSetModelNode<T> extends SetModel<T, ExecutionPosition> implement
 export class DevMapModel<K, T> extends MapModel<K, T, ExecutionPosition> implements Destroyable {
     public readonly id: number;
 
-    public constructor(usage: StaticPosition, map?: [K, T][], ctx?: Reactive, name?: string) {
-        super(map, ctx);
+    public constructor(
+        usage: StaticPosition,
+        map?: [K, T][],
+        size?: WritableIValue<number, ExecutionPosition>,
+        ctx?: Reactive,
+        name?: string,
+    ) {
+        super(map, ctx, size);
         this.id = provideId();
 
         ctx?.bind(this);

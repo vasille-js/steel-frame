@@ -1,5 +1,7 @@
+// @ts-expect-error
 import pluginJsxSyntax from "@babel/plugin-syntax-jsx";
 import pluginVasille from "../../babel-plugin/index.js";
+// @ts-expect-error
 import pluginTypescript from "@babel/plugin-transform-typescript";
 import babel from "vite-plugin-babel";
 import type { CompilationErrorReporter } from "../../babel-plugin/index.js";

@@ -1,10 +1,10 @@
 import { styleSheet } from "steel-frame";
 
 function use() {
-  return s.c;
+    return s.c;
 }
 
 const s = styleSheet({
-  // @ts-expect-error
-  c: [],
+    // @ts-expect-error
+    c: [],
 });

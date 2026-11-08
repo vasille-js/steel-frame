@@ -4,10 +4,10 @@ const promptName = prompt(Vasille => {}, [VasilleFilePath, 3, 19, 3, 35], "promp
 const C = component(Vasille => {
   Vasille.tag("button", {
     e: {
-      click: VasilleWrap(() => showPrompt(Vasille, promptName, {}, 0, [VasilleFilePath, 6, 25, 6, 51]), [VasilleFilePath, 6, 19, 6, 51])
+      click: VasilleWrap(() => showPrompt(Vasille, promptName, {}, 0, [VasilleFilePath, 6, 27, 6, 53]), [VasilleFilePath, 6, 21, 6, 53])
     },
-    usage: [VasilleFilePath, 6, 2, 6, 73]
+    usage: [VasilleFilePath, 6, 4, 6, 75]
   }, Vasille => {
-    Vasille.text(VasillePosText("Prompt Name", [VasilleFilePath, 6, 53, 6, 64]));
+    Vasille.text(VasillePosText("Prompt Name", [VasilleFilePath, 6, 55, 6, 66]));
   });
 }, [VasilleFilePath, 5, 10, 7, 2], "C");

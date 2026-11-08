@@ -1,8 +1,8 @@
 import { beforeMount, compose, router } from "steel-frame";
 
 const C = compose(() => {
-  beforeMount(() => {
-    router()?.load("/correct");
-    router()?.goTo("/wrong");
-  });
+    beforeMount(() => {
+        router()?.load("/correct");
+        router()?.goTo("/wrong");
+    });
 });

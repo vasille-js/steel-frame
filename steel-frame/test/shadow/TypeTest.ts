@@ -1,7 +1,7 @@
 import { component } from "steel-frame";
 
 type Props = {
-  $a: number;
+    $a: number;
 };
 
 export const TypeTest = component<Props>(() => {});

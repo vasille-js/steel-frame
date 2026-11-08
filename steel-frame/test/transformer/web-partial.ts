@@ -1,11 +1,11 @@
 import { styleSheet } from "steel-frame";
 
 function use() {
-  return ss.a;
+    return ss.a;
 }
 
 const ss = styleSheet({
-  a: {
-    margin: [1, 2],
-  },
+    a: {
+        margin: [1, 2],
+    },
 });

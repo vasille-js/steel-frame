@@ -54,7 +54,9 @@ it("field renaming error", function () {
 });
 
 it("field renaming error 2", function () {
-    throwTest(__dirname, "field-renaming-2", 'Property "a" can not be renamed to "$a": rename it to "a"');
+    throwTest(__dirname, "field-renaming-2", 'Property "a" can not be renamed to "r_a": rename it to "a"', false, {
+        v4Naming: false,
+    });
 });
 
 it("property is not reactive error", function () {

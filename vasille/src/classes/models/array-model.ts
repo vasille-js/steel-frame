@@ -11,16 +11,11 @@ type Arguments<T> = [number, number, T[]] | [number, number];
 
 /**
  * Model based on Array class
- * @extends Array
  */
 export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
     public readonly listener: Listener<Arguments<T>>;
     public readonly length?: WritableIValue<number, unknown>;
 
-    /**
-     * @param data {Array} input data
-     * @param ctx lifetime context of model
-     */
     public constructor(
         data?: T[] | WritableIValue<T[] | undefined, unknown>,
         ctx?: Reactive,

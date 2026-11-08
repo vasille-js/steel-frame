@@ -1,7 +1,7 @@
 const key = "key";
 
 interface Props {
-  [key]: number;
+    [key]: number;
 }
 
 function err123({ [key]: $add = 23 }: Props) {}

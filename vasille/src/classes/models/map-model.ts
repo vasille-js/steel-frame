@@ -18,7 +18,6 @@ type Arguments<K, T> = [Ops.Clear] | [Ops.Remove, K] | [Ops.Add, K, T];
 /**
  * A `Map` based memory
  * @class MapModel
- * @extends Map
  */
 export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | undefined, Map<K, T>> {
     public readonly listener: Listener<Arguments<K, T>>;
@@ -26,8 +25,6 @@ export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | und
 
     /**
      * Constructs a map model
-     * @param data {[*, *][]} input data
-     * @param ctx lifetime context
      */
     public constructor(
         data?: [K, T][] | Map<K, T> | WritableIValue<[K, T][] | Map<K, T> | undefined, unknown>,

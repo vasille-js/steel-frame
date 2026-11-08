@@ -6,7 +6,7 @@ type Composed<In extends object> = ReturnType<typeof compose<In>>;
 let a = 1;
 
 function tag(args: TemplateStringsArray, arg: unknown) {
-  return arg;
+    return arg;
 }
 
 `compose:${compose(() => {})}`;
@@ -26,12 +26,12 @@ new String(compose(() => {}));
 (0, compose(() => {}));
 
 function* generator() {
-  yield 1;
-  yield compose(() => {});
+    yield 1;
+    yield compose(() => {});
 }
 
 async function fn() {
-  await Promise.resolve(compose(() => {}));
+    await Promise.resolve(compose(() => {}));
 }
 
 const VMap = Map<string, number>;
@@ -44,13 +44,13 @@ compose(() => {}) as Composed<object>;
 compose(() => {}) satisfies Composed<object>;
 
 () => {
-  compose(() => {});
+    compose(() => {});
 };
 
 const cx = class {
-  m() {
-    compose(() => {});
-  }
+    m() {
+        compose(() => {});
+    }
 };
 
 const o1 = { e: 1 };

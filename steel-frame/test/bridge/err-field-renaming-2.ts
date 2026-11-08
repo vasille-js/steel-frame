@@ -1,5 +1,5 @@
 const o6 = {
-  a: 1,
+    a: 1,
 };
 
-const { a: $a } = o6;
+const { a: r_a } = o6;

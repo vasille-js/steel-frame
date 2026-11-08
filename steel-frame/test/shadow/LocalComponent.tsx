@@ -7,21 +7,21 @@ import { TestFourthComponent } from "@/components/not-local/TestFourthComponent.
 import { component } from "steel-frame";
 
 export const LocalComponent = component<{}>(() => {
-  <TestFirstComponent name={"first"}>
-    <div></div>
-  </TestFirstComponent>;
-  <TestThirdComponent
-    name={"third"}
-    id={1}
-    onClick={() => {
-      console.log("test");
-    }}
-  />;
-  // this will trigger an error when field name is changed
-  // match it with previous one
-  <div property:autofocus>
-    <span></span>
-  </div>;
-  // this must not be threaded as a local component
-  <TestFourthComponent name={"fourth"} />;
+    <TestFirstComponent name={"first"}>
+        <div></div>
+    </TestFirstComponent>;
+    <TestThirdComponent
+        name={"third"}
+        id={1}
+        onClick={() => {
+            console.log("test");
+        }}
+    />;
+    // this will trigger an error when field name is changed
+    // match it with previous one
+    <div property:autofocus>
+        <span></span>
+    </div>;
+    // this must not be threaded as a local component
+    <TestFourthComponent name={"fourth"} />;
 });

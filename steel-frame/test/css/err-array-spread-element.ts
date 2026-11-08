@@ -1,11 +1,11 @@
 import { styleSheet } from "steel-frame";
 
 function use() {
-  return s.c;
+    return s.c;
 }
 
 const s = styleSheet({
-  c: {
-    m: [0, ...[1]],
-  },
+    c: {
+        m: [0, ...[1]],
+    },
 });

@@ -135,8 +135,6 @@ We respect semantic versioning:
 
 ### 7.0 - 7.2
 
-- **7.2**: Add tracking of the builtin models size. Reactive array/set/map can be converted into a builtin model.
-- **7.1**: Add support for ARIA attributes.
 - Add `debounced` and `field` functions, which extend the reativity system.
 - Add `Zombie` component, it keeps HTML elements alive some time after destruction.
 - Add `abortSignal` to cancel fetch requests and timers when component is destroyed.
@@ -154,6 +152,8 @@ We respect semantic versioning:
 - New reactivity marks `r_` & `wr_` insted of `$`,
   workaround with `v4-naming` compilation flag. **[API change]**
 - Component files have strict structure (imports, export, helpers, CSS). **[API change]**
+- `7.1`: Add support for ARIA attributes.
+- `7.2`: Add tracking of the builtin models size. Reactive array/set/map can be converted into a builtin model.
 
 ### 6.0 RC (never released)
 

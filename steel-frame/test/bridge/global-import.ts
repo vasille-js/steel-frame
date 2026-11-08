@@ -3,14 +3,14 @@ import * as Web from "steel-frame";
 const $a = Web.ref(2);
 
 const C = Web.compose(() => {
-  function overrideTest() {
-    const Web = {
-      ref(x: number) {
-        return x;
-      },
-    };
-    const xx = Web.ref(2);
-  }
+    function overrideTest() {
+        const Web = {
+            ref(x: number) {
+                return x;
+            },
+        };
+        const xx = Web.ref(2);
+    }
 
-  Web.beforeMount(() => Web.router());
+    Web.beforeMount(() => Web.router());
 });

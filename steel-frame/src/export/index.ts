@@ -133,13 +133,16 @@ export declare function effect(f: () => void): void;
 export declare function bypassWriteRestriction<T>(reactive: T, value: T): T;
 
 /** Returns an array model of the array */
-export declare function arrayModel<T>(v?: T[]): ArrayModel<T>;
+export declare function arrayModel<T>(v?: readonly T[], length?: number): ArrayModel<T>;
 
 /** Returns a set model of array values */
-export declare function setModel<T>(v?: T[]): SetModel<T>;
+export declare function setModel<T>(v?: readonly T[] | ReadonlySet<T>, size?: number): SetModel<T>;
 
 /** Returns a map model of map data */
-export declare function mapModel<K, T>(v?: [K, T][]): MapModel<K, T>;
+export declare function mapModel<K, T>(
+    v?: readonly (readonly [K, T])[] | ReadonlyMap<K, T>,
+    size?: number,
+): MapModel<K, T>;
 
 /** Awaits async data in a sync component */
 export declare function awaited<T>(target: (signal?: AbortSignal) => Promise<T>): [unknown, T | undefined];

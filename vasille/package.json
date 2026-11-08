@@ -3,7 +3,7 @@
     "description": "The same devkit which is designed to build fault tolerant frontends (core library).",
     "main": "lib/index.js",
     "types": "types/index.d.ts",
-    "version": "7.2.1",
+    "version": "7.2.2",
     "exports": {
         ".": {
             "types": "./build/index.d.ts",

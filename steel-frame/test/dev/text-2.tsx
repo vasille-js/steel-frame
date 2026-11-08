@@ -1,7 +1,7 @@
 import { component } from "steel-frame";
 
 const C = component(() => {
-  let $text = "text";
+    let $text = "text";
 
-  <>{$text}</>;
+    <>{$text}</>;
 });

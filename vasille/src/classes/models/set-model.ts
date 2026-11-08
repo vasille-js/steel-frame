@@ -17,7 +17,6 @@ type Arguments<T> = [Ops.Clear] | [Ops.Remove, T] | [Ops.Add, T];
 /**
  * A `Set` based model
  * @class SetModel
- * @extends Set
  */
 export class SetModel<T, Extra> extends Collection<T[] | Set<T> | undefined, Set<T>> {
     public readonly listener: Listener<Arguments<T>>;

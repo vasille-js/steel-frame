@@ -1,5 +1,5 @@
 import { compose } from "steel-frame";
 
 const C = compose(() => {
-  const $a = 0;
+    const $a = 0;
 });
