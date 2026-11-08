@@ -1,9 +1,11 @@
-import { AppNode, ScreenProps } from "vasille";
-import type { VasilleSlot } from "vasille-web/jsx-runtime";
-import { WebRouter, WebTagOptions, CssStyleInjector, StyleSheetProps } from "vasille-web/types";
 import { ArrayModel, MapModel, SetModel } from "./models.js";
+import { VasilleSlot } from "./jsx-runtime.js";
+import { AppNode, ScreenProps } from "../vasille/index.js";
+import { StyleSheetProps } from "../vasille-web/web/jsx/spec/css.js";
+import { CssStyleInjector } from "../vasille-web/web/css/index.js";
+import { WebTagOptions } from "../vasille-web/web/runner/runner.js";
+import { WebRouter } from "../vasille-web/web/router/router.js";
 
-export { safe } from "vasille";
 /** Set a handler for component errors */
 export declare function setErrorHandler(handler: (e: unknown) => void): void;
 
@@ -333,7 +335,7 @@ export declare function allDark<T>(value: T): T;
 /** `light` + `prefersLight` */
 export declare function allLight<T>(value: T): T;
 
-export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth } from "vasille-web";
+export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth } from "../vasille-web/web/index.js";
 
 /** Creates a local style sheet */
 export declare const styleSheet: <
@@ -402,7 +404,7 @@ export interface PromptProps<T> {
     reject(err: unknown): void;
 }
 
-/** Represent an prompt constructor */
+/** Represent a prompt constructor */
 export declare class Prompt<T, Input> {}
 
 /** Creates a prompt constructor */
@@ -486,6 +488,6 @@ export type {
     WebRouterInitialization,
     CssStyleInjector,
     StyleSheetProps,
-} from "vasille-web/types";
+} from "../vasille-web/types/index.js";
 
 export type { ArrayModel, MapModel, SetModel } from "./models.js";

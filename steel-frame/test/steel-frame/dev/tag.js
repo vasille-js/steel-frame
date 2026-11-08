@@ -1,0 +1,7 @@
+const VasilleFilePath = "steel-frame/test/steel-frame/dev/tag.tsx";
+import { component } from "steel-frame";
+const C = component(Vasille => {
+  Vasille.tag("div", {
+    usage: [VasilleFilePath, 4, 4, 4, 15]
+  });
+}, [VasilleFilePath, 3, 10, 5, 2], "C");

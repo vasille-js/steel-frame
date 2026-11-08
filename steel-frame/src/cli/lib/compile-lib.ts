@@ -2,10 +2,10 @@ import { cp, mkdir, opendir, readFile, rm, writeFile } from "node:fs/promises";
 import { Dirent, statSync } from "node:fs";
 import path, { dirname } from "node:path";
 import { transformAsync } from "@babel/core";
-// @ts-expect-error
+// @ts-ignore
 import pluginJsxSyntax from "@babel/plugin-syntax-jsx";
 import vasillePlugin from "../../babel-plugin/index.js";
-// @ts-expect-error
+// @ts-ignore
 import typeScriptPlugin from "@babel/plugin-transform-typescript";
 import { watchFolder } from "./watch-folder.js";
 

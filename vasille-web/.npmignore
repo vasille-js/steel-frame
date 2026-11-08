@@ -1,8 +1,0 @@
-*.tgz
-/src
-/.*
-/test
-/coverage
-qodana.yaml
-tsconfig.*
-jest.config.cjs
