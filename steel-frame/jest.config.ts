@@ -2,7 +2,7 @@ import { defineConfig } from "jest";
 
 export default defineConfig({
     transform: {
-        "\\.tsx$": [
+        ".*\\/vasille-web\\/ssg\\/.*\\.tsx$": [
             "babel-jest",
             {
                 plugins: [
@@ -13,6 +13,25 @@ export default defineConfig({
                             devMode: true,
                             strictFolders: false,
                             replaceWeb: "steel-frame/ssg",
+                            headTag: true,
+                            bodyTag: true,
+                            v4Naming: true,
+                        },
+                    ],
+                    ["@babel/plugin-transform-typescript", { isTSX: true, allowDeclareFields: true }],
+                ],
+            },
+        ],
+        ".*\\/integration\\/.*\\.tsx?$": [
+            "babel-jest",
+            {
+                plugins: [
+                    "@babel/plugin-syntax-jsx",
+                    [
+                        "steel-frame/babel-plugin",
+                        {
+                            strictFolders: false,
+                            replaceWeb: "steel-frame/web",
                             headTag: true,
                             bodyTag: true,
                             v4Naming: true,
