@@ -22,7 +22,7 @@ jobs:
       # Loop through each package and run tests sequentially
       - name: Run tests for all packages sequentially
         run: |
-          for pkg in vasille vasille-web steel-frame; do
+          for pkg in steel-frame; do
             echo "== Building $pkg =="
             cd $pkg
             export COVERALLS_FLAG_NAME=$pkg
@@ -30,7 +30,7 @@ jobs:
             npm run build
             cd ..
           done
-          for pkg in vasille vasille-web steel-frame; do
+          for pkg in steel-frame; do
             echo "== Testing $pkg =="
             cd $pkg
             npm run test-coverage

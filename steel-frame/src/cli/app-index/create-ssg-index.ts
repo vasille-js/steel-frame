@@ -1,5 +1,5 @@
 import { findRoutes } from "./find-routes.js";
-import { SsgRouterMode } from "vasille-web/types";
+import { SsgRouterMode } from "../../vasille-web/types/index.js";
 
 export async function createSsgIndex(routerDir: string, pagesDir: string, mode: SsgRouterMode): Promise<string> {
     const indexJs: string[] = [];

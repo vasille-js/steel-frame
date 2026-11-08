@@ -2,7 +2,7 @@ import { NodePath, types } from "@babel/core";
 import * as t from "@babel/types";
 import { calledFn, calls, hintFunctions, isDiCall, unwrapFunctions } from "./call.js";
 import { ctx, Internal, StackedStates, V, VariablesStatus } from "./internal.js";
-import { checkNonReactiveName, err, Errors, forceReactiveName, ReactiveType, reactivityTypeOfNode } from "./lib.js";
+import { checkNonReactiveName, err, Errors, forceReactiveName, ReactiveType, reactivityTypeOfNodePath } from "./lib.js";
 import { checkStyleUsage, ignoreParams, meshAllUnknown, meshExpression } from "./mesh.js";
 import { routerReplace } from "./router.js";
 import { stringify } from "./utils.js";
@@ -312,7 +312,7 @@ export function checkExpression(
                     arg1 &&
                     arg2 &&
                     arg1.isExpression() &&
-                    reactivityTypeOfNode(arg1, search.external) === "writable" &&
+                    reactivityTypeOfNodePath(arg1, search.external) === "writable" &&
                     arg2.isExpression()
                 ) {
                     checkExpression(arg2, search);
@@ -358,7 +358,7 @@ export function checkExpression(
             const left = path.get("left");
             const right = path.get("right");
 
-            if (reactivityTypeOfNode(left, search.external)) {
+            if (reactivityTypeOfNodePath(left, search.external)) {
                 err(Errors.RulesOfVasille, left, "Assigment are forbidden in live values and effects", search.external);
             }
             meshLValue(left, search.external);

@@ -19,11 +19,13 @@ import { checkExpression, exprIsSure, idIsIValue, memberIsIValue, nodeIsMeshed }
 import { ctx, InterfaceData, Internal, V, VariablesStatus, VariableState } from "./internal.js";
 import { ConditionCollection, processConditions, transformJsx } from "./jsx.js";
 import {
+    checkBuildInModelArgs,
     checkNonReactiveName,
     checkReactiveName,
     err,
     Errors,
     exprCall,
+    extractReactivityMark,
     forceReactiveName,
     isReactiveName,
     isReadableName,
@@ -33,9 +35,10 @@ import {
     pathIsReactiveValue,
     processModelCall,
     reactivityTypeByName,
-    reactivityTypeOfNode,
+    reactivityTypeOfNodePath,
     ref,
     removeExtension,
+    replaceReactivityMark,
     toKebabCase,
 } from "./lib.js";
 import { checkOrder } from "./order-check.js";
@@ -71,7 +74,8 @@ export function resolveSourceFilePath(sourcePath: string, internal: Internal): s
         const __filename = fileURLToPath(import.meta.url);
         const packageJson = module.findPackageJSON(sourcePath, __filename);
         const packageJsonContent = packageJson && JSON.parse(fs.readFileSync(packageJson, "utf8"));
-        const relativePath = packageJsonContent?.exports?.browser ?? packageJsonContent?.exports?.["."]?.browser;
+        const key = [".", ...sourcePath.split("/").slice(1)].join("/");
+        const relativePath = packageJsonContent?.exports?.browser ?? packageJsonContent?.exports?.[key]?.browser;
 
         /* istanbul ignore else */
         if (relativePath) {
@@ -396,24 +400,21 @@ export function meshExpression(
             }
             // arrayModel/setModel/mapModel call
             else if (!internal.isComposing && calls(path, modelFunctions, internal)) {
-                /* istanbul ignore else */
-                if (argPath) {
-                    meshAllUnknown([argPath], internal, true);
-                }
-
+                const [source, size] = checkBuildInModelArgs(path, internal);
+                const called = calledFn(path, modelFunctions, internal);
                 const loc = path.node.loc;
 
-                if (calls(path, ["arrayModel"], internal)) {
-                    path.replaceWith(internal.arrayModel(argPath?.node, path.node, undefined));
-                } else if (calls(path, ["mapModel"], internal)) {
-                    path.replaceWith(internal.mapModel(argPath?.node, path.node, undefined));
-                } else {
-                    /* istanbul ignore else */
-                    if (calls(path, ["setModel"], internal)) {
-                        path.replaceWith(internal.setModel(argPath?.node, path.node, undefined));
-                    }
+                switch (called) {
+                    case "arrayModel":
+                        path.replaceWith(internal.arrayModel(source, size, path.node, undefined));
+                        break;
+                    case "mapModel":
+                        path.replaceWith(internal.mapModel(source, size, path.node, undefined));
+                        break;
+                    case "setModel":
+                        path.replaceWith(internal.setModel(source, size, path.node, undefined));
+                        break;
                 }
-
                 path.node.loc = loc;
             }
             // router call
@@ -478,8 +479,8 @@ export function meshExpression(
             const path = nodePath as NodePath<types.AssignmentExpression>;
             const left = path.get("left");
             const right = path.get("right");
-            const leftReactivity = reactivityTypeOfNode(left, internal);
-            const rightReactivity = reactivityTypeOfNode(right, internal);
+            const leftReactivity = reactivityTypeOfNodePath(left, internal);
+            const rightReactivity = reactivityTypeOfNodePath(right, internal);
             let bypassMesh = false;
 
             if (left.isMemberExpression() && hasBreakPoint(left, internal) && !memberIsIValue(left, "any", internal)) {
@@ -747,9 +748,11 @@ function ignoreObjectPattern(pattern: NodePath<types.ObjectPattern>, internal: I
                 newName &&
                 reactivityTypeByName(originName, internal) !== reactivityTypeByName(newName, internal)
             ) {
-                const correctName =
-                    originName.substring(0, originName.search(/[_$]/) + 1) +
-                    newName.substring(newName.search(/[_$]/) + 1);
+                const correctName = replaceReactivityMark(
+                    newName,
+                    extractReactivityMark(originName, internal.v4Naming),
+                    internal.v4Naming,
+                );
                 err(
                     Errors.RulesOfVasille,
                     path.get("value"),

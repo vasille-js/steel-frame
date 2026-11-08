@@ -1,9 +1,11 @@
-import { AppNode, ScreenProps } from "vasille";
-import type { VasilleSlot } from "vasille-web/jsx-runtime";
-import { WebRouter, WebTagOptions, CssStyleInjector, StyleSheetProps } from "vasille-web/types";
 import { ArrayModel, MapModel, SetModel } from "./models.js";
+import { VasilleSlot } from "./jsx-runtime.js";
+import { AppNode, ScreenProps } from "../vasille/index.js";
+import { StyleSheetProps } from "../vasille-web/web/jsx/spec/css.js";
+import { CssStyleInjector } from "../vasille-web/web/css/index.js";
+import { WebTagOptions } from "../vasille-web/web/runner/runner.js";
+import { WebRouter } from "../vasille-web/web/router/router.js";
 
-export { safe } from "vasille";
 /** Set a handler for component errors */
 export declare function setErrorHandler(handler: (e: unknown) => void): void;
 
@@ -133,13 +135,16 @@ export declare function effect(f: () => void): void;
 export declare function bypassWriteRestriction<T>(reactive: T, value: T): T;
 
 /** Returns an array model of the array */
-export declare function arrayModel<T>(v?: T[]): ArrayModel<T>;
+export declare function arrayModel<T>(v?: readonly T[], length?: number): ArrayModel<T>;
 
 /** Returns a set model of array values */
-export declare function setModel<T>(v?: T[]): SetModel<T>;
+export declare function setModel<T>(v?: readonly T[] | ReadonlySet<T>, size?: number): SetModel<T>;
 
 /** Returns a map model of map data */
-export declare function mapModel<K, T>(v?: [K, T][]): MapModel<K, T>;
+export declare function mapModel<K, T>(
+    v?: readonly (readonly [K, T])[] | ReadonlyMap<K, T>,
+    size?: number,
+): MapModel<K, T>;
 
 /** Awaits async data in a sync component */
 export declare function awaited<T>(target: (signal?: AbortSignal) => Promise<T>): [unknown, T | undefined];
@@ -330,7 +335,7 @@ export declare function allDark<T>(value: T): T;
 /** `light` + `prefersLight` */
 export declare function allLight<T>(value: T): T;
 
-export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth } from "vasille-web";
+export { setMobileMaxWidth, setTabletMaxWidth, setLaptopMaxWidth } from "../vasille-web/web/index.js";
 
 /** Creates a local style sheet */
 export declare const styleSheet: <
@@ -399,7 +404,7 @@ export interface PromptProps<T> {
     reject(err: unknown): void;
 }
 
-/** Represent an prompt constructor */
+/** Represent a prompt constructor */
 export declare class Prompt<T, Input> {}
 
 /** Creates a prompt constructor */
@@ -483,6 +488,6 @@ export type {
     WebRouterInitialization,
     CssStyleInjector,
     StyleSheetProps,
-} from "vasille-web/types";
+} from "../vasille-web/types/index.js";
 
 export type { ArrayModel, MapModel, SetModel } from "./models.js";
