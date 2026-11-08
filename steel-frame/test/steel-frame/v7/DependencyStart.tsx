@@ -1,5 +1,5 @@
 import { compose, receive } from "steel-frame";
-import { Reference } from "../../../src/vasille/index.js";
+import { Reference } from "steel-frame/core";
 
 export const DependencyStart = compose(() => {
     const x = receive("unexisting");

@@ -157,7 +157,7 @@ it("dependency reexport check", function () {
     runJsxTest(__dirname, "DependencyReexport", { appData });
     throwTest(__dirname, "dependency-reexport-check", 'Missing dependencies: "unexisting"\n', true, { appData });
 
-    expect(mapping.get("Reference")).toBe("steel-frame/src/vasille/index:Reference");
+    expect(mapping.get("Reference")).toBe("steel-frame/build/vasille/index:Reference");
 });
 
 it("static live value", function () {

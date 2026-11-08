@@ -74,7 +74,8 @@ export function resolveSourceFilePath(sourcePath: string, internal: Internal): s
         const __filename = fileURLToPath(import.meta.url);
         const packageJson = module.findPackageJSON(sourcePath, __filename);
         const packageJsonContent = packageJson && JSON.parse(fs.readFileSync(packageJson, "utf8"));
-        const relativePath = packageJsonContent?.exports?.browser ?? packageJsonContent?.exports?.["."]?.browser;
+        const key = [".", ...sourcePath.split("/").slice(1)].join("/");
+        const relativePath = packageJsonContent?.exports?.browser ?? packageJsonContent?.exports?.[key]?.browser;
 
         /* istanbul ignore else */
         if (relativePath) {

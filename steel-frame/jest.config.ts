@@ -30,6 +30,7 @@ export default defineConfig({
         "steel-frame/ssg": "<rootDir>/src/vasille-web/ssg/index.ts",
         "steel-frame/shadow": "<rootDir>/src/vasille-web/shadow/index.ts",
         "steel-frame/babel-plugin": "<rootDir>/src/babel-plugin/index.ts",
+        "steel-frame/core": "<rootDir>/src/vasille/core/index.ts",
         "^(\\.{1,2}/.*)\\.js$": "$1",
     },
     coveragePathIgnorePatterns: ["/test/"],
