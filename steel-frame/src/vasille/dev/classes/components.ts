@@ -2,7 +2,6 @@ import { ReadableIValue } from "../../classes/core/ivalue.js";
 import { AppNode, Fragment, PortalNode, SwitchedNode, WatchNode, ZombieNode } from "../../classes/index.js";
 import { Root, SwitchedNodeCase } from "../../classes/node/node.js";
 import { IRunner } from "../../classes/node/runner.js";
-import { WatchOptions } from "../../classes/node/watch.js";
 import {
     DevValue,
     inspector,
@@ -33,11 +32,14 @@ export class DevWatchNode<Node, Element extends Node, TagOptions extends object,
     public override id: number;
 
     public constructor(
-        input: WatchOptions<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, T>,
         parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
+        r_model: ReadableIValue<T, unknown>,
+        slot:
+            | ((ctx: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>, value: T) => void)
+            | undefined,
         usage: StaticPosition,
     ) {
-        super(input, parent);
+        super(parent, r_model, slot);
         this.deep = 0;
 
         const id = (this.id = provideId());
@@ -48,7 +50,7 @@ export class DevWatchNode<Node, Element extends Node, TagOptions extends object,
             name: "Watch",
             time: Date.now(),
         });
-        processComponentProps(id, input);
+        processComponentProps(id, { r_model, slot });
     }
 
     public override d(deep: number, keepNodes?: boolean): void {
@@ -138,7 +140,7 @@ export class DevSwitchedNode<Node, Element extends Node, TagOptions extends obje
         const conditions: { [k: number]: number | DevValue } = {};
 
         cases.forEach((_case, index) => {
-            conditions[index] = _case.slot === _default ? toDevValue(true) : toDevIdOrValue(_case.$case);
+            conditions[index] = _case.l === _default ? toDevValue(true) : toDevIdOrValue(_case.c);
         });
 
         inspector.createComponent({

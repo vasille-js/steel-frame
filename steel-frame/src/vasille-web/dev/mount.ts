@@ -57,7 +57,7 @@ export function devModal<T extends CompositionProps>(
                 time: Date.now(),
                 ...event,
             });
-            portal.runOnDestroy(() => {
+            portal.rod(() => {
                 inspector.eventTrigger({
                     eventName: "close",
                     time: Date.now(),

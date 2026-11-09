@@ -2,15 +2,15 @@ import { compose, ref as VasilleRef, expr as VasilleExpr, Switch as VasilleSwitc
 const C = compose(Vasille => {
   const $a = VasilleRef(1, Vasille);
   VasilleSwitch({
-    cases: [{
-      $case: VasilleExpr(Vasille, Vasille_0 => Vasille_0 < 1, [$a]),
-      slot: Vasille => Vasille.text("smaller then 1")
+    c: [{
+      c: VasilleExpr(Vasille, Vasille_0 => Vasille_0 < 1, [$a]),
+      l: Vasille => Vasille.text("smaller then 1")
     }]
   }, Vasille);
   VasilleSwitch({
-    cases: [{
-      $case: VasilleExpr(Vasille, Vasille_0 => Vasille_0 < 1 && Vasille_0 < 2, [$a]),
-      slot: Vasille => Vasille.text("smaller then 2")
+    c: [{
+      c: VasilleExpr(Vasille, Vasille_0 => Vasille_0 < 1 && Vasille_0 < 2, [$a]),
+      l: Vasille => Vasille.text("smaller then 2")
     }]
   }, Vasille);
 });

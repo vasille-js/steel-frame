@@ -1,6 +1,6 @@
 import { compose } from "vasille-web";
 const C = compose(Vasille => {
-  Vasille.runOnDestroy(() => {
+  Vasille.rod(() => {
     console.log("destroy called");
   });
 });

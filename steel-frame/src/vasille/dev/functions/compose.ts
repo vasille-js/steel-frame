@@ -106,7 +106,7 @@ export function devView<Node, Element extends Node, TagOptions extends object, I
 
         node.child(frag);
         fragments.set(frag, { props, node: frag, usage });
-        frag.runOnDestroy(() => fragments.delete(frag));
+        frag.rod(() => fragments.delete(frag));
         safeRun(frag, props, usage);
     };
 

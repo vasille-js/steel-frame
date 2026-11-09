@@ -23,7 +23,7 @@ export class Reactive implements Destroyable {
      * A list of user-defined bindings
      */
     private linked?: Destroyable[];
-    private onDestroy?: () => void;
+    private od?: () => void;
 
     public bind<T extends Destroyable & { deep: number }>(value: T): void {
         if (this.linked) {
@@ -40,23 +40,23 @@ export class Reactive implements Destroyable {
         this.deep = deep;
     }
 
-    public runOnDestroy(func: () => void) {
-        const existing = this.onDestroy;
+    public rod(func: () => void) {
+        const existing = this.od;
 
         if (existing) {
-            this.onDestroy = () => {
+            this.od = () => {
                 existing();
                 safe(func)();
             };
         } else {
-            this.onDestroy = safe(func);
+            this.od = safe(func);
         }
         // this component needs manual destruction
         this.refreshDeep(0);
     }
 
     public d(deep: number) {
-        this.onDestroy?.();
+        this.od?.();
         if (this.deep < deep) {
             this.linked?.forEach(item => {
                 item.d(deep);

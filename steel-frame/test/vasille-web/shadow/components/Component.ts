@@ -35,10 +35,10 @@ export function register() {
             });
             Switch(
                 {
-                    cases: [
+                    c: [
                         {
-                            $case: input.$visible,
-                            slot: ctx => {
+                            c: input.$visible,
+                            l: ctx => {
                                 ctx.tag("div", {});
                             },
                         },

@@ -398,17 +398,17 @@ export function processConditions(
                   internal.Switch(
                       t.objectExpression([
                           t.objectProperty(
-                              t.identifier("cases"),
+                              t.identifier("c"),
                               t.arrayExpression(
                                   conditions.cases.map(item =>
                                       t.objectExpression([
-                                          t.objectProperty(t.identifier("$case"), item.condition),
-                                          t.objectProperty(t.identifier("slot"), item.slot),
+                                          t.objectProperty(t.identifier("c"), item.condition),
+                                          t.objectProperty(t.identifier("l"), item.slot),
                                       ]),
                                   ),
                               ),
                           ),
-                          ...(_default ? [t.objectProperty(t.identifier("default"), _default)] : []),
+                          ...(_default ? [t.objectProperty(t.identifier("d"), _default)] : []),
                       ]),
                   ),
               ),

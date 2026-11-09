@@ -73,7 +73,7 @@ class MyApp extends AppNode<Node, Element, TagOptions> {
                     });
                 }
                 if (runOnDestroy) {
-                    ctx.runOnDestroy(runOnDestroy);
+                    ctx.rod(runOnDestroy);
                 }
             });
         });
@@ -227,11 +227,13 @@ it("destroys array view", () => {
         tag.child(
             new ArrayModelViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
                 tag as any,
-                array,
-                function (f, item: number) {
-                    f.text(new TestExpression(a => a + item, [ref], f));
+                {
+                    of: array,
+                    slot: function (f, item: number) {
+                        f.text(new TestExpression(a => a + item, [ref], f));
+                    },
+                    writable: false,
                 },
-                false,
                 v => new Reference(v),
                 r => new Fragment(r),
             ),
@@ -253,8 +255,8 @@ it("destroys switched node", () => {
         tag.child(
             new SwitchedNode<Node, Element, TagOptions, typeof runner>(tag as any, [
                 {
-                    $case: new TestExpression(n => n === 1, [ref], tag),
-                    slot(node) {
+                    c: new TestExpression(n => n === 1, [ref], tag),
+                    l(node) {
                         node.text("2");
                     },
                 },
@@ -275,15 +277,9 @@ it("destroys watch node", () => {
 
     root.tag("div", {}, function (tag) {
         tag.child(
-            new WatchNode<Node, Element, TagOptions, number, typeof runner>(
-                {
-                    model: ref,
-                    slot(node, input) {
-                        node.text(input);
-                    },
-                },
-                tag as any,
-            ),
+            new WatchNode<Node, Element, TagOptions, number, typeof runner>(tag as any, ref, function (node, input) {
+                node.text(input);
+            }),
         );
     });
 

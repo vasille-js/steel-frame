@@ -227,6 +227,25 @@ class WritableArrayModelItem<T, Extra> extends SyncedIValue<T, Extra> implements
     }
 }
 
+export interface ArrayModelProps<
+    T,
+    Value extends T | WritableIValue<T, Extra>,
+    Writable extends boolean,
+    Node,
+    Element extends Node,
+    TagOptions extends object,
+    Runner extends IRunner<Node, Element, TagOptions>,
+    Extra extends unknown,
+> {
+    of: ArrayModel<T, Extra>;
+    slot: (
+        ctx: Fragment<Node, Element, TagOptions, Runner>,
+        value: Value,
+        index: ReadableIValue<number, Extra>,
+    ) => void;
+    writable: Writable;
+}
+
 export class ArrayModelViewNode<
     T,
     Node,
@@ -243,6 +262,8 @@ export class ArrayModelViewNode<
     Extra,
     CacheItem<T, Node, Element, TagOptions, Runner, Extra, WritableArrayModelItem<T, Extra>>
 > {
+    private readonly model: ArrayModel<T, Extra>;
+    private readonly writable?: boolean;
     private apply: ((...args: Arguments<T>) => void) | undefined;
     private readonly slot: (
         ctx: Fragment<Node, Element, TagOptions, Runner>,
@@ -252,56 +273,34 @@ export class ArrayModelViewNode<
 
     public constructor(
         parent: Root<Node, Element, TagOptions, Runner>,
-        model: ArrayModel<T, Extra>,
-        slot: (
-            ctx: Fragment<Node, Element, TagOptions, Runner>,
-            value: T,
-            index: ReadableIValue<number, Extra>,
-        ) => void,
-        writable: false,
+        props: ArrayModelProps<T, WritableIValue<T, Extra>, true, Node, Element, TagOptions, Runner, Extra>,
         ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
         frag: (parent: Root<Node, Element, TagOptions, Runner>) => Fragment<Node, Element, TagOptions, Runner>,
     );
     public constructor(
         parent: Root<Node, Element, TagOptions, Runner>,
-        model: ArrayModel<T, Extra>,
-        slot: (
-            ctx: Fragment<Node, Element, TagOptions, Runner>,
-            value: WritableIValue<T, Extra>,
-            index: ReadableIValue<number, Extra>,
-        ) => void,
-        writable: true,
+        props: ArrayModelProps<T, T, false, Node, Element, TagOptions, Runner, Extra>,
         ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
         frag: (parent: Root<Node, Element, TagOptions, Runner>) => Fragment<Node, Element, TagOptions, Runner>,
     );
     public constructor(
         parent: Root<Node, Element, TagOptions, Runner>,
-        model: ArrayModel<T, Extra>,
-        slot: (
-            ctx: Fragment<Node, Element, TagOptions, Runner>,
-            value: T | WritableIValue<T, Extra>,
-            index: ReadableIValue<number, Extra>,
-        ) => void,
-        writable: boolean,
+        props: ArrayModelProps<T, T | WritableIValue<T, Extra>, boolean, Node, Element, TagOptions, Runner, Extra>,
         ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
         frag: (parent: Root<Node, Element, TagOptions, Runner>) => Fragment<Node, Element, TagOptions, Runner>,
     );
     public constructor(
         parent: Root<Node, Element, TagOptions, Runner>,
-        private readonly model: ArrayModel<T, Extra>,
-        slot: (
-            ctx: Fragment<Node, Element, TagOptions, Runner>,
-            value: T | WritableIValue<T, Extra>,
-            index: ReadableIValue<number, Extra>,
-        ) => void,
-        private readonly writable: boolean,
+        props: ArrayModelProps<T, T | WritableIValue<T, Extra>, boolean, Node, Element, TagOptions, Runner, Extra>,
         private readonly ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
         private readonly frag: (
             parent: Root<Node, Element, TagOptions, Runner>,
         ) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(parent);
-        this.slot = safe(slot);
+        this.slot = safe(props.slot);
+        this.model = props.of;
+        this.writable = props.writable;
     }
 
     public override compose() {

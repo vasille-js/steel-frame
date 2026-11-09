@@ -51,7 +51,7 @@ export function DevSwitch<Node, Element extends Node, TagOptions extends object>
     _slot: undefined,
     usage: StaticPosition,
 ) {
-    ctx.child(new DevSwitchedNode(usage, ctx, options.cases, options.default));
+    ctx.child(new DevSwitchedNode(usage, ctx, options.c, options.d));
 }
 
 export function DevFor<
@@ -81,15 +81,17 @@ export function DevFor<
         ctx.child(
             new DevArrayModelViewNode<Node, Element, TagOptions, V>(
                 ctx,
-                model,
-                (ctx, value, index) => {
-                    slot(
-                        ctx as Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
-                        value as V,
-                        index.V as K,
-                    );
+                {
+                    of: model,
+                    slot: (ctx, value, index) => {
+                        slot(
+                            ctx as Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
+                            value as V,
+                            index.V as K,
+                        );
+                    },
+                    writable: false,
                 },
-                false,
                 usage,
             ),
         );
@@ -97,11 +99,17 @@ export function DevFor<
         ctx.child(
             new DevMapViewNode(
                 ctx,
-                model,
-                (ctx, value, key) => {
-                    slot(ctx as Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>, value.V, key);
+                {
+                    of: model,
+                    slot: (ctx, value, key) => {
+                        slot(
+                            ctx as Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
+                            value.V,
+                            key,
+                        );
+                    },
+                    writable: false,
                 },
-                false,
                 usage,
                 undefined,
             ),
@@ -110,13 +118,15 @@ export function DevFor<
         ctx.child(
             new DevSetViewNode(
                 ctx,
-                model,
-                (ctx, value) => {
-                    slot(
-                        ctx as Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
-                        value,
-                        value as unknown as K,
-                    );
+                {
+                    of: model,
+                    slot: (ctx, value) => {
+                        slot(
+                            ctx as Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
+                            value,
+                            value as unknown as K,
+                        );
+                    },
                 },
                 usage,
             ),
@@ -199,16 +209,7 @@ export function DevArrayModelView<Node, Element extends Node, TagOptions extends
     usage: StaticPosition,
     index: StaticPosition | undefined,
 ) {
-    ctx.child(
-        new DevArrayModelViewNode<Node, Element, TagOptions, V>(
-            ctx,
-            props.of,
-            props.slot,
-            props.writable,
-            usage,
-            index,
-        ),
-    );
+    ctx.child(new DevArrayModelViewNode<Node, Element, TagOptions, V>(ctx, props, usage, index));
 }
 
 export function DevMapModelView<Node, Element extends Node, TagOptions extends object, K, V>(
@@ -225,9 +226,7 @@ export function DevMapModelView<Node, Element extends Node, TagOptions extends o
     usage: StaticPosition,
     value: StaticPosition | undefined,
 ) {
-    ctx.child(
-        new DevMapViewNode<Node, Element, TagOptions, K, V>(ctx, props.of, props.slot, props.writable, usage, value),
-    );
+    ctx.child(new DevMapViewNode<Node, Element, TagOptions, K, V>(ctx, props, usage, value));
 }
 
 export function DevSetModelView<Node, Element extends Node, TagOptions extends object, V>(
@@ -235,7 +234,7 @@ export function DevSetModelView<Node, Element extends Node, TagOptions extends o
     ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
     usage: StaticPosition,
 ) {
-    ctx.child(new DevSetViewNode<Node, Element, TagOptions, V>(ctx, props.of, props.slot, usage));
+    ctx.child(new DevSetViewNode<Node, Element, TagOptions, V>(ctx, props, usage));
 }
 
 export function DevWatch<Node, Element extends Node, TagOptions extends object, T>(
@@ -248,7 +247,7 @@ export function DevWatch<Node, Element extends Node, TagOptions extends object, 
 
     /* istanbul ignore else */
     if (slot) {
-        ctx.child(new DevWatchNode({ model: r_model, slot: safe(slot) }, ctx, usage));
+        ctx.child(new DevWatchNode(ctx, r_model, slot, usage));
     }
 }
 

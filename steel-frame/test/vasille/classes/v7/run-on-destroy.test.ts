@@ -9,7 +9,7 @@ it("handles destroy via callback", function () {
 
     root.tag("div", {
         slot(node) {
-            node.runOnDestroy(() => {
+            node.rod(() => {
                 destroyed = true;
             });
         },

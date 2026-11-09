@@ -10,22 +10,16 @@ it("Watch Test", function () {
     const root = new AppNode<Node, Element, TagOptions>(body, runner);
 
     root.child(
-        new WatchNode<Node, Element, TagOptions, boolean>(
-            {
-                model,
-                slot: function (node, input) {
-                    node.child(new Fragment<Node, Element, TagOptions>(root), ctx => {
-                        ctx.tag("div", {}, ctx => {
-                            ctx.text(input);
-                        });
-                    });
-                },
-            },
-            root,
-        ),
+        new WatchNode<Node, Element, TagOptions, boolean>(root, model, function (node, input) {
+            node.child(new Fragment<Node, Element, TagOptions>(root), ctx => {
+                ctx.tag("div", {}, ctx => {
+                    ctx.text(input);
+                });
+            });
+        }),
     );
 
-    root.child(new WatchNode<Node, Element, TagOptions, boolean>({ model }, root));
+    root.child(new WatchNode<Node, Element, TagOptions, boolean>(root, model));
 
     expect(body.children.length).toBe(1);
     expect(body.children[0]!.innerHTML).toBe("false");

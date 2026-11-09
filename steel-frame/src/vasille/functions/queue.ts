@@ -67,7 +67,7 @@ export function QueuedRender<Node, Element extends Node, TagOptions extends obje
         } else {
             queue.push(item);
         }
-        node.runOnDestroy(() => {
+        node.rod(() => {
             if (!item.done) {
                 const index = queue.indexOf(item);
 

@@ -29,31 +29,19 @@ it("import test", function () {
     const set = new SetModel();
     const listener = new Listener();
     const arrayView = new ArrayModelViewNode(
-        runner,
-        0,
-        array,
-        () => void 0,
-        false,
+        root,
+        { of: array, slot: () => void 0, writable: false },
         v => new Reference(v),
-        runner => new Fragment(runner, 1),
+        runner => new Fragment(runner),
     );
     const mapView = new MapViewNode(
-        runner,
-        0,
-        map,
-        () => {},
-        false,
+        root,
+        { of: map, slot: () => {}, writable: false },
         v => new Reference(v),
-        runner => new Fragment(runner, 1),
+        runner => new Fragment(runner),
     );
-    const setView = new SetViewNode(
-        runner,
-        0,
-        set,
-        () => {},
-        runner => new Fragment(runner, 1),
-    );
-    const fragment = new Fragment(runner, 1);
+    const setView = new SetViewNode(root, { of: set, slot: () => {} }, runner => new Fragment(root));
+    const fragment = new Fragment(root);
     const app = new AppNode<Node, Element, TagOptions>(window.document.body, runner);
     const expr = new Expression<number, [number], unknown>(
         v => v,
@@ -61,8 +49,8 @@ it("import test", function () {
         [ref],
         app,
     );
-    const portal = new PortalNode<Node, Element, TagOptions>(window.document.body, runner, 1);
-    const watch = new WatchNode({ model: ref }, runner, 1);
+    const portal = new PortalNode<Node, Element, TagOptions>(root, window.document.body);
+    const watch = new WatchNode(root, ref);
 
     expect(ref instanceof IValue).toBe(true);
     expect(array instanceof Array).toBe(false);

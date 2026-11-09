@@ -98,6 +98,18 @@ export class SetModel<T, Extra> extends Collection<T[] | Set<T> | undefined, Set
     }
 }
 
+export interface SetModelProps<
+    T,
+    Node,
+    Element extends Node,
+    TagOptions extends object,
+    Runner extends IRunner<Node, Element, TagOptions>,
+    Extra,
+> {
+    of: SetModel<T, Extra>;
+    slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T) => void;
+}
+
 export class SetViewNode<
     T,
     Node,
@@ -106,20 +118,21 @@ export class SetViewNode<
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra,
 > extends Fragment<Node, Element, TagOptions, Runner> {
+    private readonly model: SetModel<T, Extra>;
     private map = new Map<T, Fragment<Node, Element, TagOptions, Runner>>();
     private acceptUpdate: ((...args: Arguments<T>) => void) | undefined;
     private readonly slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T) => void;
 
     public constructor(
         parent: Root<Node, Element, TagOptions, Runner>,
-        private readonly model: SetModel<T, Extra>,
-        slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T) => void,
+        props: SetModelProps<T, Node, Element, TagOptions, Runner, Extra>,
         private readonly frag: (
             parent: Root<Node, Element, TagOptions, Runner>,
         ) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(parent);
-        this.slot = safe(slot);
+        this.slot = safe(props.slot);
+        this.model = props.of;
     }
 
     public override compose() {

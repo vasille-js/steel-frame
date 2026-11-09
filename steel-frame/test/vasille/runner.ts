@@ -48,7 +48,7 @@ export class MockTextNode<Options extends TagOptions, RunnerT extends Runner<Opt
         }
     }
 
-    protected findFirstChild(): Node {
+    protected firstChild(): Node {
         return this.node;
     }
 }

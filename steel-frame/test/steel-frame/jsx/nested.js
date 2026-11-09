@@ -32,9 +32,9 @@ const C2 = compose(Vasille => {
     }
   }, Vasille);
   VasilleSwitch({
-    cases: [{
-      $case: VasilleExpr(Vasille, Vasille_0 => Vasille_0 > 1, [$a]),
-      slot: Vasille => {
+    c: [{
+      c: VasilleExpr(Vasille, Vasille_0 => Vasille_0 > 1, [$a]),
+      l: Vasille => {
         C1({}, Vasille);
       }
     }]

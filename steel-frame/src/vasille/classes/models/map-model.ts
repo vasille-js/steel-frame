@@ -130,6 +130,20 @@ class WritableMapValue<K, T, Extra> extends SyncedIValue<T, Extra> implements Wr
     }
 }
 
+export interface MapModelProps<
+    K,
+    T,
+    Node,
+    Element extends Node,
+    TagOptions extends object,
+    Runner extends IRunner<Node, Element, TagOptions>,
+    Extra,
+> {
+    of: MapModel<K, T, Extra>;
+    slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: WritableIValue<T, any>, key: K) => void;
+    writable: boolean;
+}
+
 export class MapViewNode<
     K,
     T,
@@ -139,6 +153,8 @@ export class MapViewNode<
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra,
 > extends Fragment<Node, Element, TagOptions, Runner> {
+    private readonly model: MapModel<K, T, Extra>;
+    private readonly writable: boolean;
     private map = new Map<
         K,
         {
@@ -155,16 +171,16 @@ export class MapViewNode<
 
     public constructor(
         parent: Root<Node, Element, TagOptions, Runner>,
-        private readonly model: MapModel<K, T, Extra>,
-        slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: WritableIValue<T, any>, key: K) => void,
-        private readonly writable: boolean,
+        props: MapModelProps<K, T, Node, Element, TagOptions, Runner, Extra>,
         private readonly ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, unknown>,
         private readonly frag: (
             parent: Root<Node, Element, TagOptions, Runner>,
         ) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
         super(parent);
-        this.slot = safe(slot);
+        this.slot = safe(props.slot);
+        this.model = props.of;
+        this.writable = props.writable;
     }
 
     public override compose() {

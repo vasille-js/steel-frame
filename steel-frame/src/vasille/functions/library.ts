@@ -58,7 +58,7 @@ export function awaited<T, Extra>(
     if (target instanceof IValue) {
         target.on(run);
     }
-    ctx.runOnDestroy(() => {
+    ctx.rod(() => {
         if (target instanceof IValue) {
             target.off(run);
         }
@@ -77,7 +77,7 @@ export function abortSignal(ctx: Reactive): AbortSignal {
 
     const manager = new AbortController();
 
-    ctx.runOnDestroy(() => {
+    ctx.rod(() => {
         manager.abort();
     });
 

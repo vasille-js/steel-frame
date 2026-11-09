@@ -62,8 +62,8 @@ it("if", function () {
     root.child(
         new SwitchedNode<Node, Element, TagOptions>(root, [
             {
-                $case: new Reference(true),
-                slot: (node, value) => {
+                c: new Reference(true),
+                l: (node, value) => {
                     check1 = true;
                     expect(value).toBe(true);
                 },
@@ -73,8 +73,8 @@ it("if", function () {
     root.child(
         new SwitchedNode<Node, Element, TagOptions>(root, [
             {
-                $case: new Reference(false),
-                slot: () => (check2 = false),
+                c: new Reference(false),
+                l: () => (check2 = false),
             },
         ]),
     );
@@ -94,19 +94,11 @@ it("if else", function () {
         check2 = 1;
 
     root.child(
-        new SwitchedNode<Node, Element, TagOptions>(
-            root,
-            [{ $case: iv1, slot: () => (check1 = 1) }],
-            () => (check1 = 2),
-        ),
+        new SwitchedNode<Node, Element, TagOptions>(root, [{ c: iv1, l: () => (check1 = 1) }], () => (check1 = 2)),
     );
 
     root.child(
-        new SwitchedNode<Node, Element, TagOptions>(
-            root,
-            [{ $case: iv2, slot: () => (check2 = 1) }],
-            () => (check2 = 2),
-        ),
+        new SwitchedNode<Node, Element, TagOptions>(root, [{ c: iv2, l: () => (check2 = 1) }], () => (check2 = 2)),
     );
 
     expect(check1).toBe(1);
@@ -132,10 +124,10 @@ it("switch", function () {
         new SwitchedNode<Node, Element, TagOptions>(
             root,
             [
-                { $case: new TestExpression(v => v == 1, [v], root), slot: () => (check = 1) },
-                { $case: new TestExpression(v => v == 2, [v], root), slot: () => (check = 2) },
-                { $case: new TestExpression(v => v == 3, [v], root), slot: () => (check = 3) },
-                { $case: v2, slot: () => (check = -2) },
+                { c: new TestExpression(v => v == 1, [v], root), l: () => (check = 1) },
+                { c: new TestExpression(v => v == 2, [v], root), l: () => (check = 2) },
+                { c: new TestExpression(v => v == 3, [v], root), l: () => (check = 3) },
+                { c: v2, l: () => (check = -2) },
             ],
             () => (check = 4),
         ),
@@ -194,8 +186,8 @@ it("Insert adjacent", function () {
         node.child(
             new SwitchedNode<Node, Element, TagOptions>(node, [
                 {
-                    $case: bool,
-                    slot(node) {
+                    c: bool,
+                    l(node) {
                         node.tag("div", {});
                     },
                 },
@@ -217,8 +209,8 @@ it("Find first child of tag", function () {
         node.child(
             new SwitchedNode<Node, Element, TagOptions>(node, [
                 {
-                    $case: bool,
-                    slot(node) {
+                    c: bool,
+                    l(node) {
                         node.tag("div", {});
                     },
                 },

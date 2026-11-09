@@ -27,11 +27,13 @@ it("array view", function () {
         tag.child(
             (view = new ArrayModelViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
                 tag as any,
-                array,
-                function (f, item) {
-                    f.text(`${item}`);
+                {
+                    of: array,
+                    slot: function (f, item) {
+                        f.text(`${item}`);
+                    },
+                    writable: false,
                 },
-                false,
                 v => new Reference(v),
                 r => new Fragment(r),
             )),
@@ -340,11 +342,13 @@ it("map view", function () {
         tag.child(
             (view = new MapViewNode<number, number, Node, Element, TagOptions, typeof runner, unknown>(
                 tag as any,
-                model,
-                function (f, item) {
-                    f.text(item);
+                {
+                    of: model,
+                    slot: function (f, item) {
+                        f.text(item);
+                    },
+                    writable: false,
                 },
-                false,
                 v => new Reference(v),
                 r => new Fragment(r),
             )),
@@ -393,16 +397,18 @@ it("map view remount", function () {
                     f.child(
                         new MapViewNode<number, number, Node, Element, TagOptions, typeof runner, unknown>(
                             f,
-                            new MapModel([[item.V.id, item.V.value]]),
-                            function (f, item, key) {
-                                f.tag("div", {}, ctx => {
-                                    ctx.text(key);
-                                });
-                                f.tag("div", {}, ctx => {
-                                    ctx.text(item);
-                                });
+                            {
+                                of: new MapModel([[item.V.id, item.V.value]]),
+                                slot: function (f, item, key) {
+                                    f.tag("div", {}, ctx => {
+                                        ctx.text(key);
+                                    });
+                                    f.tag("div", {}, ctx => {
+                                        ctx.text(item);
+                                    });
+                                },
+                                writable: false,
                             },
-                            false,
                             v => new Reference(v),
                             r => new Fragment(r),
                         ),
@@ -436,9 +442,11 @@ it("set view", function () {
         f.child(
             (view = new SetViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
                 f as any,
-                model,
-                function (f, item) {
-                    f.text(`${item}`);
+                {
+                    of: model,
+                    slot: function (f, item) {
+                        f.text(`${item}`);
+                    },
                 },
                 r => new Fragment(r),
             )),
@@ -476,11 +484,13 @@ it("view timeout test", function (done) {
         f.child(
             new SetViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
                 f as any,
-                model,
-                function (f, item) {
-                    setTimeout(() => {
-                        f.text(`${item}`);
-                    }, 0);
+                {
+                    of: model,
+                    slot: function (f, item) {
+                        setTimeout(() => {
+                            f.text(`${item}`);
+                        }, 0);
+                    },
                 },
                 r => new Fragment(r),
             ),
@@ -524,12 +534,14 @@ it("set view remount", function () {
                     f.child(
                         new SetViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
                             f,
-                            new SetModel([item.V.id, item.V.value]),
-                            function (f, item) {
-                                f.tag("div", {}, ctx => {
-                                    ctx.text(item);
-                                });
-                                ++count;
+                            {
+                                of: new SetModel([item.V.id, item.V.value]),
+                                slot: function (f, item) {
+                                    f.tag("div", {}, ctx => {
+                                        ctx.text(item);
+                                    });
+                                    ++count;
+                                },
                             },
                             r => new Fragment(r),
                         ),

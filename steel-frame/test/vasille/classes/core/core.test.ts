@@ -60,10 +60,10 @@ it("Reactive", function () {
     const destroyable1 = new Reactive(0),
         destroyable2 = new Reactive(0);
 
-    destroyable1.runOnDestroy(() => (test1 = true));
-    destroyable2.runOnDestroy(() => (test1 = true));
+    destroyable1.rod(() => (test1 = true));
+    destroyable2.rod(() => (test1 = true));
     // here we test override
-    destroyable2.runOnDestroy(() => (test2 = true));
+    destroyable2.rod(() => (test2 = true));
 
     coreTest.bind(destroyable1);
 

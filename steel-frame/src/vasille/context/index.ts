@@ -22,7 +22,7 @@ function setUp(node: Reactive, key: unknown, value: unknown) {
     if (!map) {
         const created = (map = new Map());
         searchMap.set(node, created);
-        node.runOnDestroy(() => created.delete(node));
+        node.rod(() => created.delete(node));
     }
 
     map.set(key, value);

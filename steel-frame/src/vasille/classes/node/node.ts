@@ -54,11 +54,11 @@ export abstract class Root<
      * @return {?Element}
      * @protected
      */
-    protected findFirstChild(): Node | Element | undefined {
+    protected firstChild(): Node | Element | undefined {
         let first: Node | Element | undefined;
 
         this.children.forEach(child => {
-            first = first ?? child.findFirstChild();
+            first = first ?? child.firstChild();
         });
 
         return first;
@@ -192,7 +192,7 @@ export class Fragment<
      * @param node {Node} node to insert
      */
     public insertAdjacent(node: Node): void {
-        const child = this.findFirstChild();
+        const child = this.firstChild();
 
         if (child) {
             this.r.insertBefore(node, child);
@@ -268,7 +268,7 @@ export abstract class TextNode<
 
     public abstract override compose(): void;
 
-    protected abstract override findFirstChild(): Node;
+    protected abstract override firstChild(): Node;
 
     public override d(deep: number, keepNodes?: boolean): void {
         const text = this.data;
@@ -308,7 +308,7 @@ export abstract class Tag<
         this.r.insertBefore(node, this.node!);
     }
 
-    protected override findFirstChild(): Node | Element | undefined {
+    protected override firstChild(): Node | Element | undefined {
         return this.node;
     }
 
@@ -323,8 +323,8 @@ export interface SwitchedNodeCase<
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
 > {
-    $case: unknown;
-    slot: (node: Fragment<Node, Element, TagOptions, Runner>, value?: unknown) => void;
+    c: unknown;
+    l: (node: Fragment<Node, Element, TagOptions, Runner>, value?: unknown) => void;
 }
 
 /**
@@ -365,12 +365,12 @@ export class SwitchedNode<
         super(parent);
 
         if (_default) {
-            cases.push({ $case: 1, slot: _default });
+            cases.push({ c: 1, l: _default });
         }
         this.cases = cases;
 
         this.sync = () => {
-            let i = this.cases.findIndex(item => (item.$case instanceof IValue ? item.$case.V : item.$case));
+            let i = this.cases.findIndex(item => (item.c instanceof IValue ? item.c.V : item.c));
 
             if (i === this.index) {
                 return;
@@ -384,18 +384,18 @@ export class SwitchedNode<
 
             if (i !== -1) {
                 const node = this.newChild(i);
-                const value = this.cases[i]!.$case;
+                const value = this.cases[i]!.c;
 
                 this.last = node;
                 this.children.push(node);
 
-                safe(this.cases[i]!.slot)(node, value instanceof IValue ? value.V : value);
+                safe(this.cases[i]!.l)(node, value instanceof IValue ? value.V : value);
             }
             this.index = i;
         };
 
         cases.forEach(_case => {
-            const item = _case.$case;
+            const item = _case.c;
             if (item instanceof IValue) {
                 item.on(this.sync);
             }
@@ -408,7 +408,7 @@ export class SwitchedNode<
 
     public override d(deep: number, keepNodes?: boolean) {
         this.cases.forEach(c => {
-            const item = c.$case;
+            const item = c.c;
             if (item instanceof IValue && item.deep < deep) {
                 item.off(this.sync);
             }

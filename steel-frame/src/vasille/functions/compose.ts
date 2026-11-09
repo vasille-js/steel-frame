@@ -36,7 +36,7 @@ export function view<Node, Element extends Node, TagOptions extends object, In e
                 const onDestroy = callback(result);
 
                 if (onDestroy) {
-                    frag.runOnDestroy(onDestroy);
+                    frag.rod(onDestroy);
                 }
             }
         } catch (e) {
@@ -44,7 +44,7 @@ export function view<Node, Element extends Node, TagOptions extends object, In e
         }
 
         if (runOnDestroy) {
-            frag.runOnDestroy(runOnDestroy);
+            frag.rod(runOnDestroy);
         }
     };
 }

@@ -360,7 +360,7 @@ export class SsgTextNode extends TextNode<Node, Element, SsgTagOptions> {
         this.parent.appendNode(this.node);
     }
 
-    protected findFirstChild(): Node {
+    protected firstChild(): Node {
         return this.node;
     }
 }

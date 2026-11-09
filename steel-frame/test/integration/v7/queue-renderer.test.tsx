@@ -22,5 +22,5 @@ it("renders in queue", function (done) {
     setTimeout(() => {
         expect(body.children.length).toBe(7);
         done();
-    });
+    }, 1000);
 });

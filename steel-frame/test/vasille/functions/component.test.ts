@@ -193,15 +193,15 @@ it("Switch", function () {
         slot(node) {
             Switch(
                 {
-                    cases: [
+                    c: [
                         {
-                            $case: ref,
-                            slot(node) {
+                            c: ref,
+                            l(node) {
                                 node.text("true");
                             },
                         },
                     ],
-                    default(node) {
+                    d(node) {
                         node.text("false");
                     },
                 },

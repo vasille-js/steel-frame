@@ -2,16 +2,6 @@ import { Fragment, Root } from "./node.js";
 import { ReadableIValue } from "../core/ivalue.js";
 import { IRunner } from "./runner.js";
 
-export interface WatchOptions<
-    Node,
-    Element extends Node,
-    TagOptions extends object,
-    Runner extends IRunner<Node, Element, TagOptions>,
-    T,
-> {
-    model: ReadableIValue<T, unknown>;
-    slot?: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T) => void;
-}
 /**
  * Watch Node
  * @class WatchNode
@@ -29,12 +19,13 @@ export class WatchNode<
     private handler?: (value: T) => void;
 
     public constructor(
-        input: WatchOptions<Node, Element, TagOptions, Runner, T>,
         parent: Root<Node, Element, TagOptions, Runner>,
+        r_model: ReadableIValue<T, unknown>,
+        slot?: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T) => void,
     ) {
         super(parent);
-        this.model = input.model;
-        this.slot = input.slot;
+        this.model = r_model;
+        this.slot = slot;
     }
 
     public override compose() {

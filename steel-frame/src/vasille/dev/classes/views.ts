@@ -8,6 +8,9 @@ import { ExecutionPosition, inspector, provideId, StaticPosition } from "./inspe
 import { DevArrayModel, DevMapModel, DevSetModelNode } from "./models.js";
 import { DevFragment } from "./node.js";
 import { Root } from "../../classes/node/node.js";
+import { ArrayModelProps } from "../../classes/models/array-model.js";
+import { SetModelProps } from "../../classes/models/set-model.js";
+import { MapModelProps } from "../../classes/models/map-model.js";
 
 function createDevFragment<Node, Element extends Node, TagOptions extends object>(
     parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
@@ -27,24 +30,20 @@ export class DevArrayModelViewNode<Node, Element extends Node, TagOptions extend
 
     public constructor(
         parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
-        model: DevArrayModel<T>,
-        slot: (
-            ctx: Fragment<Node, Element, TagOptions>,
-            value: T | WritableIValue<T, ExecutionPosition>,
-            index: ReadableIValue<number, ExecutionPosition>,
-        ) => void,
-        writable: boolean,
+        props: ArrayModelProps<
+            T,
+            T | WritableIValue<T, ExecutionPosition>,
+            boolean,
+            Node,
+            Element,
+            TagOptions,
+            IRunner<Node, Element, TagOptions>,
+            ExecutionPosition
+        >,
         usage: StaticPosition,
         indexDeclaration?: StaticPosition,
     ) {
-        super(
-            parent,
-            model,
-            slot,
-            writable,
-            v => (indexDeclaration ? devRef(v, this, indexDeclaration) : ref(v)),
-            createDevFragment,
-        );
+        super(parent, props, v => (indexDeclaration ? devRef(v, this, indexDeclaration) : ref(v)), createDevFragment);
         this.id = provideId();
 
         inspector.createComponent({
@@ -53,7 +52,7 @@ export class DevArrayModelViewNode<Node, Element extends Node, TagOptions extend
             usage: usage,
             time: Date.now(),
         });
-        processComponentProps(this.id, { model });
+        processComponentProps(this.id, props);
     }
 
     override d(deep: number, keepNodes?: boolean) {
@@ -126,11 +125,10 @@ export class DevSetViewNode<Node, Element extends Node, TagOptions extends objec
 
     public constructor(
         parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
-        model: DevSetModelNode<T>,
-        slot: (ctx: Fragment<Node, Element, TagOptions>, value: T) => void,
+        props: SetModelProps<T, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, ExecutionPosition>,
         usage: StaticPosition,
     ) {
-        super(parent, model, slot, createDevFragment);
+        super(parent, props, createDevFragment);
         this.id = provideId();
 
         inspector.createComponent({
@@ -139,7 +137,7 @@ export class DevSetViewNode<Node, Element extends Node, TagOptions extends objec
             usage: usage,
             time: Date.now(),
         });
-        processComponentProps(this.id, { model, slot });
+        processComponentProps(this.id, props);
     }
 
     override d(deep: number, keepNodes?: boolean) {
@@ -161,20 +159,11 @@ export class DevMapViewNode<Node, Element extends Node, TagOptions extends objec
 
     public constructor(
         parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
-        model: DevMapModel<K, T>,
-        slot: (ctx: Fragment<Node, Element, TagOptions>, value: WritableIValue<T, ExecutionPosition>, key: K) => void,
-        writable: boolean,
+        props: MapModelProps<K, T, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, ExecutionPosition>,
         usage: StaticPosition,
         valueDeclaration: StaticPosition | undefined,
     ) {
-        super(
-            parent,
-            model,
-            slot,
-            writable,
-            v => (valueDeclaration ? devRef(v, this, valueDeclaration) : ref(v)),
-            createDevFragment,
-        );
+        super(parent, props, v => (valueDeclaration ? devRef(v, this, valueDeclaration) : ref(v)), createDevFragment);
         this.id = provideId();
 
         inspector.createComponent({
@@ -183,7 +172,7 @@ export class DevMapViewNode<Node, Element extends Node, TagOptions extends objec
             usage: usage,
             time: Date.now(),
         });
-        processComponentProps(this.id, { model, slot });
+        processComponentProps(this.id, props);
     }
 
     override d(deep: number, keepNodes?: boolean) {

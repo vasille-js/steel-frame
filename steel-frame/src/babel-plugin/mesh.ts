@@ -1479,7 +1479,7 @@ export function composeExpression(path: NodePath<types.Expression | null | undef
                     err(Errors.IncompatibleContext, path, "Stores/Models are not destroyable", internal);
                 }
 
-                path.get("callee").replaceWith(t.memberExpression(ctx, t.identifier("runOnDestroy")));
+                path.get("callee").replaceWith(t.memberExpression(ctx, t.identifier("rod")));
             } else {
                 /* istanbul ignore else */
                 if (calls(path, ["share"], internal) && isDiCall(path, internal)) {

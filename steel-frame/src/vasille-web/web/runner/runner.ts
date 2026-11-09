@@ -76,7 +76,7 @@ export class WebTextNode<Options extends WebTagOptions, RunnerT extends WebRunne
         }
     }
 
-    protected findFirstChild(): Node {
+    protected firstChild(): Node {
         return this.node;
     }
 }
@@ -107,10 +107,10 @@ export class WebTag<Options extends WebTagOptions, RunnerT extends WebRunner<Opt
         const destructor = options.k?.(node);
 
         if (typeof destructor === "function") {
-            this.runOnDestroy(destructor);
+            this.rod(destructor);
         }
         if (options.d) {
-            this.runOnDestroy(options.d);
+            this.rod(options.d);
         }
     }
 
