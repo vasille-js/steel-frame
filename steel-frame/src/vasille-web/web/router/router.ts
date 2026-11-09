@@ -203,7 +203,7 @@ export class WebRouter<Routes extends string> extends Router<
         node: Fragment<Node, Element, WebTagOptions>,
         run?: (node: Fragment<Node, Element, WebTagOptions>) => void,
     ) {
-        const child = new Fragment<Node, Element, WebTagOptions>(node.runner, node.sDeep + 1);
+        const child = new Fragment<Node, Element, WebTagOptions>(node.runner, node.node, node.sDeep + 1);
 
         node.child(child, run);
     }

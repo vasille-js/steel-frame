@@ -1,6 +1,6 @@
 import { Fragment, reportError } from "../classes/index.js";
 
-export type QueueItem<Node, Element, TagOptions extends object> = {
+export type QueueItem<Node, Element extends Node, TagOptions extends object> = {
     node: Fragment<Node, Element, TagOptions>;
     slot: (ctx: Fragment<Node, Element, TagOptions>) => void;
     callback?: () => void;
@@ -44,14 +44,14 @@ export interface QueuedRenderProps {
     callback?(): void;
 }
 
-export function QueuedRender<Node, Element, TagOptions extends object>(
+export function QueuedRender<Node, Element extends Node, TagOptions extends object>(
     props: QueuedRenderProps,
     ctx: Fragment<Node, Element, TagOptions>,
     defaultSlot?: (ctx: Fragment<Node, Element, TagOptions>) => void,
 ) {
     /* istanbul ignore else */
     if (defaultSlot) {
-        const node = new Fragment<Node, Element, TagOptions>(ctx.runner, ctx.sDeep + 1);
+        const node = new Fragment<Node, Element, TagOptions>(ctx.runner, ctx.node, ctx.sDeep + 1);
         const item: QueueItem<Node, Element, TagOptions> = {
             done: false,
             node: node,

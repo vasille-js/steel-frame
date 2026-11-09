@@ -7,7 +7,7 @@ import babel from "vite-plugin-babel";
 import type { CompilationErrorReporter } from "../../babel-plugin/index.js";
 
 export function getVitePlugins(
-    target: "vasille-web/dev" | "vasille-web" | "vasille-web/ssg",
+    target: "steel-frame/web-dev" | "steel-frame/web" | "steel-frame/ssg",
     options: {
         errorsHandler?: CompilationErrorReporter;
         v4Naming: boolean;
@@ -27,8 +27,8 @@ export function getVitePlugins(
                         pluginVasille,
                         {
                             replaceWeb: target,
-                            devLayer: target === "vasille-web/dev",
-                            hmr: target === "vasille-web/dev",
+                            devLayer: target === "steel-frame/web-dev",
+                            hmr: target === "steel-frame/web-dev",
                             reporter: options.errorsHandler,
                             v4Naming: options.v4Naming,
                         },

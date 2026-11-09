@@ -352,7 +352,7 @@ export class Element extends Node {
 }
 
 export class SsgTextNode extends TextNode<Node, Element, SsgTagOptions> {
-    protected node!: Text;
+    public node!: Text;
 
     public compose() {
         this.node = new Text(this.data);
@@ -417,12 +417,13 @@ export class SsgRunner implements IRunner<Node, Element, SsgTagOptions> {
         node.appendChild(child);
     }
 
-    textNode(deep: number, text: unknown): TextNode<Node, Element, SsgTagOptions> {
-        return new SsgTextNode({ text }, this, deep);
+    textNode(deep: number, text: unknown, node: Node): TextNode<Node, Element, SsgTagOptions> {
+        return new SsgTextNode({ text }, this, node, deep);
     }
 
     tag(
         deep: number,
+        node: Node,
         tagName: string,
         input: SsgTagOptions,
         cb?: ((ctx: Tag<Node, Element, SsgTagOptions>) => void) | undefined,
@@ -432,9 +433,9 @@ export class SsgRunner implements IRunner<Node, Element, SsgTagOptions> {
         }
 
         return tagName === "head"
-            ? new HeadTag(input, this, tagName, deep)
+            ? new HeadTag(input, this, node, tagName, deep)
             : tagName === "body"
-              ? new BodyTag(input, this, tagName, deep)
-              : new SsgTag(input, this, tagName, deep);
+              ? new BodyTag(input, this, node, tagName, deep)
+              : new SsgTag(input, this, node, tagName, deep);
     }
 }

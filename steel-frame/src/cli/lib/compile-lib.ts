@@ -33,7 +33,7 @@ export async function compileComponentsLib(srcDir: string, outputDir: string): P
 
 async function compileComponentsDir(srcDir: string, source: string, output: string): Promise<boolean> {
     const relative = source.slice(srcDir.length);
-    const libName = relative === "/components" ? "vasille-shadow" : "vasille-web";
+    const libName = relative === "/components" ? "steel-frame/shadow" : "steel-frame/web";
     const dir = await opendir(source);
     let it: Dirent | null = null;
     let ret = true;
@@ -138,8 +138,8 @@ async function compileFile(sourcePath: string, name: string, outputDirPath: stri
                         vasillePlugin,
                         {
                             replaceWeb: libName,
-                            devLayer: libName === "steel-frame",
-                            shadow: libName === "vasille-shadow",
+                            devLayer: libName === "steel-frame/web-dev",
+                            shadow: libName === "steel-frame/shadow",
                         },
                     ],
                     ...(isTsx || isTs ? [[typeScriptPlugin, { isTSX: isTsx }]] : []),

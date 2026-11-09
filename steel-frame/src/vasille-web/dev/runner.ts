@@ -31,8 +31,8 @@ export function positionedText(text: unknown, position: StaticPosition) {
 export class DevWebTextNode extends WebTextNode<DevWebTagOptions, DevWebRunner> {
     public override id: number;
 
-    public constructor(input: TextProps, runner: DevWebRunner, deep: number, usage: StaticPosition) {
-        super(input, runner, deep);
+    public constructor(input: TextProps, runner: DevWebRunner, node: Node, deep: number, usage: StaticPosition) {
+        super(input, runner, node, deep);
         this.id = provideId();
 
         inspector.createNode({
@@ -61,10 +61,11 @@ export class DevWebTag extends WebTag<DevWebTagOptions, DevWebRunner> {
         options: DevWebTagOptions,
         runner: DevWebRunner,
         deep: number,
+        node: Node,
         tagName: string,
         usage: StaticPosition | undefined,
     ) {
-        super(options, runner, tagName, deep);
+        super(options, runner, node, tagName, deep);
 
         const id = (this.id = provideId());
 
@@ -147,16 +148,17 @@ export class DevWebTag extends WebTag<DevWebTagOptions, DevWebRunner> {
 }
 
 export class DevWebRunner extends WebRunner<DevWebTagOptions> implements IRunner<Node, Element, DevWebTagOptions> {
-    public override textNode(deep: number, text: unknown): WebTextNode<DevWebTagOptions, DevWebRunner> {
+    public override textNode(deep: number, text: unknown, node: Node): WebTextNode<DevWebTagOptions, DevWebRunner> {
         if (text instanceof PositionedText) {
-            return new DevWebTextNode({ text: text.text }, this, deep, text.position);
+            return new DevWebTextNode({ text: text.text }, this, node, deep, text.position);
         }
 
-        return new WebTextNode({ text: text }, this, deep);
+        return new WebTextNode({ text: text }, this, node, deep);
     }
 
     public override tag(
         deep: number,
+        node: Node,
         tagName: string,
         input: DevWebTagOptions,
         cb?: ((ctx: DevWebTag) => void) | undefined,
@@ -165,6 +167,6 @@ export class DevWebRunner extends WebRunner<DevWebTagOptions> implements IRunner
             input.l = cb as any;
         }
 
-        return new DevWebTag(input, this, deep, tagName, input.usage);
+        return new DevWebTag(input, this, deep, node, tagName, input.usage);
     }
 }

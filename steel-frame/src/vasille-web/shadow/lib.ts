@@ -26,7 +26,7 @@ class ShadowTag extends WebTag<WebTagOptions, ShadowRunner> {
 
 class ShadowFragment extends Fragment<Node, Element, WebTagOptions, ShadowRunner> {
     public constructor(app: AppNode<Node, Element, WebTagOptions, ShadowRunner>) {
-        super(app.runner, app.sDeep + 1);
+        super(app.runner, app.node, app.sDeep + 1);
         this.parent = app;
     }
 }
@@ -41,6 +41,7 @@ class ShadowRunner extends WebRunner<WebTagOptions> {
 
     tag(
         deep: number,
+        node: Node,
         tagName: string,
         input: WebTagOptions,
         cb?: ((ctx: WebTag<WebTagOptions, ShadowRunner>) => void) | undefined,
@@ -48,7 +49,7 @@ class ShadowRunner extends WebRunner<WebTagOptions> {
         if (cb) {
             input.l = cb as any;
         }
-        return new ShadowTag(input, this, tagName, deep);
+        return new ShadowTag(input, this, node, tagName, deep);
     }
 }
 

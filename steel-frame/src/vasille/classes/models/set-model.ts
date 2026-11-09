@@ -6,13 +6,12 @@ import { IRunner } from "../node/runner.js";
 import { Collection } from "./collection.js";
 import { Listener, removeFragmentFromTree } from "./listener.js";
 
-const enum Ops {
-    Clear,
-    Add,
-    Remove,
-}
+const Clear = 0,
+    Add = 1,
+    Remove = 2;
 
-type Arguments<T> = [Ops.Clear] | [Ops.Remove, T] | [Ops.Add, T];
+type Arguments<T> = [typeof Clear] | [typeof Remove, T] | [typeof Add, T];
+type Ops = typeof Clear | typeof Remove | typeof Add;
 
 /**
  * A `Set` based model
@@ -51,7 +50,7 @@ export class SetModel<T, Extra> extends Collection<T[] | Set<T> | undefined, Set
      * @return {this} a pointer to this
      */
     public add(value: T): this {
-        this.listener.emit(Ops.Add, value);
+        this.listener.emit(Add, value);
         return this.run(() => {
             this.d.add(value);
             return this;
@@ -62,7 +61,7 @@ export class SetModel<T, Extra> extends Collection<T[] | Set<T> | undefined, Set
      * Calls `Set.clear` and notify about changes
      */
     public clear() {
-        this.listener.emit(Ops.Clear);
+        this.listener.emit(Clear);
         this.run(() => this.d.clear());
     }
 
@@ -72,15 +71,15 @@ export class SetModel<T, Extra> extends Collection<T[] | Set<T> | undefined, Set
      * @return {boolean} true if a value was deleted, otherwise false
      */
     public delete(value: T): boolean {
-        this.listener.emit(Ops.Remove, value);
+        this.listener.emit(Remove, value);
         return this.run(() => this.d.delete(value));
     }
 
     protected override reset(next: Set<T> | Array<T> | undefined) {
-        this.listener.emit(Ops.Clear);
+        this.listener.emit(Clear);
         this.d.clear();
         next?.forEach((value: T) => {
-            this.listener.emit(Ops.Add, value);
+            this.listener.emit(Add, value);
             this.d.add(value);
         });
         this.size?.up(this.d.size);
@@ -102,7 +101,7 @@ export class SetModel<T, Extra> extends Collection<T[] | Set<T> | undefined, Set
 export class SetViewNode<
     T,
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra,
@@ -113,12 +112,17 @@ export class SetViewNode<
 
     public constructor(
         runner: Runner,
+        node: Node,
         deep: number,
         private readonly model: SetModel<T, Extra>,
         slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T) => void,
-        private readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
+        private readonly frag: (
+            runner: Runner,
+            node: Node,
+            deep: number,
+        ) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
-        super(runner, deep);
+        super(runner, node, deep);
         this.slot = safe(slot);
     }
 
@@ -126,7 +130,7 @@ export class SetViewNode<
         const view = this;
 
         function create(this: void, value: T) {
-            const frag = view.frag(view.runner, view.sDeep + 1);
+            const frag = view.frag(view.runner, view.node, view.sDeep + 1);
 
             frag.link(view, view.last, undefined);
             view.slot(frag, value);
@@ -134,7 +138,7 @@ export class SetViewNode<
             view.last = frag;
         }
         function acceptUpdate(op: Ops, value?: T) {
-            if (op === Ops.Add) {
+            if (op === Add) {
                 const existing = view.map.get(value!);
 
                 if (existing) {
@@ -142,7 +146,7 @@ export class SetViewNode<
                     existing.destroy(existing.sDeep);
                 }
                 create(value!);
-            } else if (op === Ops.Remove) {
+            } else if (op === Remove) {
                 const item = view.map.get(value!);
 
                 /* istanbul ignore else */

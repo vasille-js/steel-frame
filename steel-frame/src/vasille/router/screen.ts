@@ -1,8 +1,10 @@
 import { Fragment } from "../classes/index.js";
 import { ScreenProps } from "./types.js";
 
-function createFragment<Node, Element, TagOptions extends object>(node: Fragment<Node, Element, TagOptions>) {
-    return new Fragment<Node, Element, TagOptions>(node.runner, node.sDeep + 1);
+function createFragment<Node, Element extends Node, TagOptions extends object>(
+    node: Fragment<Node, Element, TagOptions>,
+) {
+    return new Fragment<Node, Element, TagOptions>(node.runner, node.node, node.sDeep + 1);
 }
 
 export function createScreen<F extends Fragment<unknown, unknown, object>, Route extends string>(
@@ -11,7 +13,7 @@ export function createScreen<F extends Fragment<unknown, unknown, object>, Route
 ): (props: ScreenProps<Route>, ctx?: F) => Promise<void> {
     return async function (props, node) {
         if (!node) {
-            throw new Error("Vasille: Screen context is missing");
+            throw new Error("Context is missing");
         }
 
         const frag = create(node, props);
@@ -22,7 +24,7 @@ export function createScreen<F extends Fragment<unknown, unknown, object>, Route
     };
 }
 
-export function screen<Node, Element, TagOptions extends object, Route extends string>(
+export function screen<Node, Element extends Node, TagOptions extends object, Route extends string>(
     renderer: (node: Fragment<Node, Element, TagOptions>, input: ScreenProps<Route>) => Promise<void>,
 ): (props: ScreenProps<Route>, ctx?: Fragment<Node, Element, TagOptions>) => Promise<void> {
     return createScreen<Fragment<Node, Element, TagOptions>, Route>(renderer, createFragment);

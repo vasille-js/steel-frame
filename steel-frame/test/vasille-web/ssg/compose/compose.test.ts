@@ -9,7 +9,7 @@ it("view component", async function () {
 });
 
 it("view component throw", function () {
-    expect(() => runViewDirectly()).toThrow("Vasille: Component context is missing");
+    expect(() => runViewDirectly()).toThrow("Context is missing");
 });
 
 it("modal component", async function () {
@@ -17,7 +17,7 @@ it("modal component", async function () {
 });
 
 it("modal throw", function () {
-    expect(() => runModalDirectly()).toThrow("Vasille: Modal context is missing");
+    expect(() => runModalDirectly()).toThrow("Context is missing");
 });
 
 it("mount throw", function () {

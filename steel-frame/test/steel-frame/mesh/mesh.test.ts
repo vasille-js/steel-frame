@@ -110,7 +110,7 @@ it("compose nested destruction error", function () {
 });
 
 it("run on destroy error", function () {
-    throwTest(__dirname, "run-on-destroy", "Stores/Models in Vasille.JS are not destroyable");
+    throwTest(__dirname, "run-on-destroy", "Stores/Models are not destroyable");
 });
 
 it("param name starts with $", function () {
@@ -166,5 +166,5 @@ it("computed properties in destruction", function () {
 });
 
 it("store share dependency", function () {
-    throwTest(__dirname, "store-share-dependency", "Stores/Models in Vasille.JS cannot share dependencies");
+    throwTest(__dirname, "store-share-dependency", "Stores/Models cannot share dependencies");
 });

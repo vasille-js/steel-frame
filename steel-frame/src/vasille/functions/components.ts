@@ -20,19 +20,21 @@ import {
 import { Watch } from "./index.js";
 import { ref } from "./internal.js";
 
-export interface SlotOptions<Node, Element, TagOptions extends object, T extends object> {
+export interface SlotOptions<Node, Element extends Node, TagOptions extends object, T extends object> {
     model?: (input: T, ctx: Fragment<Node, Element, TagOptions>) => void;
     slot?: (input: object, ctx: Fragment<Node, Element, TagOptions>) => void;
 }
 
-function frag<Node, Element, TagOptions extends object, TRunner extends IRunner<Node, Element, TagOptions>>(
-    runner: TRunner,
-    deep: number,
-) {
-    return new Fragment<Node, Element, TagOptions>(runner, deep);
+function frag<
+    Node,
+    Element extends Node,
+    TagOptions extends object,
+    TRunner extends IRunner<Node, Element, TagOptions>,
+>(runner: TRunner, node: Node, deep: number) {
+    return new Fragment<Node, Element, TagOptions>(runner, node, deep);
 }
 
-export function Slot<Node, Element, TagOptions extends object, T extends object = {}>(
+export function Slot<Node, Element extends Node, TagOptions extends object, T extends object = {}>(
     { model, slot, ...options }: SlotOptions<Node, Element, TagOptions, T> & T,
     ctx: Fragment<Node, Element, TagOptions>,
     defaultSlot?: (ctx: Fragment<Node, Element, TagOptions>) => void,
@@ -51,7 +53,7 @@ export function Slot<Node, Element, TagOptions extends object, T extends object 
     }
 }
 
-export interface SwitchOptions<Node, Element, TagOptions extends object> {
+export interface SwitchOptions<Node, Element extends Node, TagOptions extends object> {
     cases: {
         $case: ReadableIValue<unknown, unknown>;
         slot: (ctx: Fragment<Node, Element, TagOptions>) => void;
@@ -59,21 +61,21 @@ export interface SwitchOptions<Node, Element, TagOptions extends object> {
     default?: (ctx: Fragment<Node, Element, TagOptions>) => void;
 }
 
-export function Switch<Node, Element, TagOptions extends object>(
+export function Switch<Node, Element extends Node, TagOptions extends object>(
     options: SwitchOptions<Node, Element, TagOptions>,
     ctx: Fragment<Node, Element, TagOptions>,
 ) {
-    ctx.child(new SwitchedNode(ctx.runner, ctx.sDeep + 1, options.cases, options.default));
+    ctx.child(new SwitchedNode(ctx.runner, ctx.node, ctx.sDeep + 1, options.cases, options.default));
 }
 
-export interface ForOptions<Node, Element, TagOptions extends object, T, Args extends unknown[]> {
+export interface ForOptions<Node, Element extends Node, TagOptions extends object, T, Args extends unknown[]> {
     of: T;
     slot?: (ctx: Fragment<Node, Element, TagOptions>, ...args: Args) => void;
 }
 
 export function For<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     T extends
         | Set<unknown>
@@ -123,6 +125,7 @@ export function For<
         ctx.child(
             new ArrayModelViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
                 ctx.runner,
+                ctx.node,
                 ctx.sDeep + 1,
                 model as ArrayModel<V, unknown>,
                 (ctx, value, index) => {
@@ -137,6 +140,7 @@ export function For<
         ctx.child(
             new MapViewNode<K, V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
                 ctx.runner,
+                ctx.node,
                 ctx.sDeep + 1,
                 model as MapModel<K, V, unknown>,
                 (ctx, iValue, key) => {
@@ -159,6 +163,7 @@ export function For<
         ctx.child(
             new SetViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
                 ctx.runner,
+                ctx.node,
                 ctx.sDeep + 1,
                 model as SetModel<V, unknown>,
                 (ctx, value) => {
@@ -192,7 +197,7 @@ export function For<
 
 export function ArrayViewFn<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     T extends unknown[],
     V = T extends (infer R)[] ? R : never,
@@ -212,6 +217,7 @@ export function ArrayViewFn<
     ctx.child(
         new ArrayViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
             ctx.runner,
+            ctx.node,
             ctx.sDeep + 1,
             props.r_of,
             props.key,
@@ -226,7 +232,7 @@ export function ArrayViewFn<
 
 export interface WritableViewOptions<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     T,
     Args extends unknown[],
@@ -235,7 +241,7 @@ export interface WritableViewOptions<
     writable: Writable;
 }
 
-export function ArrayModelView<Node, Element, TagOptions extends object, V, Extra>(
+export function ArrayModelView<Node, Element extends Node, TagOptions extends object, V, Extra>(
     props: WritableViewOptions<
         Node,
         Element,
@@ -246,7 +252,7 @@ export function ArrayModelView<Node, Element, TagOptions extends object, V, Extr
     >,
     ctx: Fragment<Node, Element, TagOptions>,
 ): void;
-export function ArrayModelView<Node, Element, TagOptions extends object, V, Extra>(
+export function ArrayModelView<Node, Element extends Node, TagOptions extends object, V, Extra>(
     props: WritableViewOptions<
         Node,
         Element,
@@ -257,7 +263,7 @@ export function ArrayModelView<Node, Element, TagOptions extends object, V, Extr
     >,
     ctx: Fragment<Node, Element, TagOptions>,
 ): void;
-export function ArrayModelView<Node, Element, TagOptions extends object, V, Extra>(
+export function ArrayModelView<Node, Element extends Node, TagOptions extends object, V, Extra>(
     props: WritableViewOptions<
         Node,
         Element,
@@ -271,6 +277,7 @@ export function ArrayModelView<Node, Element, TagOptions extends object, V, Extr
     ctx.child(
         new ArrayModelViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
             ctx.runner,
+            ctx.node,
             ctx.sDeep + 1,
             props.of,
             props.slot,
@@ -281,7 +288,7 @@ export function ArrayModelView<Node, Element, TagOptions extends object, V, Extr
     );
 }
 
-export function MapModelView<Node, Element, TagOptions extends object, K, V>(
+export function MapModelView<Node, Element extends Node, TagOptions extends object, K, V>(
     props: WritableViewOptions<
         Node,
         Element,
@@ -292,7 +299,7 @@ export function MapModelView<Node, Element, TagOptions extends object, K, V>(
     >,
     ctx: Fragment<Node, Element, TagOptions>,
 ): void;
-export function MapModelView<Node, Element, TagOptions extends object, K, V>(
+export function MapModelView<Node, Element extends Node, TagOptions extends object, K, V>(
     props: WritableViewOptions<
         Node,
         Element,
@@ -303,7 +310,7 @@ export function MapModelView<Node, Element, TagOptions extends object, K, V>(
     >,
     ctx: Fragment<Node, Element, TagOptions>,
 ): void;
-export function MapModelView<Node, Element, TagOptions extends object, K, V>(
+export function MapModelView<Node, Element extends Node, TagOptions extends object, K, V>(
     props: WritableViewOptions<
         Node,
         Element,
@@ -317,6 +324,7 @@ export function MapModelView<Node, Element, TagOptions extends object, K, V>(
     ctx.child(
         new MapViewNode<K, V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
             ctx.runner,
+            ctx.node,
             ctx.sDeep + 1,
             props.of,
             props.slot,
@@ -327,13 +335,14 @@ export function MapModelView<Node, Element, TagOptions extends object, K, V>(
     );
 }
 
-export function SetModelView<Node, Element, TagOptions extends object, V>(
+export function SetModelView<Node, Element extends Node, TagOptions extends object, V>(
     props: Required<ForOptions<Node, Element, TagOptions, SetModel<V, unknown>, [V]>>,
     ctx: Fragment<Node, Element, TagOptions>,
 ) {
     ctx.child(
         new SetViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
             ctx.runner,
+            ctx.node,
             ctx.sDeep + 1,
             props.of,
             props.slot,
@@ -342,12 +351,12 @@ export function SetModelView<Node, Element, TagOptions extends object, V>(
     );
 }
 
-export interface WatchOptions<Node, Element, TagOptions extends object, T, Extra = unknown> {
+export interface WatchOptions<Node, Element extends Node, TagOptions extends object, T, Extra = unknown> {
     r_model: ReadableIValue<T, Extra>;
     slot?: (ctx: Fragment<Node, Element, TagOptions>, value: T) => void;
 }
 
-export function WatchFn<Node, Element, TagOptions extends object, T>(
+export function WatchFn<Node, Element extends Node, TagOptions extends object, T>(
     { r_model, slot: _slot }: WatchOptions<Node, Element, TagOptions, T>,
     ctx: Fragment<Node, Element, TagOptions>,
     defaultSlot?: (ctx: Fragment<Node, Element, TagOptions>) => void,
@@ -356,13 +365,13 @@ export function WatchFn<Node, Element, TagOptions extends object, T>(
 
     /* istanbul ignore else */
     if (slot) {
-        ctx.child(new WatchNode({ model: r_model, slot: safe(slot) }, ctx.runner, ctx.sDeep + 1));
+        ctx.child(new WatchNode({ model: r_model, slot: safe(slot) }, ctx.runner, ctx.node, ctx.sDeep + 1));
     }
 }
 
 export interface DelayOptions<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Context extends Fragment<Node, Element, TagOptions>,
 > {
@@ -370,12 +379,12 @@ export interface DelayOptions<
     slot?: (ctx: Context) => unknown;
 }
 
-export function Delay<Node, Element, TagOptions extends object>(
+export function Delay<Node, Element extends Node, TagOptions extends object>(
     { time, slot: _slot }: DelayOptions<Node, Element, TagOptions, Fragment<Node, Element, TagOptions>>,
     ctx: Fragment<Node, Element, TagOptions>,
     defaultSlot?: (ctx: Fragment<Node, Element, TagOptions>) => void,
     createContext = (ctx: Fragment<Node, Element, TagOptions>) =>
-        new Fragment<Node, Element, TagOptions>(ctx.runner, ctx.sDeep + 1),
+        new Fragment<Node, Element, TagOptions>(ctx.runner, ctx.node, ctx.sDeep + 1),
 ) {
     const fragment = createContext(ctx);
     const slot = _slot ?? defaultSlot;
@@ -402,10 +411,10 @@ export interface ZombieOptions<Extra = unknown> {
     trigger(): void;
 }
 
-export function ZombieFn<Node, Element, TagOptions extends object>(
+export function ZombieFn<Node, Element extends Node, TagOptions extends object>(
     { r_time, trigger }: ZombieOptions,
     ctx: Fragment<Node, Element, TagOptions>,
     defaultSlot?: (ctx: Fragment<Node, Element, TagOptions>) => void,
 ) {
-    ctx.child(new ZombieNode<Node, Element, TagOptions>(ctx.runner, r_time, trigger), defaultSlot);
+    ctx.child(new ZombieNode<Node, Element, TagOptions>(ctx.runner, ctx.node, r_time, trigger), defaultSlot);
 }

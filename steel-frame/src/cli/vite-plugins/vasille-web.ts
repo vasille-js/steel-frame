@@ -11,7 +11,7 @@ export async function vasilleWebPlugin(imported: Set<string>) {
         },
         load(id: string) {
             if (id === resolvedVirtualModuleId) {
-                return `export {${[...imported].join(",")}} from "vasille-web";`;
+                return `export {${[...imported].join(",")}} from "steel-frame/web";`;
             }
         },
     };

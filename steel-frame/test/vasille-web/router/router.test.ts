@@ -771,5 +771,5 @@ it("screen test", function () {
             url: "",
             params: "",
         }),
-    ).rejects.toThrow("Vasille: Screen context is missing");
+    ).rejects.toThrow("Context is missing");
 });

@@ -67,7 +67,7 @@ export function modal<T extends CompositionProps>(
 ): (input: T, node: Fragment<Node, Element, SsgTagOptions, SsgRunner>) => void {
     return function (props, node) {
         if (!node) {
-            throw new Error("Vasille: Modal context is missing");
+            throw new Error("Context is missing");
         }
         const runner: SsgRunner = node.runner;
         const portal = new PortalNode<Node, Element, SsgTagOptions, SsgRunner>(runner.body, runner, node.sDeep + 1);

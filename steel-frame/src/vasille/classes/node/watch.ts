@@ -4,7 +4,7 @@ import { IRunner } from "./runner.js";
 
 export interface WatchOptions<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     T,
@@ -19,7 +19,7 @@ export interface WatchOptions<
  */
 export class WatchNode<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     T,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
@@ -28,8 +28,13 @@ export class WatchNode<
     private readonly slot?: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T) => void;
     private handler?: (value: T) => void;
 
-    public constructor(input: WatchOptions<Node, Element, TagOptions, Runner, T>, runner: Runner, deep: number) {
-        super(runner, deep);
+    public constructor(
+        input: WatchOptions<Node, Element, TagOptions, Runner, T>,
+        runner: Runner,
+        node: Node,
+        deep: number,
+    ) {
+        super(runner, node, deep);
         this.model = input.model;
         this.slot = input.slot;
     }

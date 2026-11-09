@@ -4,7 +4,7 @@ export interface CompositionProps {
     slot?: (...args: any[]) => void;
 }
 
-export type Composed<Node, Element, TagOptions extends object, In extends CompositionProps, Out> = (
+export type Composed<Node, Element extends Node, TagOptions extends object, In extends CompositionProps, Out> = (
     $: In & {
         callback?(data: Out): void | (() => void);
         runOnDestroy?(): void;
@@ -13,16 +13,16 @@ export type Composed<Node, Element, TagOptions extends object, In extends Compos
     slot?: In["slot"],
 ) => void;
 
-export function view<Node, Element, TagOptions extends object, In extends CompositionProps, Out>(
+export function view<Node, Element extends Node, TagOptions extends object, In extends CompositionProps, Out>(
     renderer: (node: Fragment<Node, Element, TagOptions>, input: In) => Out,
 ): Composed<Node, Element, TagOptions, In, Out> {
     return function (props, node, slot) {
         const { callback, runOnDestroy } = props;
 
         if (!node) {
-            throw new Error("Vasille: Component context is missing");
+            throw new Error("Context is missing");
         }
-        const frag = new Fragment<Node, Element, TagOptions>(node.runner, node.sDeep + 1);
+        const frag = new Fragment<Node, Element, TagOptions>(node.runner, node.node, node.sDeep + 1);
 
         if (slot) {
             props.slot = slot;
@@ -75,14 +75,14 @@ export function createModel<In extends object, Out extends object>(
     return model.create(o, parent);
 }
 
-export function mountApp<Node, Element, TagOptions extends object, T>(
+export function mountApp<Node, Element extends Node, TagOptions extends object, T>(
     tag: Element,
     view: ($: T, node: Fragment<Node, Element, TagOptions>) => unknown,
     runner: IRunner<Node, Element, TagOptions>,
     $: T,
 ): AppNode<Node, Element, TagOptions> {
     const root = new AppNode<Node, Element, TagOptions>(tag, runner);
-    const frag = new Fragment<Node, Element, TagOptions>(runner, 1);
+    const frag = new Fragment<Node, Element, TagOptions>(runner, tag, 1);
 
     root.child(frag, function () {
         view($, frag);

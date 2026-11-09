@@ -1,18 +1,16 @@
 {
-  "name": "javascript-example",
+  "name": "typescript-example",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "web dev",
-    "build": "web build"
+    "build": "web build spa"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "steel-frame": "file:../../steel-frame",
-    "vasille": "file:../../vasille",
-    "vasille-web": "file:../../vasille-web"
+    "steel-frame": "file:../../steel-frame"
   }
 }

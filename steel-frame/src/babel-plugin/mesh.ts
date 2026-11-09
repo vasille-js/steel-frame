@@ -1476,7 +1476,7 @@ export function composeExpression(path: NodePath<types.Expression | null | undef
                 }
             } else if (calls(path, ["beforeDestroy"], internal)) {
                 if (internal.stateOnly) {
-                    err(Errors.IncompatibleContext, path, "Stores/Models in Vasille.JS are not destroyable", internal);
+                    err(Errors.IncompatibleContext, path, "Stores/Models are not destroyable", internal);
                 }
 
                 path.get("callee").replaceWith(t.memberExpression(ctx, t.identifier("runOnDestroy")));
@@ -1484,12 +1484,7 @@ export function composeExpression(path: NodePath<types.Expression | null | undef
                 /* istanbul ignore else */
                 if (calls(path, ["share"], internal) && isDiCall(path, internal)) {
                     if (internal.stateOnly) {
-                        err(
-                            Errors.IncompatibleContext,
-                            path,
-                            "Stores/Models in Vasille.JS cannot share dependencies",
-                            internal,
-                        );
+                        err(Errors.IncompatibleContext, path, "Stores/Models cannot share dependencies", internal);
                     }
                     path.node.arguments.unshift(ctx);
                 }

@@ -11,7 +11,7 @@ export interface ErrorScreenProps {
 
 export interface RouterInitialization<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Routes extends string,
     Extras extends object,
@@ -27,7 +27,7 @@ export type RouteRenderScope = "found" | "not-found" | "fallback" | "error";
 
 export abstract class Router<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Routes extends string,
     Extras extends object,

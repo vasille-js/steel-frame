@@ -7,13 +7,12 @@ import { SyncedIValue } from "../value/synced.js";
 import { Collection } from "./collection.js";
 import { Listener, removeFragmentFromTree } from "./listener.js";
 
-const enum Ops {
-    Clear,
-    Add,
-    Remove,
-}
+const Clear = 0,
+    Add = 1,
+    Remove = 2;
 
-type Arguments<K, T> = [Ops.Clear] | [Ops.Remove, K] | [Ops.Add, K, T];
+type Arguments<K, T> = [typeof Clear] | [typeof Remove, K] | [typeof Add, K, T];
+type Ops = typeof Clear | typeof Remove | typeof Add;
 
 /**
  * A `Map` based memory
@@ -48,7 +47,7 @@ export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | und
      * Calls `Map.clear` and notify about changes
      */
     public clear(): void {
-        this.listener.emit(Ops.Clear);
+        this.listener.emit(Clear);
         this.run(() => this.d.clear());
     }
 
@@ -58,7 +57,7 @@ export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | und
      * @return {boolean} true if removed something, otherwise false
      */
     public delete(key: K): boolean {
-        this.listener.emit(Ops.Remove, key);
+        this.listener.emit(Remove, key);
         return this.run(() => this.d.delete(key));
     }
 
@@ -69,7 +68,7 @@ export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | und
      * @return {MapModel} a pointer to this
      */
     public set(key: K, value: T): this {
-        this.listener.emit(Ops.Add, key, value);
+        this.listener.emit(Add, key, value);
         return this.run(() => {
             this.d.set(key, value);
             return this;
@@ -86,12 +85,12 @@ export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | und
     }
 
     protected override reset(next: Map<K, T> | [K, T][] | undefined) {
-        this.listener.emit(Ops.Clear);
+        this.listener.emit(Clear);
         this.d.clear();
         /* istanbul ignore else */
         if (next) {
             for (const [key, value] of next) {
-                this.listener.emit(Ops.Add, key, value);
+                this.listener.emit(Add, key, value);
                 this.d.set(key, value);
             }
         }
@@ -135,7 +134,7 @@ export class MapViewNode<
     K,
     T,
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra,
@@ -156,14 +155,19 @@ export class MapViewNode<
 
     public constructor(
         runner: Runner,
+        node: Node,
         deep: number,
         private readonly model: MapModel<K, T, Extra>,
         slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: WritableIValue<T, any>, key: K) => void,
         private readonly writable: boolean,
         private readonly ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, unknown>,
-        private readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
+        private readonly frag: (
+            runner: Runner,
+            node: Node,
+            deep: number,
+        ) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
-        super(runner, deep);
+        super(runner, node, deep);
         this.slot = safe(slot);
     }
 
@@ -171,7 +175,7 @@ export class MapViewNode<
         const view = this;
 
         function create(this: void, key: K, value: T) {
-            const frag = view.frag(view.runner, view.sDeep + 1);
+            const frag = view.frag(view.runner, view.node, view.sDeep + 1);
             const ref = view.writable ? new WritableMapValue(frag, view.model, key, view.ref) : view.ref(value, frag);
 
             frag.link(view, view.last, undefined);
@@ -180,7 +184,7 @@ export class MapViewNode<
             view.last = frag;
         }
         function acceptUpdate(this: void, op: Ops, key?: K, value?: T) {
-            if (op === Ops.Add) {
+            if (op === Add) {
                 const existing = view.map.get(key!);
 
                 if (existing) {
@@ -188,7 +192,7 @@ export class MapViewNode<
                 } else {
                     create(key!, value!);
                 }
-            } else if (op === Ops.Remove) {
+            } else if (op === Remove) {
                 const item = view.map.get(key!);
 
                 /* istanbul ignore else */

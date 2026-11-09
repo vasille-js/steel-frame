@@ -76,9 +76,9 @@ export function devModal<T extends CompositionProps>(
         usage?: StaticPosition,
     ) => {
         if (!node) {
-            throw new Error("Vasille: Modal context is missing");
+            throw new Error("Context is missing");
         }
-        const frag = new DevFragment<Node, Element, SsgTagOptions>(node.runner, null, null, name, {});
+        const frag = new DevFragment<Node, Element, SsgTagOptions>(node.runner, node.node, null, null, name, {});
 
         if (!input.slot && slot) {
             input.slot = slot;

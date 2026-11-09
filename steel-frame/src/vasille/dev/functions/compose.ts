@@ -11,7 +11,7 @@ import {
     toDevIdOrValue,
 } from "../classes/index.js";
 
-export type DevComposed<Node, Element, TagOptions extends object, In extends CompositionProps, Out> = (
+export type DevComposed<Node, Element extends Node, TagOptions extends object, In extends CompositionProps, Out> = (
     $: In & { callback?(data: Out | undefined): void },
     node?: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
     slot?: In["slot"],
@@ -20,7 +20,7 @@ export type DevComposed<Node, Element, TagOptions extends object, In extends Com
 
 export type DevInput<In, Out> = In & { callback?(data: Out | undefined): void };
 
-export type DevFragmentMap<Node, Element, TagOptions extends object, In> = Map<
+export type DevFragmentMap<Node, Element extends Node, TagOptions extends object, In> = Map<
     Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
     {
         props: In;
@@ -29,7 +29,7 @@ export type DevFragmentMap<Node, Element, TagOptions extends object, In> = Map<
     }
 >;
 
-export function devDynamicalModule<T, Node, Element, TagOptions extends object, Props>(
+export function devDynamicalModule<T, Node, Element extends Node, TagOptions extends object, Props>(
     composed: T,
     fragments: DevFragmentMap<Node, Element, TagOptions, Props>,
     safeRun: (
@@ -58,7 +58,7 @@ export function devDynamicalModule<T, Node, Element, TagOptions extends object, 
     return composed;
 }
 
-export function devView<Node, Element, TagOptions extends object, In extends CompositionProps, Out>(
+export function devView<Node, Element extends Node, TagOptions extends object, In extends CompositionProps, Out>(
     renderer: (node: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>, input: In) => Out,
     declaration: StaticPosition,
     name: string,
@@ -70,7 +70,14 @@ export function devView<Node, Element, TagOptions extends object, In extends Com
         usage: StaticPosition | undefined,
     ) {
         const { callback } = props;
-        const frag = new DevFragment<Node, Element, TagOptions>(parent.runner, declaration, usage ?? null, name, props);
+        const frag = new DevFragment<Node, Element, TagOptions>(
+            parent.runner,
+            parent.node,
+            declaration,
+            usage ?? null,
+            name,
+            props,
+        );
 
         parent.child(frag);
 
@@ -96,10 +103,11 @@ export function devView<Node, Element, TagOptions extends object, In extends Com
     };
     const composed: DevComposed<Node, Element, TagOptions, In, Out> = function (props, node, slot, usage) {
         if (!node) {
-            throw new Error("Vasille: Component context is missing");
+            throw new Error("Context is missing");
         }
         const frag = new Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>(
             node.runner,
+            node.node,
             node.sDeep + 1,
         );
 
@@ -178,7 +186,7 @@ export function createDevModel<In extends object, Out extends object>(
     return model.create(o, parent, usage);
 }
 
-export function devMountApp<T, Node, Element, TagOptions extends object>(
+export function devMountApp<T, Node, Element extends Node, TagOptions extends object>(
     tag: Element,
     view: ($: T, node: Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>) => unknown,
     runner: IRunner<Node, Element, TagOptions>,
@@ -186,7 +194,7 @@ export function devMountApp<T, Node, Element, TagOptions extends object>(
     devInspector: Inspector,
 ): DevAppNode<Node, Element, TagOptions> {
     const root = new DevAppNode<Node, Element, TagOptions>(tag, runner);
-    const frag = new DevFragment<Node, Element, TagOptions>(runner, null, null, "Root", {});
+    const frag = new DevFragment<Node, Element, TagOptions>(runner, tag, null, null, "Root", {});
 
     // share information about created stores
     inspector.connect(devInspector);

@@ -36,16 +36,28 @@ export type ScreenProps<Route extends string> = {
     hash: string;
 };
 
-export type Screen<Node, Element, TagOptions extends object, Route extends string> = (
+export type Screen<Node, Element extends Node, TagOptions extends object, Route extends string> = (
     props: ScreenProps<Route>,
     ctx: Fragment<Node, Element, TagOptions>,
 ) => Promise<void>;
 
-export type Answer<Node, Element, TagOptions extends object, Route extends string, Extras extends object> = {
+export type Answer<
+    Node,
+    Element extends Node,
+    TagOptions extends object,
+    Route extends string,
+    Extras extends object,
+> = {
     screen: Screen<Node, Element, TagOptions, Route>;
 } & Extras;
 
-export type Routing<Node, Element, TagOptions extends object, RoutePath extends string, Extras extends object> = {
+export type Routing<
+    Node,
+    Element extends Node,
+    TagOptions extends object,
+    RoutePath extends string,
+    Extras extends object,
+> = {
     self?: Answer<Node, Element, TagOptions, RoutePath, Extras>;
     static: { [k: string]: Routing<Node, Element, TagOptions, RoutePath, Extras> };
     dynamic: { [k: string]: Routing<Node, Element, TagOptions, RoutePath, Extras> };

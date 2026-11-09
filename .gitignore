@@ -1,7 +1,7 @@
 */lib*
 */out
 */node_modules
-*/package-lock.json
+package-lock.json
 */.idea/webResources.xml
 */coverage
 */types

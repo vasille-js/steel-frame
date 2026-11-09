@@ -55,7 +55,7 @@ export declare function view(renderer: () => void): ComposedNoCallback<NonNullab
 /** Composes a view, which can receive external reactive values via props */
 export declare function view<In extends object>(renderer: (input: In) => void): ComposedNoCallback<In, void>;
 
-/** A Vasille.JS App screen */
+/** An App screen */
 type Screen<Route extends string> = (input: ScreenProps<Route>) => Promise<void>;
 
 /**
@@ -351,7 +351,7 @@ export declare const styleSheet: <
     input: T,
 ) => { [K in keyof T]: CssStyleInjector };
 
-/** Mounts a Vasille.JS component to a page */
+/** Mounts a component to a page */
 export declare function mount<T>(
     element: Element,
     component: (props: T) => void,

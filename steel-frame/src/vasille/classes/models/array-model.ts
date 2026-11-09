@@ -151,7 +151,7 @@ export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
 interface CacheItem<
     T,
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra,
@@ -165,7 +165,7 @@ interface CacheItem<
 class BaseArrayView<
     T,
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra extends unknown,
@@ -230,7 +230,7 @@ class WritableArrayModelItem<T, Extra> extends SyncedIValue<T, Extra> implements
 export class ArrayModelViewNode<
     T,
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra extends unknown,
@@ -252,6 +252,7 @@ export class ArrayModelViewNode<
 
     public constructor(
         runner: Runner,
+        node: Node,
         deep: number,
         model: ArrayModel<T, Extra>,
         slot: (
@@ -261,10 +262,11 @@ export class ArrayModelViewNode<
         ) => void,
         writable: false,
         ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
-        frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
+        frag: (runner: Runner, node: Node, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     );
     public constructor(
         runner: Runner,
+        node: Node,
         deep: number,
         model: ArrayModel<T, Extra>,
         slot: (
@@ -274,10 +276,11 @@ export class ArrayModelViewNode<
         ) => void,
         writable: true,
         ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
-        frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
+        frag: (runner: Runner, node: Node, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     );
     public constructor(
         runner: Runner,
+        node: Node,
         deep: number,
         model: ArrayModel<T, Extra>,
         slot: (
@@ -287,10 +290,11 @@ export class ArrayModelViewNode<
         ) => void,
         writable: boolean,
         ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
-        frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
+        frag: (runner: Runner, node: Node, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
     );
     public constructor(
         runner: Runner,
+        node: Node,
         deep: number,
         private readonly model: ArrayModel<T, Extra>,
         slot: (
@@ -300,9 +304,13 @@ export class ArrayModelViewNode<
         ) => void,
         private readonly writable: boolean,
         private readonly ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
-        private readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
+        private readonly frag: (
+            runner: Runner,
+            node: Node,
+            deep: number,
+        ) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
-        super(runner, deep);
+        super(runner, node, deep);
         this.slot = safe(slot);
     }
 
@@ -328,7 +336,7 @@ export class ArrayModelViewNode<
 
             // create new fragments
             for (let i = 0; i < length; i++) {
-                const ctx = view.frag(view.runner, view.sDeep + 1);
+                const ctx = view.frag(view.runner, view.node, view.sDeep + 1);
                 const inserted: CacheItem<T, Node, Element, TagOptions, Runner, Extra> = (toInsert[i] = {
                     frag: ctx,
                     index: view.ref(i + index, ctx),
@@ -384,7 +392,7 @@ export class ArrayModelViewNode<
 interface KeyedCacheItem<
     T,
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra extends unknown,
@@ -432,7 +440,7 @@ class WritableArrayItem<T, Extra> extends SyncedIValue<T, Extra> implements Writ
 export class DiffingArrayView<
     T,
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra extends unknown,
@@ -454,6 +462,7 @@ export class DiffingArrayView<
 
     public constructor(
         runner: Runner,
+        node: Node,
         deep: number,
         protected readonly model: ReadableIValue<T[], Extra>,
         protected readonly key: (item: T) => number | string,
@@ -465,9 +474,13 @@ export class DiffingArrayView<
         protected readonly writable: boolean,
         protected readonly vRef: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
         protected readonly iRef: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
-        protected readonly frag: (runner: Runner, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
+        protected readonly frag: (
+            runner: Runner,
+            node: Node,
+            deep: number,
+        ) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
-        super(runner, deep);
+        super(runner, node, deep);
         this.slot = safe(slot);
     }
 
@@ -478,7 +491,7 @@ export class DiffingArrayView<
         prev?: Fragment<Node, Element, TagOptions, Runner>,
         next?: Fragment<Node, Element, TagOptions, Runner>,
     ) {
-        const frag = this.frag(this.runner, this.sDeep + 1);
+        const frag = this.frag(this.runner, this.node, this.sDeep + 1);
         const index = this.iRef(newCache.length, this);
         const value =
             this.writable && this.model.isWritable()
@@ -512,7 +525,7 @@ export class DiffingArrayView<
 export class ArrayViewNode<
     T,
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
     Extra extends unknown,

@@ -30,6 +30,7 @@ export default defineConfig({
                     [
                         "steel-frame/babel-plugin",
                         {
+                            devMode: true,
                             strictFolders: false,
                             replaceWeb: "steel-frame/web",
                             headTag: true,

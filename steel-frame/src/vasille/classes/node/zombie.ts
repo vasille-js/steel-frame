@@ -5,15 +5,15 @@ import { IRunner } from "./runner.js";
 
 export class ZombieNode<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Fragment<Node, Element, TagOptions, Runner> {
     public readonly time: ReadableIValue<number, unknown>;
     public readonly trigger: () => void;
 
-    public constructor(runner: Runner, time: ReadableIValue<number, unknown>, trigger: () => void) {
-        super(runner, 0);
+    public constructor(runner: Runner, node: Node, time: ReadableIValue<number, unknown>, trigger: () => void) {
+        super(runner, node, 0);
 
         this.time = time;
         this.trigger = safe(trigger);

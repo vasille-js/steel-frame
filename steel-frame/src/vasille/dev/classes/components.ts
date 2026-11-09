@@ -24,15 +24,21 @@ export function processComponentProps(id: number, props: object): void {
     });
 }
 
-export class DevWatchNode<Node, Element, TagOptions extends object, T> extends WatchNode<Node, Element, TagOptions, T> {
+export class DevWatchNode<Node, Element extends Node, TagOptions extends object, T> extends WatchNode<
+    Node,
+    Element,
+    TagOptions,
+    T
+> {
     public override id: number;
 
     public constructor(
         input: WatchOptions<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, T>,
         runner: IRunner<Node, Element, TagOptions>,
+        node: Node,
         usage: StaticPosition,
     ) {
-        super(input, runner, 1);
+        super(input, runner, node, 1);
         this.rDeep = 0;
 
         const id = (this.id = provideId());
@@ -52,7 +58,11 @@ export class DevWatchNode<Node, Element, TagOptions extends object, T> extends W
     }
 }
 
-export class DevAppNode<Node, Element, TagOptions extends object> extends AppNode<Node, Element, TagOptions> {
+export class DevAppNode<Node, Element extends Node, TagOptions extends object> extends AppNode<
+    Node,
+    Element,
+    TagOptions
+> {
     public override id: number;
 
     public constructor(node: Element, runner: IRunner<Node, Element, TagOptions>) {
@@ -75,7 +85,7 @@ export class DevAppNode<Node, Element, TagOptions extends object> extends AppNod
 
 export class DevPortalNode<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
 > extends PortalNode<Node, Element, TagOptions, Runner> {
@@ -108,7 +118,7 @@ export class DevPortalNode<
     }
 }
 
-export class DevSwitchedNode<Node, Element, TagOptions extends object> extends SwitchedNode<
+export class DevSwitchedNode<Node, Element extends Node, TagOptions extends object> extends SwitchedNode<
     Node,
     Element,
     TagOptions,
@@ -119,10 +129,11 @@ export class DevSwitchedNode<Node, Element, TagOptions extends object> extends S
     public constructor(
         usage: StaticPosition,
         runner: IRunner<Node, Element, TagOptions>,
+        node: Node,
         cases: SwitchedNodeCase<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>[],
         _default?: (node: Fragment<Node, Element, TagOptions>) => void,
     ) {
-        super(runner, 1, cases, _default);
+        super(runner, node, 1, cases, _default);
         this.rDeep = 0;
 
         const id = (this.id = provideId());
@@ -149,11 +160,11 @@ export class DevSwitchedNode<Node, Element, TagOptions extends object> extends S
     protected override newChild(
         index: number,
     ): Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>> {
-        return new DevFragment(this.runner, null, null, "Case", { index });
+        return new DevFragment(this.runner, this.node, null, null, "Case", { index });
     }
 }
 
-export class DevZombieNode<Node, Element, TagOptions extends object> extends ZombieNode<
+export class DevZombieNode<Node, Element extends Node, TagOptions extends object> extends ZombieNode<
     Node,
     Element,
     TagOptions,
@@ -164,10 +175,11 @@ export class DevZombieNode<Node, Element, TagOptions extends object> extends Zom
     public constructor(
         usage: StaticPosition,
         runner: IRunner<Node, Element, TagOptions>,
+        node: Node,
         time: ReadableIValue<number, unknown>,
         trigger: () => void,
     ) {
-        super(runner, time, trigger);
+        super(runner, node, time, trigger);
 
         const id = (this.id = provideId());
 

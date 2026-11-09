@@ -64,7 +64,7 @@ it("MVVM test", function () {
 
     expect(div.children.length).toBe(1);
     expect(div.children[0].className).toBe("1");
-    expect(() => mvvm({})).toThrow("Vasille: Component context is missing");
+    expect(() => mvvm({})).toThrow("Context is missing");
 
     mountApp(body, mvvm, node.runner, {
         callback: node => {

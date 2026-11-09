@@ -39,7 +39,7 @@ export class WebTextNode<Options extends WebTagOptions, RunnerT extends WebRunne
     Options,
     RunnerT
 > {
-    protected node!: Text;
+    public node!: Text;
 
     public compose(): void {
         const text = this.data;
@@ -86,6 +86,8 @@ export class WebTag<Options extends WebTagOptions, RunnerT extends WebRunner<Opt
     Options,
     RunnerT
 > {
+    public node!: Element;
+
     public compose(): void {
         const name = this.name;
 
@@ -234,11 +236,12 @@ export class WebRunner<Options extends WebTagOptions> implements IRunner<Node, E
     appendChild(node: Element, child: Element | Node): void {
         node.appendChild(child);
     }
-    textNode(deep: number, text: unknown): TextNode<Node, Element, Options> {
-        return new WebTextNode({ text }, this, deep);
+    textNode(deep: number, text: unknown, node: Node): TextNode<Node, Element, Options> {
+        return new WebTextNode({ text }, this, node, deep);
     }
     tag(
         deep: number,
+        node: Node,
         tagName: string,
         input: Options,
         cb?: ((ctx: Tag<Node, Element, Options>) => void) | undefined,
@@ -247,6 +250,6 @@ export class WebRunner<Options extends WebTagOptions> implements IRunner<Node, E
             input.l = cb as any;
         }
 
-        return new WebTag(input, this, tagName, deep);
+        return new WebTag(input, this, node, tagName, deep);
     }
 }

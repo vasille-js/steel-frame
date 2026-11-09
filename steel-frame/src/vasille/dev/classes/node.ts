@@ -5,7 +5,7 @@ import { InspectableReactive, inspector, provideId, StaticPosition } from "./ins
 
 export const ModelId = Symbol("model-id");
 
-export class DevFragment<Node, Element, TagOptions extends object>
+export class DevFragment<Node, Element extends Node, TagOptions extends object>
     extends Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>
     implements InspectableReactive
 {
@@ -14,12 +14,13 @@ export class DevFragment<Node, Element, TagOptions extends object>
 
     public constructor(
         runner: IRunner<Node, Element, TagOptions>,
+        node: Node,
         declaration: StaticPosition | null,
         usage: StaticPosition | null,
         name: string,
         props: object,
     ) {
-        super(runner, 1);
+        super(runner, node, 1);
         this.id = provideId();
         this.declaration = declaration;
 

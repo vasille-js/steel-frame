@@ -131,7 +131,6 @@ class AppHandler implements AppSide {
 
             for (const text of texts) {
                 const range = document.createRange();
-                // @ts-expect-error node field is protected
                 range.selectNodeContents(text.node);
                 sel.addRange(range);
             }

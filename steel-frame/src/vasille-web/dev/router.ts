@@ -3,14 +3,15 @@ import { createScreen, Fragment, IRunner, ScreenProps } from "../../vasille/inde
 import { WebRouter, WebRouterInitialization } from "../web/router/router.js";
 import { DevWebRunner, DevWebTagOptions } from "./runner.js";
 
-export function devScreen<Node, Element, TagOptions extends object, Route extends string>(
+export function devScreen<Node, Element extends Node, TagOptions extends object, Route extends string>(
     renderer: (node: DevFragment<Node, Element, TagOptions>, input: ScreenProps<Route>) => Promise<void>,
     declaration: StaticPosition,
     name: string,
 ): (props: ScreenProps<Route>, ctx?: DevFragment<Node, Element, TagOptions>) => Promise<void> {
     return createScreen(
         renderer,
-        (node, props) => new DevFragment<Node, Element, TagOptions>(node.runner, declaration, null, name, props),
+        (node, props) =>
+            new DevFragment<Node, Element, TagOptions>(node.runner, node.node, declaration, null, name, props),
     );
 }
 

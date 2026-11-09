@@ -9,7 +9,7 @@ import { IRunner } from "./runner.js";
  */
 export abstract class Root<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Reactive {
@@ -21,10 +21,12 @@ export abstract class Root<
     public readonly runner: Runner;
 
     public last: Fragment<Node, Element, TagOptions> | undefined = undefined;
+    public node: Node;
 
-    protected constructor(runner: Runner, deep: number) {
+    protected constructor(runner: Runner, node: Node, deep: number) {
         super(deep);
         this.runner = runner;
+        this.node = node;
     }
 
     /**
@@ -64,7 +66,7 @@ export abstract class Root<
      * @param text {String | IValue} A text fragment string
      */
     public text(text: unknown): void {
-        const node = this.runner.textNode(this.sDeep + 1, text);
+        const node = this.runner.textNode(this.sDeep + 1, text, this.node);
 
         this.push(node);
         node.compose();
@@ -89,7 +91,7 @@ export abstract class Root<
      * @param cb {function(Tag, *)} callback
      */
     public tag(tagName: string, input: TagOptions, cb?: (ctx: Tag<Node, Element, TagOptions>) => void): void {
-        const tag = this.runner.tag(this.sDeep + 1, tagName, input, cb);
+        const tag = this.runner.tag(this.sDeep + 1, this.node, tagName, input, cb);
 
         this.push(tag);
         tag.compose();
@@ -120,14 +122,14 @@ export abstract class Root<
 
 export class Fragment<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Root<Node, Element, TagOptions, Runner> {
     public parent!: Root<Node, Element, TagOptions>;
 
-    public constructor(runner: Runner, deep: number) {
-        super(runner, deep);
+    public constructor(runner: Runner, node: Node, deep: number) {
+        super(runner, node, deep);
     }
 
     /**
@@ -248,15 +250,15 @@ export interface TextProps {
  */
 export abstract class TextNode<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Fragment<Node, Element, TagOptions, Runner> {
     protected handler: ((v: unknown) => void) | null = null;
     protected readonly data: unknown;
 
-    public constructor(input: TextProps, runner: Runner, deep: number) {
-        super(runner, deep);
+    public constructor(input: TextProps, runner: Runner, node: Node, deep: number) {
+        super(runner, node, deep);
         this.data = input.text;
     }
 
@@ -282,21 +284,16 @@ export abstract class TextNode<
  */
 export abstract class Tag<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Fragment<Node, Element, TagOptions, Runner> {
+    public node!: Element;
     public readonly name: string;
     public readonly options: TagOptions;
 
-    /**
-     * The element of vasille node
-     * @type Element
-     */
-    public node: Element | undefined;
-
-    public constructor(options: TagOptions, runner: Runner, tagName: string, deep: number) {
-        super(runner, deep);
+    public constructor(options: TagOptions, runner: Runner, node: Node, tagName: string, deep: number) {
+        super(runner, node, deep);
         this.options = options;
         this.name = tagName;
     }
@@ -312,13 +309,13 @@ export abstract class Tag<
     }
 
     public override appendNode(node: Node): void {
-        this.runner.appendChild(this.node!, node);
+        this.runner.appendChild(this.node! as Element, node);
     }
 }
 
 export interface SwitchedNodeCase<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
 > {
@@ -331,7 +328,7 @@ export interface SwitchedNodeCase<
  */
 export class SwitchedNode<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Fragment<Node, Element, TagOptions, Runner> {
@@ -358,11 +355,12 @@ export class SwitchedNode<
      */
     public constructor(
         runner: Runner,
+        node: Node,
         deep: number,
         cases: SwitchedNodeCase<Node, Element, TagOptions, Runner>[],
         _default?: (node: Fragment<Node, Element, TagOptions>) => void,
     ) {
-        super(runner, deep);
+        super(runner, node, deep);
 
         if (_default) {
             cases.push({ $case: 1, slot: _default });
@@ -419,6 +417,6 @@ export class SwitchedNode<
     }
 
     protected newChild(_index: number): Fragment<Node, Element, TagOptions, Runner> {
-        return new Fragment(this.runner, this.sDeep + 1);
+        return new Fragment(this.runner, this.node, this.sDeep + 1);
     }
 }

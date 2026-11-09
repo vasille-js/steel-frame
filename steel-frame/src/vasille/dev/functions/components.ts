@@ -1,5 +1,5 @@
 import { ReadableIValue, WritableIValue } from "../../classes/core/ivalue.js";
-import { Fragment, IValue, IRunner as Runner, safe, userError } from "../../classes/index.js";
+import { Fragment, IValue, IRunner as Runner, safe, userError, IRunner } from "../../classes/index.js";
 import {
     Delay,
     DelayOptions,
@@ -29,7 +29,7 @@ import {
     StaticPosition,
 } from "../classes/index.js";
 
-export function DevSlot<Node, Element, TagOptions extends object, T extends object = {}>(
+export function DevSlot<Node, Element extends Node, TagOptions extends object, T extends object = {}>(
     options: SlotOptions<Node, Element, TagOptions, T> & T,
     ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
     defaultSlot: ((ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>) => void) | undefined,
@@ -45,18 +45,18 @@ export function DevSlot<Node, Element, TagOptions extends object, T extends obje
     });
 }
 
-export function DevSwitch<Node, Element, TagOptions extends object>(
+export function DevSwitch<Node, Element extends Node, TagOptions extends object>(
     options: SwitchOptions<Node, Element, TagOptions>,
     ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
     _slot: undefined,
     usage: StaticPosition,
 ) {
-    ctx.child(new DevSwitchedNode(usage, ctx.runner, options.cases, options.default));
+    ctx.child(new DevSwitchedNode(usage, ctx.runner, ctx.node, options.cases, options.default));
 }
 
 export function DevFor<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     T extends Set<unknown> | Map<unknown, unknown> | unknown[],
     K = T extends unknown[] ? number : T extends Set<infer R> ? R : T extends Map<infer R, unknown> ? R : never,
@@ -70,8 +70,7 @@ export function DevFor<
     const slot = _slot ?? defaultSlot;
 
     console.warn(
-        "Vasille <For of/> IS DEPRECATED. " +
-            "Please use ArrayView/ArrayModelView/SetModelView/MapModelView/Iterate/ForEach.",
+        "<For of/> IS DEPRECATED. Please use ArrayView/ArrayModelView/SetModelView/MapModelView/Iterate/ForEach.",
     );
 
     if (!slot) {
@@ -82,6 +81,7 @@ export function DevFor<
         ctx.child(
             new DevArrayModelViewNode<Node, Element, TagOptions, V>(
                 ctx.runner,
+                ctx.node,
                 model,
                 (ctx, value, index) => {
                     slot(
@@ -98,6 +98,7 @@ export function DevFor<
         ctx.child(
             new DevMapViewNode(
                 ctx.runner,
+                ctx.node,
                 model,
                 (ctx, value, key) => {
                     slot(ctx as Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>, value.V, key);
@@ -111,6 +112,7 @@ export function DevFor<
         ctx.child(
             new DevSetViewNode(
                 ctx.runner,
+                ctx.node,
                 model,
                 (ctx, value) => {
                     slot(
@@ -127,7 +129,7 @@ export function DevFor<
     else {
         const safeSlot = safe(slot);
 
-        console.warn("Vasille <For of/> fallback detected. Please use Iterate or ForEach.");
+        console.warn("<For of/> fallback detected. Please use Iterate or ForEach.");
 
         if (model instanceof Array) {
             (model as Array<V>).forEach((value: V) => {
@@ -149,7 +151,7 @@ export function DevFor<
 
 export function DevArrayView<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     T extends unknown[],
     V = T extends (infer R)[] ? R : never,
@@ -175,6 +177,7 @@ export function DevArrayView<
     ctx.child(
         new DevArrayViewNode<Node, Element, TagOptions, V>(
             ctx.runner,
+            ctx.node,
             props.of,
             props.key,
             props.slot,
@@ -186,7 +189,7 @@ export function DevArrayView<
     );
 }
 
-export function DevArrayModelView<Node, Element, TagOptions extends object, V>(
+export function DevArrayModelView<Node, Element extends Node, TagOptions extends object, V>(
     props: WritableViewOptions<
         Node,
         Element,
@@ -203,6 +206,7 @@ export function DevArrayModelView<Node, Element, TagOptions extends object, V>(
     ctx.child(
         new DevArrayModelViewNode<Node, Element, TagOptions, V>(
             ctx.runner,
+            ctx.node,
             props.of,
             props.slot,
             props.writable,
@@ -212,7 +216,7 @@ export function DevArrayModelView<Node, Element, TagOptions extends object, V>(
     );
 }
 
-export function DevMapModelView<Node, Element, TagOptions extends object, K, V>(
+export function DevMapModelView<Node, Element extends Node, TagOptions extends object, K, V>(
     props: WritableViewOptions<
         Node,
         Element,
@@ -229,6 +233,7 @@ export function DevMapModelView<Node, Element, TagOptions extends object, K, V>(
     ctx.child(
         new DevMapViewNode<Node, Element, TagOptions, K, V>(
             ctx.runner,
+            ctx.node,
             props.of,
             props.slot,
             props.writable,
@@ -238,15 +243,15 @@ export function DevMapModelView<Node, Element, TagOptions extends object, K, V>(
     );
 }
 
-export function DevSetModelView<Node, Element, TagOptions extends object, V>(
+export function DevSetModelView<Node, Element extends Node, TagOptions extends object, V>(
     props: Required<ForOptions<Node, Element, TagOptions, DevSetModelNode<V>, [V]>>,
     ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
     usage: StaticPosition,
 ) {
-    ctx.child(new DevSetViewNode<Node, Element, TagOptions, V>(ctx.runner, props.of, props.slot, usage));
+    ctx.child(new DevSetViewNode<Node, Element, TagOptions, V>(ctx.runner, ctx.node, props.of, props.slot, usage));
 }
 
-export function DevWatch<Node, Element, TagOptions extends object, T>(
+export function DevWatch<Node, Element extends Node, TagOptions extends object, T>(
     { r_model, slot: _slot }: WatchOptions<Node, Element, TagOptions, T, ExecutionPosition>,
     ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
     defaultSlot: (ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>) => void | undefined,
@@ -256,11 +261,11 @@ export function DevWatch<Node, Element, TagOptions extends object, T>(
 
     /* istanbul ignore else */
     if (slot) {
-        ctx.child(new DevWatchNode({ model: r_model, slot: safe(slot) }, ctx.runner, usage));
+        ctx.child(new DevWatchNode({ model: r_model, slot: safe(slot) }, ctx.runner, ctx.node, usage));
     }
 }
 
-export function DevDelay<Node, Element, TagOptions extends object>(
+export function DevDelay<Node, Element extends Node, TagOptions extends object>(
     options: DelayOptions<
         Node,
         Element,
@@ -275,15 +280,15 @@ export function DevDelay<Node, Element, TagOptions extends object>(
         options,
         ctx,
         defaultSlot,
-        ctx => new DevFragment<Node, Element, TagOptions>(ctx.runner, null, usage, "Delay", options),
+        ctx => new DevFragment<Node, Element, TagOptions>(ctx.runner, ctx.node, null, usage, "Delay", options),
     );
 }
 
-export function DevZombie<Node, Element, TagOptions extends object>(
+export function DevZombie<Node, Element extends Node, TagOptions extends object>(
     { r_time, trigger }: ZombieOptions<ExecutionPosition>,
     ctx: DevFragment<Node, Element, TagOptions>,
     defaultSlot: ((ctx: DevZombieNode<Node, Element, TagOptions>) => void) | undefined,
     usage: StaticPosition,
 ) {
-    ctx.child(new DevZombieNode<Node, Element, TagOptions>(usage, ctx.runner, r_time, trigger), defaultSlot);
+    ctx.child(new DevZombieNode<Node, Element, TagOptions>(usage, ctx.runner, ctx.node, r_time, trigger), defaultSlot);
 }

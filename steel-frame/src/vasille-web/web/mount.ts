@@ -16,7 +16,7 @@ export function modal<T extends CompositionProps>(
 ): (input: T, node?: Fragment<Node, Element, WebTagOptions>, slot?: T["slot"]) => void {
     return function (props, node, slot) {
         if (!node) {
-            throw new Error("Vasille: Modal context is missing");
+            throw new Error("Context is missing");
         }
         const portal = create(node);
 

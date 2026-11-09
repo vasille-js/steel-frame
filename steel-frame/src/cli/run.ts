@@ -43,12 +43,12 @@ async function run() {
                     outDir: "dist/spa",
                     emptyOutDir: true,
                     rollupOptions: {
-                        external: ["vasille-web"],
+                        external: ["steel-frame/web"],
                     },
                 },
                 plugins: [
-                    await indexPlugin(routerDir, pagesDir, "vasille-web"),
-                    ...getVitePlugins("vasille-web", options),
+                    await indexPlugin(routerDir, pagesDir, "steel-frame/web"),
+                    ...getVitePlugins("steel-frame/web", options),
                     compress(),
                 ],
                 resolve,
@@ -60,7 +60,7 @@ async function run() {
 
             for (const file of files) {
                 const content = await fs.readFile(path.join(assetsDir, file), "utf-8");
-                const match = /import\{([^{}]*)}from"vasille-web"/.exec(content);
+                const match = /import\{([^{}]*)}from"steel-frame\/web"/.exec(content);
 
                 if (match) {
                     const items = match[1].split(",");
@@ -100,7 +100,7 @@ async function run() {
                 console.log("\nCommand shortcut is web build lib\n");
             }
 
-            if (!(await compileLib(srcDir, path.join(srcDir, "../dist/lib"), "vasille-web"))) {
+            if (!(await compileLib(srcDir, path.join(srcDir, "../dist/lib"), "steel-frame/web"))) {
                 console.log("Failed to compile library");
                 exit(1);
             } else {
@@ -176,7 +176,7 @@ async function run() {
         }
 
         if (lib) {
-            await watchLib(srcDir, path.join(srcDir, "../dist/lib"), "vasille-web/dev");
+            await watchLib(srcDir, path.join(srcDir, "../dist/lib"), "steel-frame/web-dev");
         } else {
             const { ideServer } = startProxyServer();
             const server = await createServer({
@@ -187,8 +187,8 @@ async function run() {
                 appType: "spa",
                 command: "serve",
                 plugins: [
-                    await indexPlugin(routerDir, pagesDir, "vasille-web/dev"),
-                    ...getVitePlugins("vasille-web/dev", {
+                    await indexPlugin(routerDir, pagesDir, "steel-frame/web-dev"),
+                    ...getVitePlugins("steel-frame/web-dev", {
                         ...options,
                         errorsHandler: reports => {
                             ideServer.clients.forEach(client => {
@@ -215,7 +215,7 @@ async function run() {
 
             await server.listen();
 
-            await watchForIndexUpdates(routerDir, pagesDir, "steel-frame", () => {
+            await watchForIndexUpdates(routerDir, pagesDir, "steel-frame/web-dev", () => {
                 server.restart();
             });
 

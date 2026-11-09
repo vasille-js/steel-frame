@@ -8,11 +8,11 @@ import { IRunner } from "./runner.js";
  */
 export class AppNode<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Root<Node, Element, TagOptions, Runner> {
-    private readonly node: Element;
+    public readonly node!: Element;
 
     /**
      * Constructs an app node
@@ -20,9 +20,7 @@ export class AppNode<
      * @param runner {IRunner} A adapter which execute DOM manipulation
      */
     constructor(node: Element, runner: Runner) {
-        super(runner, 0);
-
-        this.node = node;
+        super(runner, node, 0);
     }
 
     public appendNode(node: Node) {
@@ -32,16 +30,14 @@ export class AppNode<
 
 export class PortalNode<
     Node,
-    Element,
+    Element extends Node,
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Fragment<Node, Element, TagOptions, Runner> {
-    private readonly node: Element;
+    public readonly node!: Element;
 
     constructor(node: Element, runner: Runner, deep: number) {
-        super(runner, deep);
-
-        this.node = node;
+        super(runner, node, deep);
     }
 
     public override compose() {

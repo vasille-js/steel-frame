@@ -8,13 +8,14 @@ import { ExecutionPosition, inspector, provideId, StaticPosition } from "./inspe
 import { DevArrayModel, DevMapModel, DevSetModelNode } from "./models.js";
 import { DevFragment } from "./node.js";
 
-function createDevFragment<Node, Element, TagOptions extends object>(
+function createDevFragment<Node, Element extends Node, TagOptions extends object>(
     runner: IRunner<Node, Element, TagOptions>,
+    node: Node,
 ): DevFragment<Node, Element, TagOptions> {
-    return new DevFragment(runner, null, null, "Fragment", {});
+    return new DevFragment(runner, node, null, null, "Fragment", {});
 }
 
-export class DevArrayModelViewNode<Node, Element, TagOptions extends object, T> extends ArrayModelViewNode<
+export class DevArrayModelViewNode<Node, Element extends Node, TagOptions extends object, T> extends ArrayModelViewNode<
     T,
     Node,
     Element,
@@ -26,6 +27,7 @@ export class DevArrayModelViewNode<Node, Element, TagOptions extends object, T> 
 
     public constructor(
         runner: IRunner<Node, Element, TagOptions>,
+        node: Node,
         model: DevArrayModel<T>,
         slot: (
             ctx: Fragment<Node, Element, TagOptions>,
@@ -38,12 +40,13 @@ export class DevArrayModelViewNode<Node, Element, TagOptions extends object, T> 
     ) {
         super(
             runner,
+            node,
             1,
             model,
             slot,
             writable,
             v => (indexDeclaration ? devRef(v, this, indexDeclaration) : ref(v)),
-            runner => createDevFragment(runner),
+            runner => createDevFragment(runner, node),
         );
         this.id = provideId();
 
@@ -62,7 +65,7 @@ export class DevArrayModelViewNode<Node, Element, TagOptions extends object, T> 
     }
 }
 
-export class DevArrayViewNode<Node, Element, TagOptions extends object, T> extends ArrayViewNode<
+export class DevArrayViewNode<Node, Element extends Node, TagOptions extends object, T> extends ArrayViewNode<
     T,
     Node,
     Element,
@@ -74,6 +77,7 @@ export class DevArrayViewNode<Node, Element, TagOptions extends object, T> exten
 
     public constructor(
         runner: IRunner<Node, Element, TagOptions>,
+        node: Node,
         model: IValue<T[], ExecutionPosition>,
         key: (item: T) => number | string,
         slot: (
@@ -88,6 +92,7 @@ export class DevArrayViewNode<Node, Element, TagOptions extends object, T> exten
     ) {
         super(
             runner,
+            node,
             1,
             model,
             key,
@@ -95,7 +100,7 @@ export class DevArrayViewNode<Node, Element, TagOptions extends object, T> exten
             writable,
             v => (valueDeclaration ? devRef(v, this, valueDeclaration) : ref(v)),
             v => (indexDeclaration ? devRef(v, this, indexDeclaration) : ref(v)),
-            runner => createDevFragment(runner),
+            runner => createDevFragment(runner, node),
         );
 
         this.id = provideId();
@@ -115,7 +120,7 @@ export class DevArrayViewNode<Node, Element, TagOptions extends object, T> exten
     }
 }
 
-export class DevSetViewNode<Node, Element, TagOptions extends object, T> extends SetViewNode<
+export class DevSetViewNode<Node, Element extends Node, TagOptions extends object, T> extends SetViewNode<
     T,
     Node,
     Element,
@@ -127,11 +132,12 @@ export class DevSetViewNode<Node, Element, TagOptions extends object, T> extends
 
     public constructor(
         runner: IRunner<Node, Element, TagOptions>,
+        node: Node,
         model: DevSetModelNode<T>,
         slot: (ctx: Fragment<Node, Element, TagOptions>, value: T) => void,
         usage: StaticPosition,
     ) {
-        super(runner, 1, model, slot, runner => createDevFragment(runner));
+        super(runner, node, 1, model, slot, runner => createDevFragment(runner, node));
         this.id = provideId();
 
         inspector.createComponent({
@@ -149,7 +155,7 @@ export class DevSetViewNode<Node, Element, TagOptions extends object, T> extends
     }
 }
 
-export class DevMapViewNode<Node, Element, TagOptions extends object, K, T> extends MapViewNode<
+export class DevMapViewNode<Node, Element extends Node, TagOptions extends object, K, T> extends MapViewNode<
     K,
     T,
     Node,
@@ -162,6 +168,7 @@ export class DevMapViewNode<Node, Element, TagOptions extends object, K, T> exte
 
     public constructor(
         runner: IRunner<Node, Element, TagOptions>,
+        node: Node,
         model: DevMapModel<K, T>,
         slot: (ctx: Fragment<Node, Element, TagOptions>, value: WritableIValue<T, ExecutionPosition>, key: K) => void,
         writable: boolean,
@@ -170,12 +177,13 @@ export class DevMapViewNode<Node, Element, TagOptions extends object, K, T> exte
     ) {
         super(
             runner,
+            node,
             1,
             model,
             slot,
             writable,
             v => (valueDeclaration ? devRef(v, this, valueDeclaration) : ref(v)),
-            runner => createDevFragment(runner),
+            runner => createDevFragment(runner, node),
         );
         this.id = provideId();
 

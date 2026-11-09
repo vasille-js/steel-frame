@@ -1,17 +1,17 @@
 const reportIt = "Report it here: https://gitlab.com/vasille-js/vasille-js/-/issues";
 
 export function notOverwritten(): string {
-    console.error("Vasille-SFP: Internal error", "Must be overwritten", reportIt);
+    console.error("Internal error", "Must be overwritten", reportIt);
     return "not-overwritten";
 }
 
 export function internalError(msg: string): string {
-    console.error("Vasille-SFP: Internal error", msg, reportIt);
+    console.error("Internal error", msg, reportIt);
     return "internal-error";
 }
 
 export function userError(msg: string, err: string): string {
-    console.error("Vasille-SFP: User error", msg);
+    console.error("Error", msg);
     return err;
 }
 
