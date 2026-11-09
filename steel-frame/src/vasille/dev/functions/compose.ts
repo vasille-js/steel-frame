@@ -46,7 +46,7 @@ export function devDynamicalModule<T, Node, Element extends Node, TagOptions ext
             value: function (previous: DevFragmentMap<Node, Element, TagOptions, Props>) {
                 // inspector erase declaration
                 previous.forEach(({ props, node, usage }, key) => {
-                    node.children.forEach(child => child.destroy(child.sDeep));
+                    node.children.forEach(child => child.destroy(child.pos));
                     node.children.splice(0);
                     safeRun(node, props, usage);
                     fragments.set(key, { props, node, usage });
@@ -70,14 +70,7 @@ export function devView<Node, Element extends Node, TagOptions extends object, I
         usage: StaticPosition | undefined,
     ) {
         const { callback } = props;
-        const frag = new DevFragment<Node, Element, TagOptions>(
-            parent.runner,
-            parent.node,
-            declaration,
-            usage ?? null,
-            name,
-            props,
-        );
+        const frag = new DevFragment<Node, Element, TagOptions>(parent, declaration, usage ?? null, name, props);
 
         parent.child(frag);
 
@@ -105,11 +98,7 @@ export function devView<Node, Element extends Node, TagOptions extends object, I
         if (!node) {
             throw new Error("Context is missing");
         }
-        const frag = new Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>(
-            node.runner,
-            node.node,
-            node.sDeep + 1,
-        );
+        const frag = new Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>(node);
 
         if (slot) {
             props.slot = slot;
@@ -144,7 +133,7 @@ export class DevModel<In extends object, Out extends object> {
     ) {}
 
     create(o: In, parent: Reactive | undefined, usage: StaticPosition): Out {
-        const ctx = new Reactive(parent?.sDeep ?? 0);
+        const ctx = new Reactive(parent?.pos ?? 0);
         const id = ctx.id!;
         const { fn, name, declaration } = this;
 
@@ -194,7 +183,7 @@ export function devMountApp<T, Node, Element extends Node, TagOptions extends ob
     devInspector: Inspector,
 ): DevAppNode<Node, Element, TagOptions> {
     const root = new DevAppNode<Node, Element, TagOptions>(tag, runner);
-    const frag = new DevFragment<Node, Element, TagOptions>(runner, tag, null, null, "Root", {});
+    const frag = new DevFragment<Node, Element, TagOptions>(root, null, null, "Root", {});
 
     // share information about created stores
     inspector.connect(devInspector);

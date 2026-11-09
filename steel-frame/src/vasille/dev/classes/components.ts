@@ -1,6 +1,6 @@
 import { ReadableIValue } from "../../classes/core/ivalue.js";
 import { AppNode, Fragment, PortalNode, SwitchedNode, WatchNode, ZombieNode } from "../../classes/index.js";
-import { SwitchedNodeCase } from "../../classes/node/node.js";
+import { Root, SwitchedNodeCase } from "../../classes/node/node.js";
 import { IRunner } from "../../classes/node/runner.js";
 import { WatchOptions } from "../../classes/node/watch.js";
 import {
@@ -34,12 +34,11 @@ export class DevWatchNode<Node, Element extends Node, TagOptions extends object,
 
     public constructor(
         input: WatchOptions<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, T>,
-        runner: IRunner<Node, Element, TagOptions>,
-        node: Node,
+        parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
         usage: StaticPosition,
     ) {
-        super(input, runner, node, 1);
-        this.rDeep = 0;
+        super(input, parent);
+        this.deep = 0;
 
         const id = (this.id = provideId());
 
@@ -92,14 +91,14 @@ export class DevPortalNode<
     public override id: number;
 
     constructor(
+        parent: Root<Node, Element, TagOptions, Runner>,
         node: Element,
-        runner: Runner,
         declaration: StaticPosition | undefined,
         usage: StaticPosition | undefined,
         name: string | undefined,
     ) {
-        super(node, runner, 1);
-        this.rDeep = 0;
+        super(parent, node);
+        this.refreshDeep(0);
 
         const id = (this.id = provideId());
 
@@ -128,13 +127,12 @@ export class DevSwitchedNode<Node, Element extends Node, TagOptions extends obje
 
     public constructor(
         usage: StaticPosition,
-        runner: IRunner<Node, Element, TagOptions>,
-        node: Node,
+        parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
         cases: SwitchedNodeCase<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>[],
         _default?: (node: Fragment<Node, Element, TagOptions>) => void,
     ) {
-        super(runner, node, 1, cases, _default);
-        this.rDeep = 0;
+        super(parent, cases, _default);
+        this.deep = 0;
 
         const id = (this.id = provideId());
         const conditions: { [k: number]: number | DevValue } = {};
@@ -160,7 +158,7 @@ export class DevSwitchedNode<Node, Element extends Node, TagOptions extends obje
     protected override newChild(
         index: number,
     ): Fragment<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>> {
-        return new DevFragment(this.runner, this.node, null, null, "Case", { index });
+        return new DevFragment(this, null, null, "Case", { index });
     }
 }
 
@@ -174,12 +172,11 @@ export class DevZombieNode<Node, Element extends Node, TagOptions extends object
 
     public constructor(
         usage: StaticPosition,
-        runner: IRunner<Node, Element, TagOptions>,
-        node: Node,
+        parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
         time: ReadableIValue<number, unknown>,
         trigger: () => void,
     ) {
-        super(runner, node, time, trigger);
+        super(parent, time, trigger);
 
         const id = (this.id = provideId());
 

@@ -1,4 +1,4 @@
-import { Fragment, Root } from "./node.js";
+import { Fragment, Root, RootInit } from "./node.js";
 import { IRunner } from "./runner.js";
 
 /**
@@ -16,11 +16,9 @@ export class AppNode<
 
     /**
      * Constructs an app node
-     * @param node {Element} The root of application
-     * @param runner {IRunner} A adapter which execute DOM manipulation
      */
     constructor(node: Element, runner: Runner) {
-        super(runner, node, 0);
+        super({ runner, node, pos: 0 });
     }
 
     public appendNode(node: Node) {
@@ -36,8 +34,9 @@ export class PortalNode<
 > extends Fragment<Node, Element, TagOptions, Runner> {
     public readonly node!: Element;
 
-    constructor(node: Element, runner: Runner, deep: number) {
-        super(runner, node, deep);
+    constructor(parent: Root<Node, Element, TagOptions, Runner>, node: Element) {
+        super(parent);
+        this.node = node;
     }
 
     public override compose() {

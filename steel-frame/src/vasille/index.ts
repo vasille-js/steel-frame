@@ -34,7 +34,7 @@ export {
 } from "./classes/index.js";
 
 export { internalError } from "./classes/core/errors.js";
-export { type TextProps, type SwitchedNodeCase } from "./classes/node/node.js";
+export { type SwitchedNodeCase } from "./classes/node/node.js";
 
 export {
     ref,

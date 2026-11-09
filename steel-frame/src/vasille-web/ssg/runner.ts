@@ -3,6 +3,7 @@ import { WebTagOptions } from "../web/runner/runner.js";
 import { IRunner, IValue, Tag, TextNode } from "../../vasille/index.js";
 import { CssStyleInjector } from "../web/css/index.js";
 import { ClassItem } from "../web/jsx/jsx-runtime.js";
+import { Root } from "../../vasille/classes/node/node.js";
 
 export type SsgTagOptions = Omit<WebTagOptions, "slot" | "events" | "callback"> & {
     slot?(ctx: SsgTag): void;
@@ -417,13 +418,15 @@ export class SsgRunner implements IRunner<Node, Element, SsgTagOptions> {
         node.appendChild(child);
     }
 
-    textNode(deep: number, text: unknown, node: Node): TextNode<Node, Element, SsgTagOptions> {
-        return new SsgTextNode({ text }, this, node, deep);
+    textNode(
+        text: unknown,
+        parent: Root<Node, Element, SsgTagOptions, SsgRunner>,
+    ): TextNode<Node, Element, SsgTagOptions> {
+        return new SsgTextNode(text, parent);
     }
 
     tag(
-        deep: number,
-        node: Node,
+        parent: Root<Node, Element, SsgTagOptions, SsgRunner>,
         tagName: string,
         input: SsgTagOptions,
         cb?: ((ctx: Tag<Node, Element, SsgTagOptions>) => void) | undefined,
@@ -433,9 +436,9 @@ export class SsgRunner implements IRunner<Node, Element, SsgTagOptions> {
         }
 
         return tagName === "head"
-            ? new HeadTag(input, this, node, tagName, deep)
+            ? new HeadTag(input, parent, tagName)
             : tagName === "body"
-              ? new BodyTag(input, this, node, tagName, deep)
-              : new SsgTag(input, this, node, tagName, deep);
+              ? new BodyTag(input, parent, tagName)
+              : new SsgTag(input, parent, tagName);
     }
 }

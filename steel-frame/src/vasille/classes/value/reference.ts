@@ -29,7 +29,7 @@ export class Reference<T, Extra extends unknown> extends IValue<T, Extra> implem
      * @param ctx {Reactive} the reactive context
      */
     public constructor(value: T, ctx?: Reactive) {
-        super(ctx?.sDeep ?? 0);
+        super(ctx?.pos ?? 0);
         this.state = value;
     }
 

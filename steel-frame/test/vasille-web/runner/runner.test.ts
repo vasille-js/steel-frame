@@ -39,7 +39,7 @@ it("if", function () {
     let check2 = true;
 
     root.child(
-        new SwitchedNode<Node, Element, WebTagOptions>(root.runner, root.sDeep + 1, [
+        new SwitchedNode<Node, Element, WebTagOptions>(root.runner, root.pos + 1, [
             {
                 $case: new Reference(true),
                 slot: (node, value) => {
@@ -50,7 +50,7 @@ it("if", function () {
         ]),
     );
     root.child(
-        new SwitchedNode<Node, Element, WebTagOptions>(root.runner, root.sDeep + 1, [
+        new SwitchedNode<Node, Element, WebTagOptions>(root.runner, root.pos + 1, [
             {
                 $case: new Reference(false),
                 slot: () => (check2 = false),
@@ -75,7 +75,7 @@ it("if else", function () {
     root.child(
         new SwitchedNode<Node, Element, WebTagOptions>(
             root.runner,
-            root.sDeep + 1,
+            root.pos + 1,
             [{ $case: iv1, slot: () => (check1 = 1) }],
             () => (check1 = 2),
         ),
@@ -84,7 +84,7 @@ it("if else", function () {
     root.child(
         new SwitchedNode<Node, Element, WebTagOptions>(
             root.runner,
-            root.sDeep + 1,
+            root.pos + 1,
             [{ $case: iv2, slot: () => (check2 = 1) }],
             () => (check2 = 2),
         ),
@@ -112,7 +112,7 @@ it("switch", function () {
     root.child(
         new SwitchedNode<Node, Element, WebTagOptions>(
             root.runner,
-            root.sDeep + 1,
+            root.pos + 1,
             [
                 { $case: expr(root, v => v == 1, [v]), slot: () => (check = 1) },
                 { $case: expr(root, v => v == 2, [v]), slot: () => (check = 2) },

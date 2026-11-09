@@ -4,6 +4,7 @@ import { PropertyBinding } from "./binding/property.js";
 import { stringifyStyleValue, StyleBinding } from "./binding/style.js";
 import { CssStyleInjector } from "../css/index.js";
 import { internalError, IRunner, IValue, safe, Tag, TextNode } from "../../../vasille/index.js";
+import { Root } from "../../../vasille/classes/node/node.js";
 
 export type AttrType<T> = IValue<T | string | null, unknown> | T | string | null | undefined;
 export type StyleType<T> = T | number | number[] | IValue<string | number | number[] | undefined, unknown> | undefined;
@@ -236,12 +237,14 @@ export class WebRunner<Options extends WebTagOptions> implements IRunner<Node, E
     appendChild(node: Element, child: Element | Node): void {
         node.appendChild(child);
     }
-    textNode(deep: number, text: unknown, node: Node): TextNode<Node, Element, Options> {
-        return new WebTextNode({ text }, this, node, deep);
+    textNode(
+        parent: Root<Node, Element, Options, WebRunner<Options>>,
+        text: unknown,
+    ): TextNode<Node, Element, Options> {
+        return new WebTextNode(text, parent);
     }
     tag(
-        deep: number,
-        node: Node,
+        parent: Root<Node, Element, Options, WebRunner<Options>>,
         tagName: string,
         input: Options,
         cb?: ((ctx: Tag<Node, Element, Options>) => void) | undefined,
@@ -250,6 +253,6 @@ export class WebRunner<Options extends WebTagOptions> implements IRunner<Node, E
             input.l = cb as any;
         }
 
-        return new WebTag(input, this, node, tagName, deep);
+        return new WebTag(input, parent, tagName);
     }
 }

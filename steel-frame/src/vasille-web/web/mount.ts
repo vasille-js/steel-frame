@@ -3,7 +3,7 @@ import { webRouterApp, WebRouterInitialization } from "./router/router.js";
 import { AppNode, CompositionProps, Fragment, mountApp, PortalNode, reportError } from "../../vasille/index.js";
 
 function createPortal(node: Fragment<Node, Element, WebTagOptions>) {
-    const portal = new PortalNode<Node, Element, WebTagOptions>(document.body, node.runner, node.sDeep + 1);
+    const portal = new PortalNode<Node, Element, WebTagOptions>(node, document.body);
 
     node.child(portal);
 
@@ -65,7 +65,7 @@ export class Prompt<T extends PromptProps, Extra extends [number, ...unknown[]]>
 
             function destroy() {
                 timer && clearTimeout(timer);
-                portal.destroy(portal.sDeep);
+                portal.destroy(portal.pos);
             }
 
             try {

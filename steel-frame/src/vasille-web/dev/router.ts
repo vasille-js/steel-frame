@@ -10,8 +10,7 @@ export function devScreen<Node, Element extends Node, TagOptions extends object,
 ): (props: ScreenProps<Route>, ctx?: DevFragment<Node, Element, TagOptions>) => Promise<void> {
     return createScreen(
         renderer,
-        (node, props) =>
-            new DevFragment<Node, Element, TagOptions>(node.runner, node.node, declaration, null, name, props),
+        (node, props) => new DevFragment<Node, Element, TagOptions>(node, declaration, null, name, props),
     );
 }
 

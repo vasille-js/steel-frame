@@ -1,6 +1,6 @@
 import { ReadableIValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
-import { Fragment } from "./node.js";
+import { Fragment, Root } from "./node.js";
 import { IRunner } from "./runner.js";
 
 export class ZombieNode<
@@ -12,11 +12,16 @@ export class ZombieNode<
     public readonly time: ReadableIValue<number, unknown>;
     public readonly trigger: () => void;
 
-    public constructor(runner: Runner, node: Node, time: ReadableIValue<number, unknown>, trigger: () => void) {
-        super(runner, node, 0);
+    public constructor(
+        parent: Root<Node, Element, TagOptions, Runner>,
+        time: ReadableIValue<number, unknown>,
+        trigger: () => void,
+    ) {
+        super(parent);
 
         this.time = time;
         this.trigger = safe(trigger);
+        this.refreshDeep(0);
     }
 
     public override compose() {

@@ -7,12 +7,12 @@ import { processComponentProps } from "./components.js";
 import { ExecutionPosition, inspector, provideId, StaticPosition } from "./inspectable.js";
 import { DevArrayModel, DevMapModel, DevSetModelNode } from "./models.js";
 import { DevFragment } from "./node.js";
+import { Root } from "../../classes/node/node.js";
 
 function createDevFragment<Node, Element extends Node, TagOptions extends object>(
-    runner: IRunner<Node, Element, TagOptions>,
-    node: Node,
+    parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
 ): DevFragment<Node, Element, TagOptions> {
-    return new DevFragment(runner, node, null, null, "Fragment", {});
+    return new DevFragment(parent, null, null, "Fragment", {});
 }
 
 export class DevArrayModelViewNode<Node, Element extends Node, TagOptions extends object, T> extends ArrayModelViewNode<
@@ -26,8 +26,7 @@ export class DevArrayModelViewNode<Node, Element extends Node, TagOptions extend
     public override id: number;
 
     public constructor(
-        runner: IRunner<Node, Element, TagOptions>,
-        node: Node,
+        parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
         model: DevArrayModel<T>,
         slot: (
             ctx: Fragment<Node, Element, TagOptions>,
@@ -39,14 +38,12 @@ export class DevArrayModelViewNode<Node, Element extends Node, TagOptions extend
         indexDeclaration?: StaticPosition,
     ) {
         super(
-            runner,
-            node,
-            1,
+            parent,
             model,
             slot,
             writable,
             v => (indexDeclaration ? devRef(v, this, indexDeclaration) : ref(v)),
-            runner => createDevFragment(runner, node),
+            createDevFragment,
         );
         this.id = provideId();
 
@@ -76,8 +73,7 @@ export class DevArrayViewNode<Node, Element extends Node, TagOptions extends obj
     public override id: number;
 
     public constructor(
-        runner: IRunner<Node, Element, TagOptions>,
-        node: Node,
+        parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
         model: IValue<T[], ExecutionPosition>,
         key: (item: T) => number | string,
         slot: (
@@ -91,16 +87,14 @@ export class DevArrayViewNode<Node, Element extends Node, TagOptions extends obj
         indexDeclaration: StaticPosition | undefined,
     ) {
         super(
-            runner,
-            node,
-            1,
+            parent,
             model,
             key,
             slot,
             writable,
             v => (valueDeclaration ? devRef(v, this, valueDeclaration) : ref(v)),
             v => (indexDeclaration ? devRef(v, this, indexDeclaration) : ref(v)),
-            runner => createDevFragment(runner, node),
+            createDevFragment,
         );
 
         this.id = provideId();
@@ -131,13 +125,12 @@ export class DevSetViewNode<Node, Element extends Node, TagOptions extends objec
     public override id: number;
 
     public constructor(
-        runner: IRunner<Node, Element, TagOptions>,
-        node: Node,
+        parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
         model: DevSetModelNode<T>,
         slot: (ctx: Fragment<Node, Element, TagOptions>, value: T) => void,
         usage: StaticPosition,
     ) {
-        super(runner, node, 1, model, slot, runner => createDevFragment(runner, node));
+        super(parent, model, slot, createDevFragment);
         this.id = provideId();
 
         inspector.createComponent({
@@ -167,8 +160,7 @@ export class DevMapViewNode<Node, Element extends Node, TagOptions extends objec
     public override id: number;
 
     public constructor(
-        runner: IRunner<Node, Element, TagOptions>,
-        node: Node,
+        parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
         model: DevMapModel<K, T>,
         slot: (ctx: Fragment<Node, Element, TagOptions>, value: WritableIValue<T, ExecutionPosition>, key: K) => void,
         writable: boolean,
@@ -176,14 +168,12 @@ export class DevMapViewNode<Node, Element extends Node, TagOptions extends objec
         valueDeclaration: StaticPosition | undefined,
     ) {
         super(
-            runner,
-            node,
-            1,
+            parent,
             model,
             slot,
             writable,
             v => (valueDeclaration ? devRef(v, this, valueDeclaration) : ref(v)),
-            runner => createDevFragment(runner, node),
+            createDevFragment,
         );
         this.id = provideId();
 

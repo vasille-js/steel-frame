@@ -49,22 +49,22 @@ export class Expression<T, Args extends unknown[], Extra extends unknown>
 
         const handler = this.getHandler(func);
         let i = 0;
-        let deep = ctx.sDeep;
+        let deep = ctx.pos;
 
         this.valuesCache = cache;
         values.forEach(value => {
             const updater = handler.bind(this, Number(i++)) as () => void;
 
-            if (value && value.rDeep < deep) {
-                deep = value.rDeep;
+            if (value && value.deep < deep) {
+                deep = value.deep;
             }
             this.linkedFunc.push(updater);
             value?.on(updater);
         });
 
         this.values = values;
-        this.rDeep = deep;
-        if (ctx.sDeep > deep) {
+        this.deep = deep;
+        if (ctx.pos > deep) {
             ctx.bind(this);
         }
     }

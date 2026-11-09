@@ -26,8 +26,8 @@ export class DebounceReference<T, Extra extends unknown> extends SyncedIValue<T,
         );
         this.target = target;
 
-        this.rDeep = target.sDeep;
-        if (ctx.sDeep > target.sDeep) {
+        this.deep = target.pos;
+        if (ctx.pos > target.pos) {
             ctx.bind(this);
         }
     }

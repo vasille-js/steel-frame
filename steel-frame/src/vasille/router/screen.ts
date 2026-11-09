@@ -4,7 +4,7 @@ import { ScreenProps } from "./types.js";
 function createFragment<Node, Element extends Node, TagOptions extends object>(
     node: Fragment<Node, Element, TagOptions>,
 ) {
-    return new Fragment<Node, Element, TagOptions>(node.runner, node.node, node.sDeep + 1);
+    return new Fragment<Node, Element, TagOptions>(node);
 }
 
 export function createScreen<F extends Fragment<unknown, unknown, object>, Route extends string>(

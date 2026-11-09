@@ -3,6 +3,17 @@ import { IValue } from "../core/ivalue.js";
 import { reportError, safe } from "../functional/safety.js";
 import { IRunner } from "./runner.js";
 
+export interface RootInit<
+    Node,
+    Element extends Node,
+    TagOptions extends object,
+    Runner extends IRunner<Node, Element, TagOptions>,
+> {
+    runner: Runner;
+    node: Node;
+    pos: number;
+}
+
 /**
  * This class is symbolic
  * @extends Reactive
@@ -23,10 +34,10 @@ export abstract class Root<
     public last: Fragment<Node, Element, TagOptions> | undefined = undefined;
     public node: Node;
 
-    protected constructor(runner: Runner, node: Node, deep: number) {
-        super(deep);
-        this.runner = runner;
-        this.node = node;
+    protected constructor(init: RootInit<Node, Element, TagOptions, Runner>) {
+        super(init.pos + 1);
+        this.runner = init.runner;
+        this.node = init.node;
     }
 
     /**
@@ -35,9 +46,7 @@ export abstract class Root<
      * @protected
      */
     protected push(fragment: Fragment<Node, Element, TagOptions>): void {
-        fragment.parent = this;
-        this.last = fragment;
-        this.children.push(fragment);
+        this.children.push((this.last = fragment));
     }
 
     /**
@@ -66,7 +75,7 @@ export abstract class Root<
      * @param text {String | IValue} A text fragment string
      */
     public text(text: unknown): void {
-        const node = this.runner.textNode(this.sDeep + 1, text, this.node);
+        const node = this.runner.textNode(this, text);
 
         this.push(node);
         node.compose();
@@ -91,7 +100,7 @@ export abstract class Root<
      * @param cb {function(Tag, *)} callback
      */
     public tag(tagName: string, input: TagOptions, cb?: (ctx: Tag<Node, Element, TagOptions>) => void): void {
-        const tag = this.runner.tag(this.sDeep + 1, this.node, tagName, input, cb);
+        const tag = this.runner.tag(this, tagName, input, cb);
 
         this.push(tag);
         tag.compose();
@@ -110,7 +119,7 @@ export abstract class Root<
 
     public override destroy(deep: number, keepNodes?: boolean) {
         this.children.forEach(child => {
-            if (!keepNodes || child.rDeep < deep) {
+            if (!keepNodes || child.deep < deep) {
                 child.destroy(deep, keepNodes);
             }
         });
@@ -126,10 +135,11 @@ export class Fragment<
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Root<Node, Element, TagOptions, Runner> {
-    public parent!: Root<Node, Element, TagOptions>;
+    public readonly parent: Root<Node, Element, TagOptions>;
 
-    public constructor(runner: Runner, node: Node, deep: number) {
-        super(runner, node, deep);
+    public constructor(parent: Root<Node, Element, TagOptions, Runner>) {
+        super(parent);
+        this.parent = parent;
     }
 
     /**
@@ -159,8 +169,8 @@ export class Fragment<
     }
 
     public override refreshDeep(deep: number) {
-        this.rDeep = deep;
-        if (this.parent.rDeep > deep) {
+        this.deep = deep;
+        if (this.parent.deep > deep) {
             this.parent.refreshDeep(deep);
         }
     }
@@ -194,11 +204,9 @@ export class Fragment<
     }
 
     public link(
-        parent: Fragment<Node, Element, TagOptions>,
         prev: Fragment<Node, Element, TagOptions> | undefined,
         next: Fragment<Node, Element, TagOptions> | undefined,
     ) {
-        this.parent = parent;
         this.prev = prev;
         this.next = next;
         if (prev) {
@@ -239,10 +247,6 @@ export class Fragment<
     }
 }
 
-export interface TextProps {
-    text: unknown;
-}
-
 /**
  * Represents a text node
  * @class TextNode
@@ -257,9 +261,9 @@ export abstract class TextNode<
     protected handler: ((v: unknown) => void) | null = null;
     protected readonly data: unknown;
 
-    public constructor(input: TextProps, runner: Runner, node: Node, deep: number) {
-        super(runner, node, deep);
-        this.data = input.text;
+    public constructor(text: unknown, parent: Root<Node, Element, TagOptions, Runner>) {
+        super(parent);
+        this.data = text;
     }
 
     public abstract override compose(): void;
@@ -269,7 +273,7 @@ export abstract class TextNode<
     public override destroy(deep: number, keepNodes?: boolean): void {
         const text = this.data;
 
-        if (text instanceof IValue && text.rDeep < deep && this.handler) {
+        if (text instanceof IValue && text.deep < deep && this.handler) {
             text.off(this.handler);
         }
 
@@ -292,8 +296,8 @@ export abstract class Tag<
     public readonly name: string;
     public readonly options: TagOptions;
 
-    public constructor(options: TagOptions, runner: Runner, node: Node, tagName: string, deep: number) {
-        super(runner, node, deep);
+    public constructor(options: TagOptions, parent: Root<Node, Element, TagOptions, Runner>, tagName: string) {
+        super(parent);
         this.options = options;
         this.name = tagName;
     }
@@ -354,13 +358,11 @@ export class SwitchedNode<
      * Constructs a switch node and define a sync function
      */
     public constructor(
-        runner: Runner,
-        node: Node,
-        deep: number,
+        parent: Root<Node, Element, TagOptions, Runner>,
         cases: SwitchedNodeCase<Node, Element, TagOptions, Runner>[],
         _default?: (node: Fragment<Node, Element, TagOptions>) => void,
     ) {
-        super(runner, node, deep);
+        super(parent);
 
         if (_default) {
             cases.push({ $case: 1, slot: _default });
@@ -375,7 +377,7 @@ export class SwitchedNode<
             }
 
             if (this.last) {
-                this.last.destroy(this.last.sDeep);
+                this.last.destroy(this.last.pos);
                 this.children.splice(0);
                 this.last = undefined;
             }
@@ -384,7 +386,6 @@ export class SwitchedNode<
                 const node = this.newChild(i);
                 const value = this.cases[i]!.$case;
 
-                node.parent = this;
                 this.last = node;
                 this.children.push(node);
 
@@ -408,7 +409,7 @@ export class SwitchedNode<
     public override destroy(deep: number, keepNodes?: boolean) {
         this.cases.forEach(c => {
             const item = c.$case;
-            if (item instanceof IValue && item.rDeep < deep) {
+            if (item instanceof IValue && item.deep < deep) {
                 item.off(this.sync);
             }
         });
@@ -417,6 +418,6 @@ export class SwitchedNode<
     }
 
     protected newChild(_index: number): Fragment<Node, Element, TagOptions, Runner> {
-        return new Fragment(this.runner, this.node, this.sDeep + 1);
+        return new Fragment(this);
     }
 }

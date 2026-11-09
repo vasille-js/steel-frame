@@ -1,7 +1,7 @@
 import { Reactive } from "../core/core.js";
 import { WritableIValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
-import { Fragment } from "../node/node.js";
+import { Fragment, Root } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
 import { Collection } from "./collection.js";
 import { Listener, removeFragmentFromTree } from "./listener.js";
@@ -111,18 +111,14 @@ export class SetViewNode<
     private readonly slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T) => void;
 
     public constructor(
-        runner: Runner,
-        node: Node,
-        deep: number,
+        parent: Root<Node, Element, TagOptions, Runner>,
         private readonly model: SetModel<T, Extra>,
         slot: (ctx: Fragment<Node, Element, TagOptions, Runner>, value: T) => void,
         private readonly frag: (
-            runner: Runner,
-            node: Node,
-            deep: number,
+            parent: Root<Node, Element, TagOptions, Runner>,
         ) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
-        super(runner, node, deep);
+        super(parent);
         this.slot = safe(slot);
     }
 
@@ -130,9 +126,9 @@ export class SetViewNode<
         const view = this;
 
         function create(this: void, value: T) {
-            const frag = view.frag(view.runner, view.node, view.sDeep + 1);
+            const frag = view.frag(view);
 
-            frag.link(view, view.last, undefined);
+            frag.link(view.last, undefined);
             view.slot(frag, value);
             view.map.set(value, frag);
             view.last = frag;
@@ -143,7 +139,7 @@ export class SetViewNode<
 
                 if (existing) {
                     removeFragmentFromTree(existing);
-                    existing.destroy(existing.sDeep);
+                    existing.destroy(existing.pos);
                 }
                 create(value!);
             } else if (op === Remove) {
@@ -152,10 +148,10 @@ export class SetViewNode<
                 /* istanbul ignore else */
                 if (item) {
                     removeFragmentFromTree(item);
-                    item.destroy(item.sDeep);
+                    item.destroy(item.pos);
                 }
             } else {
-                view.map.forEach(frag => frag.destroy(frag.sDeep));
+                view.map.forEach(frag => frag.destroy(frag.pos));
                 view.map.clear();
                 view.last = undefined;
             }
@@ -176,12 +172,12 @@ export class SetViewNode<
 
     public override destroy(deep: number, keepNodes?: boolean): void {
         /* istanbul ignore else */
-        if (this.acceptUpdate && this.model.rDeep < deep) {
+        if (this.acceptUpdate && this.model.deep < deep) {
             this.model.listener.off(this.acceptUpdate);
         }
         this.map.forEach(frag => {
             /* istanbul ignore else */
-            if (frag.rDeep < deep || !keepNodes) {
+            if (frag.deep < deep || !keepNodes) {
                 frag.destroy(deep, keepNodes);
             }
         });

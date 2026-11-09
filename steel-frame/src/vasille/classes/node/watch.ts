@@ -1,4 +1,4 @@
-import { Fragment } from "./node.js";
+import { Fragment, Root } from "./node.js";
 import { ReadableIValue } from "../core/ivalue.js";
 import { IRunner } from "./runner.js";
 
@@ -30,11 +30,9 @@ export class WatchNode<
 
     public constructor(
         input: WatchOptions<Node, Element, TagOptions, Runner, T>,
-        runner: Runner,
-        node: Node,
-        deep: number,
+        parent: Root<Node, Element, TagOptions, Runner>,
     ) {
-        super(runner, node, deep);
+        super(parent);
         this.model = input.model;
         this.slot = input.slot;
     }
@@ -45,7 +43,7 @@ export class WatchNode<
         if (slot) {
             const handler = (this.handler = value => {
                 this.children.forEach(child => {
-                    child.destroy(child.sDeep);
+                    child.destroy(child.pos);
                 });
                 this.children.splice(0);
                 this.last = undefined;
@@ -57,7 +55,7 @@ export class WatchNode<
     }
 
     public override destroy(deep: number, keepNodes?: boolean) {
-        if (this.handler && this.model.rDeep < deep) {
+        if (this.handler && this.model.deep < deep) {
             this.model.off(this.handler);
         }
         super.destroy(deep, keepNodes);

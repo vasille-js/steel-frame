@@ -6,7 +6,7 @@ export abstract class SyncedIValue<T, Extra extends unknown> extends IValue<T, E
     protected sync: WritableIValue<T, Extra>;
 
     protected constructor(sync: WritableIValue<T, Extra>, ctx: Reactive) {
-        super(ctx.sDeep);
+        super(ctx.pos);
         this.sync = sync;
         this.id = sync.id;
     }

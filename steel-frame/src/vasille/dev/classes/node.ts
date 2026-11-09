@@ -2,6 +2,7 @@ import { Fragment } from "../../classes/index.js";
 import { IRunner } from "../../classes/node/runner.js";
 import { processComponentProps } from "./components.js";
 import { InspectableReactive, inspector, provideId, StaticPosition } from "./inspectable.js";
+import { Root } from "../../classes/node/node.js";
 
 export const ModelId = Symbol("model-id");
 
@@ -13,14 +14,13 @@ export class DevFragment<Node, Element extends Node, TagOptions extends object>
     declaration: StaticPosition | null;
 
     public constructor(
-        runner: IRunner<Node, Element, TagOptions>,
-        node: Node,
+        parent: Root<Node, Element, TagOptions, IRunner<Node, Element, TagOptions>>,
         declaration: StaticPosition | null,
         usage: StaticPosition | null,
         name: string,
         props: object,
     ) {
-        super(runner, node, 1);
+        super(parent);
         this.id = provideId();
         this.declaration = declaration;
 
@@ -31,19 +31,17 @@ export class DevFragment<Node, Element extends Node, TagOptions extends object>
             name: name,
             time: Date.now(),
         });
+        inspector.setElementParent({ parent: parent.id!, child: this.id });
+        this.refreshDeep(0);
+
         processComponentProps(this.id, props);
     }
 
     public override link(
-        parent: Fragment<Node, Element, TagOptions>,
         prev: Fragment<Node, Element, TagOptions> | undefined,
         next: Fragment<Node, Element, TagOptions> | undefined,
     ) {
-        super.link(parent, prev, next);
-        this.refreshDeep(0);
-        if (parent instanceof DevFragment) {
-            inspector.setElementParent({ parent: parent.id, child: this.id });
-        }
+        super.link(prev, next);
     }
 
     public override destroy(deep: number, keepNodes?: boolean): void {

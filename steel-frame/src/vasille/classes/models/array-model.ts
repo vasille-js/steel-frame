@@ -1,7 +1,7 @@
 import { Reactive } from "../core/core.js";
 import { ReadableIValue, WritableIValue } from "../core/ivalue.js";
 import { safe } from "../functional/safety.js";
-import { Fragment } from "../node/node.js";
+import { Fragment, Root } from "../node/node.js";
 import { IRunner } from "../node/runner.js";
 import { SyncedIValue } from "../value/synced.js";
 import { Collection } from "./collection.js";
@@ -187,7 +187,7 @@ class BaseArrayView<
         for (let i = this.cache.length - 1; i >= 0; i--) {
             const frag = this.cache[i]!.frag;
             /* istanbul ignore else */
-            if (!keepNodes || frag.sDeep < deep) {
+            if (!keepNodes || frag.pos < deep) {
                 frag.destroy(deep, keepNodes);
             }
         }
@@ -251,9 +251,7 @@ export class ArrayModelViewNode<
     ) => void;
 
     public constructor(
-        runner: Runner,
-        node: Node,
-        deep: number,
+        parent: Root<Node, Element, TagOptions, Runner>,
         model: ArrayModel<T, Extra>,
         slot: (
             ctx: Fragment<Node, Element, TagOptions, Runner>,
@@ -262,12 +260,10 @@ export class ArrayModelViewNode<
         ) => void,
         writable: false,
         ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
-        frag: (runner: Runner, node: Node, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
+        frag: (parent: Root<Node, Element, TagOptions, Runner>) => Fragment<Node, Element, TagOptions, Runner>,
     );
     public constructor(
-        runner: Runner,
-        node: Node,
-        deep: number,
+        parent: Root<Node, Element, TagOptions, Runner>,
         model: ArrayModel<T, Extra>,
         slot: (
             ctx: Fragment<Node, Element, TagOptions, Runner>,
@@ -276,12 +272,10 @@ export class ArrayModelViewNode<
         ) => void,
         writable: true,
         ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
-        frag: (runner: Runner, node: Node, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
+        frag: (parent: Root<Node, Element, TagOptions, Runner>) => Fragment<Node, Element, TagOptions, Runner>,
     );
     public constructor(
-        runner: Runner,
-        node: Node,
-        deep: number,
+        parent: Root<Node, Element, TagOptions, Runner>,
         model: ArrayModel<T, Extra>,
         slot: (
             ctx: Fragment<Node, Element, TagOptions, Runner>,
@@ -290,12 +284,10 @@ export class ArrayModelViewNode<
         ) => void,
         writable: boolean,
         ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
-        frag: (runner: Runner, node: Node, deep: number) => Fragment<Node, Element, TagOptions, Runner>,
+        frag: (parent: Root<Node, Element, TagOptions, Runner>) => Fragment<Node, Element, TagOptions, Runner>,
     );
     public constructor(
-        runner: Runner,
-        node: Node,
-        deep: number,
+        parent: Root<Node, Element, TagOptions, Runner>,
         private readonly model: ArrayModel<T, Extra>,
         slot: (
             ctx: Fragment<Node, Element, TagOptions, Runner>,
@@ -305,12 +297,10 @@ export class ArrayModelViewNode<
         private readonly writable: boolean,
         private readonly ref: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
         private readonly frag: (
-            runner: Runner,
-            node: Node,
-            deep: number,
+            parent: Root<Node, Element, TagOptions, Runner>,
         ) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
-        super(runner, node, deep);
+        super(parent);
         this.slot = safe(slot);
     }
 
@@ -336,7 +326,7 @@ export class ArrayModelViewNode<
 
             // create new fragments
             for (let i = 0; i < length; i++) {
-                const ctx = view.frag(view.runner, view.node, view.sDeep + 1);
+                const ctx = view.frag(view);
                 const inserted: CacheItem<T, Node, Element, TagOptions, Runner, Extra> = (toInsert[i] = {
                     frag: ctx,
                     index: view.ref(i + index, ctx),
@@ -348,7 +338,6 @@ export class ArrayModelViewNode<
             // locate new fragments
             for (let i = 0; i < length; i++) {
                 toInsert[i]!.frag.link(
-                    view,
                     i === 0 ? prev : toInsert[i - 1]!.frag,
                     i === lastIndex ? next : toInsert[i + 1]!.frag,
                 );
@@ -356,7 +345,7 @@ export class ArrayModelViewNode<
 
             // destroy removed nodes
             for (let i = 0; i < remove; i++) {
-                children[index + i]?.frag.destroy(view.sDeep + 1);
+                children[index + i]?.frag.destroy(view.pos + 1);
             }
 
             // modify the cache
@@ -382,7 +371,7 @@ export class ArrayModelViewNode<
 
     public override destroy(deep: number, keepNodes?: boolean) {
         /* istanbul ignore else */
-        if (this.apply && this.model.rDeep < deep) {
+        if (this.apply && this.model.deep < deep) {
             this.model.listener.off(this.apply);
         }
         super.destroy(deep, keepNodes);
@@ -461,9 +450,7 @@ export class DiffingArrayView<
     ) => void;
 
     public constructor(
-        runner: Runner,
-        node: Node,
-        deep: number,
+        parent: Root<Node, Element, TagOptions, Runner>,
         protected readonly model: ReadableIValue<T[], Extra>,
         protected readonly key: (item: T) => number | string,
         slot: (
@@ -475,12 +462,10 @@ export class DiffingArrayView<
         protected readonly vRef: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
         protected readonly iRef: <T>(v: T, ctx?: Reactive) => WritableIValue<T, Extra>,
         protected readonly frag: (
-            runner: Runner,
-            node: Node,
-            deep: number,
+            parent: Root<Node, Element, TagOptions, Runner>,
         ) => Fragment<Node, Element, TagOptions, Runner>,
     ) {
-        super(runner, node, deep);
+        super(parent);
         this.slot = safe(slot);
     }
 
@@ -491,7 +476,7 @@ export class DiffingArrayView<
         prev?: Fragment<Node, Element, TagOptions, Runner>,
         next?: Fragment<Node, Element, TagOptions, Runner>,
     ) {
-        const frag = this.frag(this.runner, this.node, this.sDeep + 1);
+        const frag = this.frag(this);
         const index = this.iRef(newCache.length, this);
         const value =
             this.writable && this.model.isWritable()
@@ -506,7 +491,7 @@ export class DiffingArrayView<
             index,
         };
 
-        frag.link(this, prev, next);
+        frag.link(prev, next);
         this.slot(frag, value, index);
         newCache.push(cache);
 
@@ -515,7 +500,7 @@ export class DiffingArrayView<
 
     public override destroy(deep: number, keepNodes?: boolean) {
         /* istanbul ignore else */
-        if (this.match && this.model.rDeep < deep) {
+        if (this.match && this.model.deep < deep) {
             this.model.off(this.match);
         }
         super.destroy(deep, keepNodes);
@@ -604,7 +589,7 @@ export class ArrayViewNode<
                         if (!present.unmounted) {
                             frag.unmount(false);
                         }
-                        frag.link(view, prev?.frag, cacheItem?.frag);
+                        frag.link(prev?.frag, cacheItem?.frag);
                         frag.remount();
                         presentIndex.V = modelIndex;
                         presentValue.V = modelItem!;
@@ -632,7 +617,7 @@ export class ArrayViewNode<
             // destroy removed nodes
             unmounted.forEach(item => {
                 existing.delete(item.key);
-                item.frag.destroy(item.frag.sDeep);
+                item.frag.destroy(item.frag.pos);
             });
 
             view.cache = newCache;

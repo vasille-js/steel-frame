@@ -55,18 +55,18 @@ class MyApp extends AppNode<Node, Element, TagOptions> {
     public compose(triple?: boolean, runOnDestroy?: () => void) {
         this.tag("div", { callback: node => (this.div = node as HTMLDivElement) });
 
-        this.child(new Fragment<Node, Element, TagOptions>(this.runner, this.sDeep + 1), ctx => {
+        this.child(new Fragment<Node, Element, TagOptions>(this.runner, this.pos + 1), ctx => {
             this.frag_1 = ctx;
             this.ref_1 = new Reference(1, ctx);
             this.expr_1 = new TestExpression(n => n, [this.ref_1], ctx);
 
-            ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.sDeep + 1), ctx => {
+            ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.pos + 1), ctx => {
                 this.frag_1_1 = ctx;
                 this.ref_1_1 = new Reference(11, ctx);
                 this.expr_1_1 = new TestExpression((n, m) => n + m, [this.ref_1_1, this.ref_1], ctx);
 
                 if (triple) {
-                    ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.sDeep + 1), ctx => {
+                    ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.pos + 1), ctx => {
                         this.frag_1_1_1 = ctx;
                         this.ref_1_1_1 = new Reference(111, ctx);
                         this.expr_1_1_1 = new TestExpression((n, m) => n, [this.ref_1_1_1, this.expr_1_1], ctx);
@@ -77,7 +77,7 @@ class MyApp extends AppNode<Node, Element, TagOptions> {
                 }
             });
         });
-        this.child(new Fragment<Node, Element, TagOptions>(this.runner, this.sDeep + 1), ctx => {
+        this.child(new Fragment<Node, Element, TagOptions>(this.runner, this.pos + 1), ctx => {
             this.frag_2 = ctx;
             this.ref_2 = new Reference(2, ctx);
 
@@ -85,7 +85,7 @@ class MyApp extends AppNode<Node, Element, TagOptions> {
                 this.expr_2 = new TestExpression((n, m) => n + m, [this.ref_0, this.ref_2], ctx);
             }
 
-            ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.sDeep + 1), ctx => {
+            ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.pos + 1), ctx => {
                 this.frag_2_1 = ctx;
                 this.ref_2_1 = new Reference(21, ctx);
 
@@ -94,7 +94,7 @@ class MyApp extends AppNode<Node, Element, TagOptions> {
                 }
 
                 if (triple) {
-                    ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.sDeep + 1), ctx => {
+                    ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.pos + 1), ctx => {
                         this.frag_2_1_1 = ctx;
                         this.ref_2_1_1 = new Reference(211, ctx);
                         this.expr_2_1_1 = new TestExpression((n, m) => n + m, [this.ref_0, this.ref_2_1_1], ctx);
@@ -136,15 +136,15 @@ it("destroy root", function () {
     expect(handlersCount(app.ref_1)).toBe(2);
     expect(handlersCount(app.ref_2)).toBe(1);
     // deep is equal to self deep (sDeep)
-    expect(app.ref_1.rDeep).toBe(app.frag_1.sDeep);
-    expect(app.ref_1_1.rDeep).toBe(app.frag_1_1.sDeep);
+    expect(app.ref_1.deep).toBe(app.frag_1.pos);
+    expect(app.ref_1_1.deep).toBe(app.frag_1_1.pos);
     // expression deep is equal to the parent fragment deep
-    expect(app.expr_1_1.rDeep).toBe(app.frag_1.sDeep);
+    expect(app.expr_1_1.deep).toBe(app.frag_1.pos);
     // fragments and expressions deep are equal to the root app deep
-    expect(app.frag_2.rDeep).toBe(app.sDeep);
-    expect(app.frag_2_1.rDeep).toBe(app.sDeep);
-    expect(app.expr_2.rDeep).toBe(app.sDeep);
-    expect(app.expr_2_1.rDeep).toBe(app.sDeep);
+    expect(app.frag_2.deep).toBe(app.pos);
+    expect(app.frag_2_1.deep).toBe(app.pos);
+    expect(app.expr_2.deep).toBe(app.pos);
+    expect(app.expr_2_1.deep).toBe(app.pos);
     // destroy root
     app.destroy(0);
     // all bindings are kept
@@ -191,11 +191,11 @@ it("recursive rDeep index update", function () {
     // check handlers count
     expect(handlersCount(app.ref_0)).toBe(1);
     // check deep
-    expect(app.frag_2.rDeep).toBe(app.sDeep);
-    expect(app.frag_2_1.rDeep).toBe(app.sDeep);
-    expect(app.frag_2_1_1.rDeep).toBe(app.sDeep);
+    expect(app.frag_2.deep).toBe(app.pos);
+    expect(app.frag_2_1.deep).toBe(app.pos);
+    expect(app.frag_2_1_1.deep).toBe(app.pos);
     // destroy frag 2
-    app.frag_2.destroy(app.frag_2.sDeep);
+    app.frag_2.destroy(app.frag_2.pos);
     // all bindings (except owned bindings) are removed
     expect(handlersCount(app.ref_0)).toBe(0);
     expect(handlersCount(app.ref_2_1_1)).toBe(0);
@@ -208,10 +208,10 @@ it("has runOnDestroy handler", function () {
 
     app.compose(false, () => (test = true));
     // runOnDestroy handler set rDeep to 0
-    expect(app.frag_1.rDeep).toBe(0);
-    expect(app.frag_1_1.rDeep).toBe(0);
+    expect(app.frag_1.deep).toBe(0);
+    expect(app.frag_1_1.deep).toBe(0);
     // destroy frag1
-    app.frag_1.destroy(app.frag_1.sDeep);
+    app.frag_1.destroy(app.frag_1.pos);
     // check if your handler was executed
     expect(test).toBe(true);
 });
@@ -227,14 +227,14 @@ it("destroys array view", () => {
         tag.child(
             new ArrayModelViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
-                tag.sDeep + 1,
+                tag.pos + 1,
                 array,
                 function (f, item: number) {
                     f.text(new TestExpression(a => a + item, [ref], f));
                 },
                 false,
                 v => new Reference(v),
-                r => new Fragment(r, tag.sDeep + 1),
+                r => new Fragment(r, tag.pos + 1),
             ),
         );
     });
@@ -252,7 +252,7 @@ it("destroys switched node", () => {
 
     root.tag("div", {}, function (tag) {
         tag.child(
-            new SwitchedNode<Node, Element, TagOptions, typeof runner>(runner, tag.sDeep + 1, [
+            new SwitchedNode<Node, Element, TagOptions, typeof runner>(runner, tag.pos + 1, [
                 {
                     $case: new TestExpression(n => n === 1, [ref], tag),
                     slot(node) {
@@ -284,7 +284,7 @@ it("destroys watch node", () => {
                     },
                 },
                 runner,
-                tag.sDeep + 1,
+                tag.pos + 1,
             ),
         );
     });
@@ -299,7 +299,7 @@ it("destroys binding", () => {
     const runner = new Runner(window.document);
     const root = new AppNode<Node, Element, TagOptions>(window.document.body, runner);
     const ref = new Reference(0);
-    const ctx = new Reactive(ref.sDeep + 1);
+    const ctx = new Reactive(ref.pos + 1);
 
     root.bind(ctx);
     new TestExpression(a => a, [ref], ctx);
@@ -314,7 +314,7 @@ it("keep binding", () => {
     const runner = new Runner(window.document);
     const root = new AppNode<Node, Element, TagOptions>(window.document.body, runner);
     const ref = new Reference(0);
-    const ctx = new Reactive(ref.sDeep + 1);
+    const ctx = new Reactive(ref.pos + 1);
 
     root.bind(ctx);
     new TestExpression(a => a, [ref], ctx);

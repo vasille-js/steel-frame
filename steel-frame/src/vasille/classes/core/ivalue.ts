@@ -1,7 +1,7 @@
 export interface ReadableIValue<T, Extra> {
     get id(): number | undefined;
-    get sDeep(): number;
-    get rDeep(): number;
+    get pos(): number;
+    get deep(): number;
     get V(): T;
     on(handler: (value: T, extra?: Extra) => void): void;
     off(handler: (value: T, extra?: Extra) => void): void;
@@ -41,12 +41,12 @@ export abstract class IValue<T, Extra extends unknown> implements ReadableIValue
     declare public id: number | undefined;
 
     /** self dependency deep */
-    public readonly sDeep: number;
+    public readonly pos: number;
     /** reactive dependency deep */
-    public rDeep: number;
+    public deep: number;
 
     public constructor(deep: number) {
-        this.sDeep = this.rDeep = deep;
+        this.pos = this.deep = deep;
     }
 
     public isWritable(): this is WritableIValue<T, Extra> {

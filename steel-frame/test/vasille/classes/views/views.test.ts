@@ -26,14 +26,14 @@ it("array view", function () {
         tag.child(
             (view = new ArrayModelViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
-                tag.sDeep + 1,
+                tag.pos + 1,
                 array,
                 function (f, item) {
                     f.text(`${item}`);
                 },
                 false,
                 v => new Reference(v),
-                r => new Fragment(r, tag.sDeep + 1),
+                r => new Fragment(r, tag.pos + 1),
             )),
         );
     });
@@ -85,7 +85,7 @@ it("array view", function () {
     array.splice(1, 1, 4, 5, 6);
     expect(element.innerHTML).toBe("145637");
 
-    view.destroy(view.sDeep);
+    view.destroy(view.pos);
     expect(element.innerHTML).toBe("");
 
     root.destroy(0);
@@ -104,7 +104,7 @@ it("single pass array view", function () {
         tag.child(
             (view = new ArrayViewNode<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
-                tag.sDeep + 1,
+                tag.pos + 1,
                 array,
                 item => item.id,
                 function (f, item, index) {
@@ -113,7 +113,7 @@ it("single pass array view", function () {
                 false,
                 v => new Reference(v),
                 v => new Reference(v),
-                r => new Fragment(r, tag.sDeep + 1),
+                r => new Fragment(r, tag.pos + 1),
             )),
         );
     });
@@ -178,7 +178,7 @@ it("single pass array view", function () {
     ];
     expect(element.innerHTML).toBe("(0:2)(1:3)");
 
-    view.destroy(view.sDeep);
+    view.destroy(view.pos);
     expect(element.innerHTML).toBe("");
 
     root.destroy(0);
@@ -199,7 +199,7 @@ it("multiple text remount", function () {
         tag.child(
             new ArrayViewNode<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
-                tag.sDeep + 1,
+                tag.pos + 1,
                 array,
                 item => item.id,
                 function (f, item, index) {
@@ -213,7 +213,7 @@ it("multiple text remount", function () {
                 false,
                 v => new Reference(v),
                 v => new Reference(v),
-                r => new Fragment(r, tag.sDeep + 1),
+                r => new Fragment(r, tag.pos + 1),
             ),
         );
     });
@@ -240,7 +240,7 @@ it("multiple tag remount", function () {
         tag.child(
             new ArrayViewNode<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
-                tag.sDeep + 1,
+                tag.pos + 1,
                 array,
                 item => item.id,
                 function (f, item, index) {
@@ -254,7 +254,7 @@ it("multiple tag remount", function () {
                 false,
                 v => new Reference(v),
                 v => new Reference(v),
-                r => new Fragment(r, tag.sDeep + 1),
+                r => new Fragment(r, tag.pos + 1),
             ),
         );
     });
@@ -281,7 +281,7 @@ it("array view remount", function () {
         tag.child(
             new ArrayViewNode<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
-                tag.sDeep + 1,
+                tag.pos + 1,
                 array,
                 item => item.id,
                 function (f, item, index) {
@@ -316,7 +316,7 @@ it("array view remount", function () {
                 false,
                 v => new Reference(v),
                 v => new Reference(v),
-                r => new Fragment(r, tag.sDeep + 1),
+                r => new Fragment(r, tag.pos + 1),
             ),
         );
     });
@@ -345,14 +345,14 @@ it("map view", function () {
         tag.child(
             (view = new MapViewNode<number, number, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
-                tag.sDeep + 1,
+                tag.pos + 1,
                 model,
                 function (f, item) {
                     f.text(item);
                 },
                 false,
                 v => new Reference(v),
-                r => new Fragment(r, tag.sDeep + 1),
+                r => new Fragment(r, tag.pos + 1),
             )),
         );
     });
@@ -372,7 +372,7 @@ it("map view", function () {
     expect(element.innerHTML).toBe("");
 
     model.set(1, 1);
-    view.destroy(view.sDeep);
+    view.destroy(view.pos);
     expect(element.innerHTML).toBe("");
 
     root.destroy(0);
@@ -393,7 +393,7 @@ it("map view remount", function () {
         tag.child(
             new ArrayViewNode<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
-                tag.sDeep + 1,
+                tag.pos + 1,
                 array,
                 item => item.id,
                 function (f, item) {
@@ -419,7 +419,7 @@ it("map view remount", function () {
                 false,
                 v => new Reference(v),
                 v => new Reference(v),
-                r => new Fragment(r, tag.sDeep + 1),
+                r => new Fragment(r, tag.pos + 1),
             ),
         );
     });
@@ -444,12 +444,12 @@ it("set view", function () {
         f.child(
             (view = new SetViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
-                f.sDeep + 1,
+                f.pos + 1,
                 model,
                 function (f, item) {
                     f.text(`${item}`);
                 },
-                r => new Fragment(r, f.sDeep + 1),
+                r => new Fragment(r, f.pos + 1),
             )),
         );
     });
@@ -466,7 +466,7 @@ it("set view", function () {
     expect(element.innerHTML).toBe("");
 
     model.add(1);
-    view.destroy(view.sDeep);
+    view.destroy(view.pos);
     expect(element.innerHTML).toBe("");
 
     root.destroy(0);
@@ -485,14 +485,14 @@ it("view timeout test", function (done) {
         f.child(
             new SetViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
-                f.sDeep + 1,
+                f.pos + 1,
                 model,
                 function (f, item) {
                     setTimeout(() => {
                         f.text(`${item}`);
                     }, 0);
                 },
-                r => new Fragment(r, f.sDeep + 1),
+                r => new Fragment(r, f.pos + 1),
             ),
         );
     });
@@ -528,7 +528,7 @@ it("set view remount", function () {
         tag.child(
             new ArrayViewNode<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
                 runner,
-                tag.sDeep + 1,
+                tag.pos + 1,
                 array,
                 item => item.id,
                 function (f, item) {
@@ -550,7 +550,7 @@ it("set view remount", function () {
                 false,
                 v => new Reference(v),
                 v => new Reference(v),
-                r => new Fragment(r, tag.sDeep + 1),
+                r => new Fragment(r, tag.pos + 1),
             ),
         );
     });

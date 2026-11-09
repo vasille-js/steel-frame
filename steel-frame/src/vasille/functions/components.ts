@@ -19,6 +19,7 @@ import {
 } from "../classes/index.js";
 import { Watch } from "./index.js";
 import { ref } from "./internal.js";
+import { Root } from "../classes/node/node.js";
 
 export interface SlotOptions<Node, Element extends Node, TagOptions extends object, T extends object> {
     model?: (input: T, ctx: Fragment<Node, Element, TagOptions>) => void;
@@ -30,8 +31,8 @@ function frag<
     Element extends Node,
     TagOptions extends object,
     TRunner extends IRunner<Node, Element, TagOptions>,
->(runner: TRunner, node: Node, deep: number) {
-    return new Fragment<Node, Element, TagOptions>(runner, node, deep);
+>(parent: Root<Node, Element, TagOptions, TRunner>) {
+    return new Fragment<Node, Element, TagOptions>(parent);
 }
 
 export function Slot<Node, Element extends Node, TagOptions extends object, T extends object = {}>(
@@ -65,7 +66,7 @@ export function Switch<Node, Element extends Node, TagOptions extends object>(
     options: SwitchOptions<Node, Element, TagOptions>,
     ctx: Fragment<Node, Element, TagOptions>,
 ) {
-    ctx.child(new SwitchedNode(ctx.runner, ctx.node, ctx.sDeep + 1, options.cases, options.default));
+    ctx.child(new SwitchedNode(ctx, options.cases, options.default));
 }
 
 export interface ForOptions<Node, Element extends Node, TagOptions extends object, T, Args extends unknown[]> {
@@ -124,9 +125,7 @@ export function For<
     if (model instanceof ArrayModel) {
         ctx.child(
             new ArrayModelViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
-                ctx.runner,
-                ctx.node,
-                ctx.sDeep + 1,
+                ctx,
                 model as ArrayModel<V, unknown>,
                 (ctx, value, index) => {
                     slot(ctx, value as V, index.V as K);
@@ -139,9 +138,7 @@ export function For<
     } else if (model instanceof MapModel) {
         ctx.child(
             new MapViewNode<K, V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
-                ctx.runner,
-                ctx.node,
-                ctx.sDeep + 1,
+                ctx,
                 model as MapModel<K, V, unknown>,
                 (ctx, iValue, key) => {
                     Watch(
@@ -162,9 +159,7 @@ export function For<
     } else if (model instanceof SetModel) {
         ctx.child(
             new SetViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
-                ctx.runner,
-                ctx.node,
-                ctx.sDeep + 1,
+                ctx,
                 model as SetModel<V, unknown>,
                 (ctx, value) => {
                     slot(ctx, value, value as unknown as K);
@@ -216,9 +211,7 @@ export function ArrayViewFn<
 ) {
     ctx.child(
         new ArrayViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
-            ctx.runner,
-            ctx.node,
-            ctx.sDeep + 1,
+            ctx,
             props.r_of,
             props.key,
             props.slot,
@@ -276,9 +269,7 @@ export function ArrayModelView<Node, Element extends Node, TagOptions extends ob
 ) {
     ctx.child(
         new ArrayModelViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
-            ctx.runner,
-            ctx.node,
-            ctx.sDeep + 1,
+            ctx,
             props.of,
             props.slot,
             props.writable,
@@ -323,9 +314,7 @@ export function MapModelView<Node, Element extends Node, TagOptions extends obje
 ): void {
     ctx.child(
         new MapViewNode<K, V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
-            ctx.runner,
-            ctx.node,
-            ctx.sDeep + 1,
+            ctx,
             props.of,
             props.slot,
             props.writable,
@@ -341,9 +330,7 @@ export function SetModelView<Node, Element extends Node, TagOptions extends obje
 ) {
     ctx.child(
         new SetViewNode<V, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, unknown>(
-            ctx.runner,
-            ctx.node,
-            ctx.sDeep + 1,
+            ctx,
             props.of,
             props.slot,
             frag,
@@ -365,7 +352,7 @@ export function WatchFn<Node, Element extends Node, TagOptions extends object, T
 
     /* istanbul ignore else */
     if (slot) {
-        ctx.child(new WatchNode({ model: r_model, slot: safe(slot) }, ctx.runner, ctx.node, ctx.sDeep + 1));
+        ctx.child(new WatchNode({ model: r_model, slot: safe(slot) }, ctx));
     }
 }
 
@@ -383,8 +370,7 @@ export function Delay<Node, Element extends Node, TagOptions extends object>(
     { time, slot: _slot }: DelayOptions<Node, Element, TagOptions, Fragment<Node, Element, TagOptions>>,
     ctx: Fragment<Node, Element, TagOptions>,
     defaultSlot?: (ctx: Fragment<Node, Element, TagOptions>) => void,
-    createContext = (ctx: Fragment<Node, Element, TagOptions>) =>
-        new Fragment<Node, Element, TagOptions>(ctx.runner, ctx.node, ctx.sDeep + 1),
+    createContext = (ctx: Fragment<Node, Element, TagOptions>) => new Fragment<Node, Element, TagOptions>(ctx),
 ) {
     const fragment = createContext(ctx);
     const slot = _slot ?? defaultSlot;
@@ -416,5 +402,5 @@ export function ZombieFn<Node, Element extends Node, TagOptions extends object>(
     ctx: Fragment<Node, Element, TagOptions>,
     defaultSlot?: (ctx: Fragment<Node, Element, TagOptions>) => void,
 ) {
-    ctx.child(new ZombieNode<Node, Element, TagOptions>(ctx.runner, ctx.node, r_time, trigger), defaultSlot);
+    ctx.child(new ZombieNode<Node, Element, TagOptions>(ctx, r_time, trigger), defaultSlot);
 }

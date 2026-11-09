@@ -31,10 +31,10 @@ export class FieldReference<Extra extends unknown>
 
         this.object = object;
         this.updated = update;
-        this.rDeep = object.sDeep;
+        this.deep = object.pos;
         this.deps = deps;
 
-        if (ctx.sDeep > object.sDeep) {
+        if (ctx.pos > object.pos) {
             ctx.bind(this);
         }
 

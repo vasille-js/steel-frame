@@ -102,8 +102,8 @@ export function routerApp(init: RouterInitialization<Node, Element, SsgTagOption
     const head = new Element("head", {});
     const body = new Element("body", {});
     const runner = new SsgRunner(head, body);
-    const app = new AppNode(body, runner);
-    const fragment = new Fragment<Node, Element, SsgTagOptions>(runner, body, 1);
+    const app = new AppNode<Node, Element, SsgTagOptions, SsgRunner>(body, runner);
+    const fragment = new Fragment<Node, Element, SsgTagOptions>(app);
 
     app.child(fragment);
     return new SsgRouter(runner, fragment, init, mode);

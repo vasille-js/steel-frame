@@ -60,7 +60,7 @@ it("if", function () {
     let check2 = true;
 
     root.child(
-        new SwitchedNode<Node, Element, TagOptions>(root.runner, root.sDeep + 1, [
+        new SwitchedNode<Node, Element, TagOptions>(root.runner, root.pos + 1, [
             {
                 $case: new Reference(true),
                 slot: (node, value) => {
@@ -71,7 +71,7 @@ it("if", function () {
         ]),
     );
     root.child(
-        new SwitchedNode<Node, Element, TagOptions>(root.runner, root.sDeep + 1, [
+        new SwitchedNode<Node, Element, TagOptions>(root.runner, root.pos + 1, [
             {
                 $case: new Reference(false),
                 slot: () => (check2 = false),
@@ -96,7 +96,7 @@ it("if else", function () {
     root.child(
         new SwitchedNode<Node, Element, TagOptions>(
             root.runner,
-            root.sDeep + 1,
+            root.pos + 1,
             [{ $case: iv1, slot: () => (check1 = 1) }],
             () => (check1 = 2),
         ),
@@ -105,7 +105,7 @@ it("if else", function () {
     root.child(
         new SwitchedNode<Node, Element, TagOptions>(
             root.runner,
-            root.sDeep + 1,
+            root.pos + 1,
             [{ $case: iv2, slot: () => (check2 = 1) }],
             () => (check2 = 2),
         ),
@@ -133,7 +133,7 @@ it("switch", function () {
     root.child(
         new SwitchedNode<Node, Element, TagOptions>(
             root.runner,
-            root.sDeep + 1,
+            root.pos + 1,
             [
                 { $case: new TestExpression(v => v == 1, [v], root), slot: () => (check = 1) },
                 { $case: new TestExpression(v => v == 2, [v], root), slot: () => (check = 2) },
@@ -195,7 +195,7 @@ it("Insert adjacent", function () {
 
     root.tag("div", {}, function (node) {
         node.child(
-            new SwitchedNode<Node, Element, TagOptions>(node.runner, node.sDeep + 1, [
+            new SwitchedNode<Node, Element, TagOptions>(node.runner, node.pos + 1, [
                 {
                     $case: bool,
                     slot(node) {
@@ -218,7 +218,7 @@ it("Find first child of tag", function () {
 
     root.tag("div", {}, function (node) {
         node.child(
-            new SwitchedNode<Node, Element, TagOptions>(node.runner, node.sDeep + 1, [
+            new SwitchedNode<Node, Element, TagOptions>(node.runner, node.pos + 1, [
                 {
                     $case: bool,
                     slot(node) {
@@ -227,7 +227,7 @@ it("Find first child of tag", function () {
                 },
             ]),
         );
-        node.child(new Fragment<Node, Element, TagOptions>(runner, node.sDeep + 1), node => {
+        node.child(new Fragment<Node, Element, TagOptions>(runner, node.pos + 1), node => {
             node.tag("span", {});
         });
 

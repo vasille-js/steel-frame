@@ -22,7 +22,7 @@ export function view<Node, Element extends Node, TagOptions extends object, In e
         if (!node) {
             throw new Error("Context is missing");
         }
-        const frag = new Fragment<Node, Element, TagOptions>(node.runner, node.node, node.sDeep + 1);
+        const frag = new Fragment<Node, Element, TagOptions>(node);
 
         if (slot) {
             props.slot = slot;
@@ -57,7 +57,7 @@ export class Model<In extends object, Out extends object> {
     public constructor(private readonly fn: (ctx: Reactive, o: In) => Out) {}
 
     public create(o: In, parent?: Reactive): Out {
-        const ctx = new Reactive(parent ? parent.sDeep + 1 : 0);
+        const ctx = new Reactive(parent ? parent.pos + 1 : 0);
         parent?.bind(ctx);
         return this.fn(ctx, o);
     }
@@ -82,7 +82,7 @@ export function mountApp<Node, Element extends Node, TagOptions extends object, 
     $: T,
 ): AppNode<Node, Element, TagOptions> {
     const root = new AppNode<Node, Element, TagOptions>(tag, runner);
-    const frag = new Fragment<Node, Element, TagOptions>(runner, tag, 1);
+    const frag = new Fragment<Node, Element, TagOptions>(root);
 
     root.child(frag, function () {
         view($, frag);

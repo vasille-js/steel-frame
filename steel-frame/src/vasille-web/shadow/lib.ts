@@ -1,6 +1,7 @@
 import { WebRunner, WebTag, WebTagOptions } from "../web/runner/runner.js";
 import { ShadowCssStyleInjector, StyleSheetsManager } from "./css.js";
 import { AppNode, Fragment, IValue, ref, Reference } from "../../vasille/index.js";
+import { Root } from "../../vasille/classes/node/node.js";
 
 const any = 0;
 const string = 1;
@@ -26,8 +27,7 @@ class ShadowTag extends WebTag<WebTagOptions, ShadowRunner> {
 
 class ShadowFragment extends Fragment<Node, Element, WebTagOptions, ShadowRunner> {
     public constructor(app: AppNode<Node, Element, WebTagOptions, ShadowRunner>) {
-        super(app.runner, app.node, app.sDeep + 1);
-        this.parent = app;
+        super(app);
     }
 }
 
@@ -40,8 +40,7 @@ class ShadowRunner extends WebRunner<WebTagOptions> {
     }
 
     tag(
-        deep: number,
-        node: Node,
+        parent: Root<Node, Element, WebTagOptions, ShadowRunner>,
         tagName: string,
         input: WebTagOptions,
         cb?: ((ctx: WebTag<WebTagOptions, ShadowRunner>) => void) | undefined,
@@ -49,7 +48,7 @@ class ShadowRunner extends WebRunner<WebTagOptions> {
         if (cb) {
             input.l = cb as any;
         }
-        return new ShadowTag(input, this, node, tagName, deep);
+        return new ShadowTag(input, parent, tagName);
     }
 }
 
@@ -166,7 +165,7 @@ export function shadow(
             }
 
             public disconnectedCallback() {
-                this.root.destroy(this.root.sDeep);
+                this.root.destroy(this.root.pos);
             }
 
             public attributeChangedCallback(name: string, oldValue: string, newValue: string | null) {

@@ -1,5 +1,5 @@
 import { ReadableIValue, WritableIValue } from "../../classes/core/ivalue.js";
-import { Fragment, IValue, IRunner as Runner, safe, userError, IRunner } from "../../classes/index.js";
+import { Fragment, IValue, IRunner as Runner, safe, userError } from "../../classes/index.js";
 import {
     Delay,
     DelayOptions,
@@ -51,7 +51,7 @@ export function DevSwitch<Node, Element extends Node, TagOptions extends object>
     _slot: undefined,
     usage: StaticPosition,
 ) {
-    ctx.child(new DevSwitchedNode(usage, ctx.runner, ctx.node, options.cases, options.default));
+    ctx.child(new DevSwitchedNode(usage, ctx, options.cases, options.default));
 }
 
 export function DevFor<
@@ -80,8 +80,7 @@ export function DevFor<
     if (model instanceof DevArrayModel) {
         ctx.child(
             new DevArrayModelViewNode<Node, Element, TagOptions, V>(
-                ctx.runner,
-                ctx.node,
+                ctx,
                 model,
                 (ctx, value, index) => {
                     slot(
@@ -97,8 +96,7 @@ export function DevFor<
     } else if (model instanceof DevMapModel) {
         ctx.child(
             new DevMapViewNode(
-                ctx.runner,
-                ctx.node,
+                ctx,
                 model,
                 (ctx, value, key) => {
                     slot(ctx as Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>, value.V, key);
@@ -111,8 +109,7 @@ export function DevFor<
     } else if (model instanceof DevSetModelNode) {
         ctx.child(
             new DevSetViewNode(
-                ctx.runner,
-                ctx.node,
+                ctx,
                 model,
                 (ctx, value) => {
                     slot(
@@ -176,8 +173,7 @@ export function DevArrayView<
 ) {
     ctx.child(
         new DevArrayViewNode<Node, Element, TagOptions, V>(
-            ctx.runner,
-            ctx.node,
+            ctx,
             props.of,
             props.key,
             props.slot,
@@ -205,8 +201,7 @@ export function DevArrayModelView<Node, Element extends Node, TagOptions extends
 ) {
     ctx.child(
         new DevArrayModelViewNode<Node, Element, TagOptions, V>(
-            ctx.runner,
-            ctx.node,
+            ctx,
             props.of,
             props.slot,
             props.writable,
@@ -231,15 +226,7 @@ export function DevMapModelView<Node, Element extends Node, TagOptions extends o
     value: StaticPosition | undefined,
 ) {
     ctx.child(
-        new DevMapViewNode<Node, Element, TagOptions, K, V>(
-            ctx.runner,
-            ctx.node,
-            props.of,
-            props.slot,
-            props.writable,
-            usage,
-            value,
-        ),
+        new DevMapViewNode<Node, Element, TagOptions, K, V>(ctx, props.of, props.slot, props.writable, usage, value),
     );
 }
 
@@ -248,7 +235,7 @@ export function DevSetModelView<Node, Element extends Node, TagOptions extends o
     ctx: Fragment<Node, Element, TagOptions, Runner<Node, Element, TagOptions>>,
     usage: StaticPosition,
 ) {
-    ctx.child(new DevSetViewNode<Node, Element, TagOptions, V>(ctx.runner, ctx.node, props.of, props.slot, usage));
+    ctx.child(new DevSetViewNode<Node, Element, TagOptions, V>(ctx, props.of, props.slot, usage));
 }
 
 export function DevWatch<Node, Element extends Node, TagOptions extends object, T>(
@@ -261,7 +248,7 @@ export function DevWatch<Node, Element extends Node, TagOptions extends object, 
 
     /* istanbul ignore else */
     if (slot) {
-        ctx.child(new DevWatchNode({ model: r_model, slot: safe(slot) }, ctx.runner, ctx.node, usage));
+        ctx.child(new DevWatchNode({ model: r_model, slot: safe(slot) }, ctx, usage));
     }
 }
 
@@ -280,7 +267,7 @@ export function DevDelay<Node, Element extends Node, TagOptions extends object>(
         options,
         ctx,
         defaultSlot,
-        ctx => new DevFragment<Node, Element, TagOptions>(ctx.runner, ctx.node, null, usage, "Delay", options),
+        ctx => new DevFragment<Node, Element, TagOptions>(ctx, null, usage, "Delay", options),
     );
 }
 
@@ -290,5 +277,5 @@ export function DevZombie<Node, Element extends Node, TagOptions extends object>
     defaultSlot: ((ctx: DevZombieNode<Node, Element, TagOptions>) => void) | undefined,
     usage: StaticPosition,
 ) {
-    ctx.child(new DevZombieNode<Node, Element, TagOptions>(usage, ctx.runner, ctx.node, r_time, trigger), defaultSlot);
+    ctx.child(new DevZombieNode<Node, Element, TagOptions>(usage, ctx, r_time, trigger), defaultSlot);
 }

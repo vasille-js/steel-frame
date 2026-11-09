@@ -4,7 +4,7 @@ import { WritableIValue } from "../core/ivalue.js";
 import { Reference } from "../value/reference.js";
 
 export abstract class Collection<T, D> implements Destroyable {
-    public readonly rDeep: number;
+    public readonly deep: number;
 
     protected readonly d: D;
     protected readonly r: WritableIValue<T, unknown> | undefined;
@@ -26,17 +26,17 @@ export abstract class Collection<T, D> implements Destroyable {
                     }
                 }),
             );
-            this.rDeep = data.rDeep;
+            this.deep = data.deep;
         } else {
             this.d = create(data as T);
-            this.rDeep = ctx?.sDeep || 0;
+            this.deep = ctx?.pos || 0;
         }
         ctx?.bind(this);
     }
 
     public destroy(deep: number) {
         /* istanbul ignore else */
-        if (this.rDeep < deep && this.r && this.handler) {
+        if (this.deep < deep && this.r && this.handler) {
             this.r.off(this.handler);
         }
     }

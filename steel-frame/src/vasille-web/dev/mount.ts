@@ -20,14 +20,14 @@ import { WebRouterInitialization } from "../web/router/router.js";
 import { PromptProps } from "../web/mount.js";
 
 function createPortal<Runner extends IRunner<Node, Element, SsgTagOptions>>(
-    node: Fragment<Node, Element, SsgTagOptions>,
+    node: Fragment<Node, Element, SsgTagOptions, Runner>,
     declaration: StaticPosition | undefined,
     usage: StaticPosition | undefined,
     name: string | undefined,
 ) {
     const portal = new DevPortalNode<Node, Element, SsgTagOptions, Runner>(
+        node,
         document.body,
-        node.runner as Runner,
         declaration,
         usage,
         name,
@@ -78,7 +78,7 @@ export function devModal<T extends CompositionProps>(
         if (!node) {
             throw new Error("Context is missing");
         }
-        const frag = new DevFragment<Node, Element, SsgTagOptions>(node.runner, node.node, null, null, name, {});
+        const frag = new DevFragment<Node, Element, SsgTagOptions>(node, null, null, name, {});
 
         if (!input.slot && slot) {
             input.slot = slot;

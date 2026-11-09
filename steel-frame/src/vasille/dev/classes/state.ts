@@ -56,7 +56,7 @@ export class DevReference<T> extends BaseDevReference<T> implements Destroyable 
         super(value, ctx);
 
         this.id = provideId();
-        this.rDeep = ctx?.sDeep ?? 0;
+        this.deep = ctx?.pos ?? 0;
         inspector.newReference({
             id: this.id,
             declaration: declaration,
@@ -162,7 +162,7 @@ export class DevExpression<T, Args extends unknown[]> extends Expression<T, Args
             ctx,
         );
 
-        if (ctx.sDeep <= ctx.rDeep) {
+        if (ctx.pos <= ctx.deep) {
             ctx.bind(this);
         }
         this.isWatch = isWatch;
