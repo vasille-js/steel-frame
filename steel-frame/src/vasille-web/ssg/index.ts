@@ -69,7 +69,7 @@ export function modal<T extends CompositionProps>(
         if (!node) {
             throw new Error("Context is missing");
         }
-        const runner: SsgRunner = node.runner;
+        const runner: SsgRunner = node.r;
         const portal = new PortalNode<Node, Element, SsgTagOptions, SsgRunner>(node, runner.body);
 
         node.child(portal);

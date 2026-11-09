@@ -43,7 +43,7 @@ export class WatchNode<
         if (slot) {
             const handler = (this.handler = value => {
                 this.children.forEach(child => {
-                    child.destroy(child.pos);
+                    child.d(child.pos);
                 });
                 this.children.splice(0);
                 this.last = undefined;
@@ -54,10 +54,10 @@ export class WatchNode<
         }
     }
 
-    public override destroy(deep: number, keepNodes?: boolean) {
+    public override d(deep: number, keepNodes?: boolean) {
         if (this.handler && this.model.deep < deep) {
             this.model.off(this.handler);
         }
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }

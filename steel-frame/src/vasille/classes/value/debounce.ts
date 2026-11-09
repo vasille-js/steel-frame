@@ -36,7 +36,7 @@ export class DebounceReference<T, Extra extends unknown> extends SyncedIValue<T,
         return this.sync.V;
     }
 
-    public destroy(): void {
+    public d(): void {
         clearTimeout(this.timer);
         this.target.off(this.handler);
     }

@@ -13,8 +13,8 @@ it("initialize router", function (done) {
         routes: {
             "/": {
                 screen: (props, ctx) => {
-                    if ("router" in ctx.runner && ctx.runner.router instanceof MockRouter) {
-                        router = ctx.runner.router;
+                    if ("r" in ctx.r && ctx.r.r instanceof MockRouter) {
+                        router = ctx.r.r;
                     }
                     screenCalled = ++index;
                     return Promise.resolve();
@@ -50,8 +50,8 @@ it("router initialization fails", function (done) {
         routes: {
             "/": {
                 screen: (props, ctx) => {
-                    if ("router" in ctx.runner && ctx.runner.router instanceof MockRouter) {
-                        router = ctx.runner.router;
+                    if ("r" in ctx.r && ctx.r.r instanceof MockRouter) {
+                        router = ctx.r.r;
                     }
                     screenCalled++;
                     return Promise.resolve();

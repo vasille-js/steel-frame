@@ -60,7 +60,7 @@ export class FieldReference<Extra extends unknown>
         return this.object.up(this.updated(value), extra);
     }
 
-    public destroy(): void {
+    public d(): void {
         this.object.off(this.handler);
 
         if (this.depsHandler) {

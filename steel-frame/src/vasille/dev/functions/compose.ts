@@ -46,7 +46,7 @@ export function devDynamicalModule<T, Node, Element extends Node, TagOptions ext
             value: function (previous: DevFragmentMap<Node, Element, TagOptions, Props>) {
                 // inspector erase declaration
                 previous.forEach(({ props, node, usage }, key) => {
-                    node.children.forEach(child => child.destroy(child.pos));
+                    node.children.forEach(child => child.d(child.pos));
                     node.children.splice(0);
                     safeRun(node, props, usage);
                     fragments.set(key, { props, node, usage });

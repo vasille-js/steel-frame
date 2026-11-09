@@ -44,9 +44,9 @@ export class DevFragment<Node, Element extends Node, TagOptions extends object>
         super.link(prev, next);
     }
 
-    public override destroy(deep: number, keepNodes?: boolean): void {
+    public override d(deep: number, keepNodes?: boolean): void {
         inspector.destroy({ id: this.id, time: Date.now() });
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 
     protected override push(node: Fragment<Node, Element, TagOptions>): void {

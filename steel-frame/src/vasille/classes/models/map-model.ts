@@ -35,12 +35,12 @@ export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | und
 
         if (size) {
             this.size = size;
-            size.up(this.d.size);
+            size.up(this.l.size);
         }
     }
 
     public get map(): ReadonlyMap<K, T> {
-        return this.d;
+        return this.l;
     }
 
     /**
@@ -48,7 +48,7 @@ export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | und
      */
     public clear(): void {
         this.listener.emit(Clear);
-        this.run(() => this.d.clear());
+        this.run(() => this.l.clear());
     }
 
     /**
@@ -58,7 +58,7 @@ export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | und
      */
     public delete(key: K): boolean {
         this.listener.emit(Remove, key);
-        return this.run(() => this.d.delete(key));
+        return this.run(() => this.l.delete(key));
     }
 
     /**
@@ -70,7 +70,7 @@ export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | und
     public set(key: K, value: T): this {
         this.listener.emit(Add, key, value);
         return this.run(() => {
-            this.d.set(key, value);
+            this.l.set(key, value);
             return this;
         });
     }
@@ -79,22 +79,22 @@ export class MapModel<K, T, Extra> extends Collection<[K, T][] | Map<K, T> | und
         const result = fn();
         const r = this.r;
 
-        this.size?.up(this.d.size);
-        r?.up((this.last = r.V instanceof Array ? [...this.d] : new Map(this.d)));
+        this.size?.up(this.l.size);
+        r?.up((this.last = r.V instanceof Array ? [...this.l] : new Map(this.l)));
         return result;
     }
 
     protected override reset(next: Map<K, T> | [K, T][] | undefined) {
         this.listener.emit(Clear);
-        this.d.clear();
+        this.l.clear();
         /* istanbul ignore else */
         if (next) {
             for (const [key, value] of next) {
                 this.listener.emit(Add, key, value);
-                this.d.set(key, value);
+                this.l.set(key, value);
             }
         }
-        this.size?.up(this.d.size);
+        this.size?.up(this.l.size);
     }
 }
 
@@ -194,11 +194,11 @@ export class MapViewNode<
                 /* istanbul ignore else */
                 if (item) {
                     removeFragmentFromTree(item.frag);
-                    item.frag.destroy(item.frag.pos);
+                    item.frag.d(item.frag.pos);
                     view.map.delete(key!);
                 }
             } else {
-                view.map.forEach(({ frag }) => frag.destroy(frag.pos));
+                view.map.forEach(({ frag }) => frag.d(frag.pos));
                 view.map.clear();
                 view.last = undefined;
             }
@@ -217,7 +217,7 @@ export class MapViewNode<
         [...this.map.values()].reverse().forEach(item => item.frag.remount());
     }
 
-    public override destroy(deep: number, keepNodes?: boolean): void {
+    public override d(deep: number, keepNodes?: boolean): void {
         /* istanbul ignore else */
         if (this.acceptUpdate && this.model.deep < deep) {
             this.model.listener.off(this.acceptUpdate);
@@ -225,9 +225,9 @@ export class MapViewNode<
         this.map.forEach(({ frag }) => {
             /* istanbul ignore else */
             if (frag.deep < deep || !keepNodes) {
-                frag.destroy(deep, keepNodes);
+                frag.d(deep, keepNodes);
             }
         });
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }

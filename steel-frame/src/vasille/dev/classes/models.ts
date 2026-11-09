@@ -43,7 +43,7 @@ export class DevArrayModel<T> extends ArrayModel<T, ExecutionPosition> implement
             usage: usage,
             time: Date.now(),
         });
-        this.d.forEach((item, index) => {
+        this.l.forEach((item, index) => {
             inspector.createModelItem({
                 model: this.id,
                 key: toDevValue(index),
@@ -59,8 +59,8 @@ export class DevArrayModel<T> extends ArrayModel<T, ExecutionPosition> implement
         }
     }
 
-    public override destroy(deep: number): void {
-        super.destroy(deep);
+    public override d(deep: number): void {
+        super.d(deep);
         inspector.destroy({ id: this.id, time: Date.now() });
     }
 
@@ -124,7 +124,7 @@ export class DevSetModelNode<T> extends SetModel<T, ExecutionPosition> implement
             usage: usage,
             time: Date.now(),
         });
-        for (const item of this.d) {
+        for (const item of this.l) {
             inspector.createModelItem({
                 model: this.id,
                 value: toDevValue(item),
@@ -139,8 +139,8 @@ export class DevSetModelNode<T> extends SetModel<T, ExecutionPosition> implement
         }
     }
 
-    public override destroy(deep: number): void {
-        super.destroy(deep);
+    public override d(deep: number): void {
+        super.d(deep);
         inspector.destroy({ id: this.id, time: Date.now() });
     }
 
@@ -181,7 +181,7 @@ export class DevMapModel<K, T> extends MapModel<K, T, ExecutionPosition> impleme
             usage: usage,
             time: Date.now(),
         });
-        for (const [key, value] of this.d) {
+        for (const [key, value] of this.l) {
             inspector.createModelItem({
                 model: this.id,
                 key: toDevValue(key),
@@ -197,8 +197,8 @@ export class DevMapModel<K, T> extends MapModel<K, T, ExecutionPosition> impleme
         }
     }
 
-    public override destroy(deep: number): void {
-        super.destroy(deep);
+    public override d(deep: number): void {
+        super.d(deep);
         inspector.destroy({ id: this.id, time: Date.now() });
     }
 

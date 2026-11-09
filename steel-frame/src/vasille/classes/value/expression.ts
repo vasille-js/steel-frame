@@ -73,7 +73,7 @@ export class Expression<T, Args extends unknown[], Extra extends unknown>
         return this.sync.V;
     }
 
-    public destroy(): void {
+    public d(): void {
         /* istanbul ignore else */
         if (this.values.length > 0) {
             for (let i = 0; i < this.values.length; i++) {

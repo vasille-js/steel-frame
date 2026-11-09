@@ -19,7 +19,7 @@ it("runs on destroy", function () {
         },
     });
 
-    root.destroy(Infinity);
+    root.d(Infinity);
     expect(onDestroy).toBe(true);
     expect(callbackDestroy).toBe(true);
 });
@@ -32,7 +32,7 @@ it("destroys text", function () {
     root.text("test");
     expect(body.childNodes.length).toBe(2);
 
-    root.destroy(Infinity);
+    root.d(Infinity);
     expect(body.childNodes.length).toBe(1);
 });
 
@@ -43,7 +43,7 @@ it("tag reorder test", function () {
     const root = new AppNode<Node, Element, WebTagOptions>(body, runner);
     const arr = new Reference([1, 2, 3]);
 
-    root.child(new Fragment<Node, Element, WebTagOptions>(runner, 1), ctx => {
+    root.child(new Fragment<Node, Element, WebTagOptions>(root), ctx => {
         ArrayView(
             {
                 r_of: arr,
@@ -84,7 +84,7 @@ it("text reorder test", function () {
     const root = new AppNode<Node, Element, WebTagOptions>(body, runner);
     const arr = new Reference([1, 2, 3]);
 
-    root.child(new Fragment<Node, Element, WebTagOptions>(runner, 1), ctx => {
+    root.child(new Fragment<Node, Element, WebTagOptions>(root), ctx => {
         ArrayView(
             {
                 r_of: arr,

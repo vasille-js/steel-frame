@@ -12,17 +12,17 @@ export class AppNode<
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Root<Node, Element, TagOptions, Runner> {
-    public readonly node!: Element;
+    declare public readonly node: Element;
 
     /**
      * Constructs an app node
      */
     constructor(node: Element, runner: Runner) {
-        super({ runner, node, pos: 0 });
+        super({ r: runner, node, pos: 0 });
     }
 
     public appendNode(node: Node) {
-        this.runner.appendChild(this.node, node);
+        this.r.appendChild(this.node, node);
     }
 }
 
@@ -32,7 +32,7 @@ export class PortalNode<
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Fragment<Node, Element, TagOptions, Runner> {
-    public readonly node!: Element;
+    declare public readonly node: Element;
 
     constructor(parent: Root<Node, Element, TagOptions, Runner>, node: Element) {
         super(parent);
@@ -44,10 +44,10 @@ export class PortalNode<
     }
 
     public override appendNode(node: Node) {
-        this.runner.appendChild(this.node, node);
+        this.r.appendChild(this.node, node);
     }
 
-    public override destroy(deep: number) {
-        super.destroy(deep);
+    public override d(deep: number) {
+        super.d(deep);
     }
 }

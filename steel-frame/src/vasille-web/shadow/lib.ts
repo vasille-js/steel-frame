@@ -17,7 +17,7 @@ class ShadowTag extends WebTag<WebTagOptions, ShadowRunner> {
         if (options.c) {
             for (const className of options.c) {
                 if (className instanceof ShadowCssStyleInjector) {
-                    className.link(this.runner.styles);
+                    className.link(this.r.styles);
                 }
             }
         }
@@ -165,7 +165,7 @@ export function shadow(
             }
 
             public disconnectedCallback() {
-                this.root.destroy(this.root.pos);
+                this.root.d(this.root.pos);
             }
 
             public attributeChangedCallback(name: string, oldValue: string, newValue: string | null) {

@@ -34,12 +34,12 @@ export class SetModel<T, Extra> extends Collection<T[] | Set<T> | undefined, Set
 
         if (size) {
             this.size = size;
-            size.up(this.d.size);
+            size.up(this.l.size);
         }
     }
 
     public get set(): ReadonlySet<T> {
-        return this.d;
+        return this.l;
     }
 
     /* Set mutate members */
@@ -52,7 +52,7 @@ export class SetModel<T, Extra> extends Collection<T[] | Set<T> | undefined, Set
     public add(value: T): this {
         this.listener.emit(Add, value);
         return this.run(() => {
-            this.d.add(value);
+            this.l.add(value);
             return this;
         });
     }
@@ -62,7 +62,7 @@ export class SetModel<T, Extra> extends Collection<T[] | Set<T> | undefined, Set
      */
     public clear() {
         this.listener.emit(Clear);
-        this.run(() => this.d.clear());
+        this.run(() => this.l.clear());
     }
 
     /**
@@ -72,26 +72,26 @@ export class SetModel<T, Extra> extends Collection<T[] | Set<T> | undefined, Set
      */
     public delete(value: T): boolean {
         this.listener.emit(Remove, value);
-        return this.run(() => this.d.delete(value));
+        return this.run(() => this.l.delete(value));
     }
 
     protected override reset(next: Set<T> | Array<T> | undefined) {
         this.listener.emit(Clear);
-        this.d.clear();
+        this.l.clear();
         next?.forEach((value: T) => {
             this.listener.emit(Add, value);
-            this.d.add(value);
+            this.l.add(value);
         });
-        this.size?.up(this.d.size);
+        this.size?.up(this.l.size);
     }
 
     protected run<T>(fn: () => T): T {
         const result = fn();
         const r = this.r;
 
-        this.size?.up(this.d.size);
+        this.size?.up(this.l.size);
         if (r) {
-            r.up((this.last = r.V instanceof Array ? [...this.d] : new Set(this.d)));
+            r.up((this.last = r.V instanceof Array ? [...this.l] : new Set(this.l)));
         }
 
         return result;
@@ -139,7 +139,7 @@ export class SetViewNode<
 
                 if (existing) {
                     removeFragmentFromTree(existing);
-                    existing.destroy(existing.pos);
+                    existing.d(existing.pos);
                 }
                 create(value!);
             } else if (op === Remove) {
@@ -148,10 +148,10 @@ export class SetViewNode<
                 /* istanbul ignore else */
                 if (item) {
                     removeFragmentFromTree(item);
-                    item.destroy(item.pos);
+                    item.d(item.pos);
                 }
             } else {
-                view.map.forEach(frag => frag.destroy(frag.pos));
+                view.map.forEach(frag => frag.d(frag.pos));
                 view.map.clear();
                 view.last = undefined;
             }
@@ -170,7 +170,7 @@ export class SetViewNode<
         [...this.map.values()].reverse().forEach(item => item.remount());
     }
 
-    public override destroy(deep: number, keepNodes?: boolean): void {
+    public override d(deep: number, keepNodes?: boolean): void {
         /* istanbul ignore else */
         if (this.acceptUpdate && this.model.deep < deep) {
             this.model.listener.off(this.acceptUpdate);
@@ -178,9 +178,9 @@ export class SetViewNode<
         this.map.forEach(frag => {
             /* istanbul ignore else */
             if (frag.deep < deep || !keepNodes) {
-                frag.destroy(deep, keepNodes);
+                frag.d(deep, keepNodes);
             }
         });
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }

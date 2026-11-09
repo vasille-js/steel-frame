@@ -56,9 +56,9 @@ export class DevArrayModelViewNode<Node, Element extends Node, TagOptions extend
         processComponentProps(this.id, { model });
     }
 
-    override destroy(deep: number, keepNodes?: boolean) {
+    override d(deep: number, keepNodes?: boolean) {
         inspector.destroy({ id: this.id, time: Date.now() });
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }
 
@@ -108,9 +108,9 @@ export class DevArrayViewNode<Node, Element extends Node, TagOptions extends obj
         processComponentProps(this.id, { model, key, slot });
     }
 
-    override destroy(deep: number, keepNodes?: boolean) {
+    override d(deep: number, keepNodes?: boolean) {
         inspector.destroy({ id: this.id, time: Date.now() });
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }
 
@@ -142,9 +142,9 @@ export class DevSetViewNode<Node, Element extends Node, TagOptions extends objec
         processComponentProps(this.id, { model, slot });
     }
 
-    override destroy(deep: number, keepNodes?: boolean) {
+    override d(deep: number, keepNodes?: boolean) {
         inspector.destroy({ id: this.id, time: Date.now() });
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }
 
@@ -186,8 +186,8 @@ export class DevMapViewNode<Node, Element extends Node, TagOptions extends objec
         processComponentProps(this.id, { model, slot });
     }
 
-    override destroy(deep: number, keepNodes?: boolean) {
+    override d(deep: number, keepNodes?: boolean) {
         inspector.destroy({ id: this.id, time: Date.now() });
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }

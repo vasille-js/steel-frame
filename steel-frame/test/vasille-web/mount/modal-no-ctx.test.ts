@@ -9,5 +9,5 @@ const Modal = modal((node, { slot }) => {
 it("creates modal", function () {
     expect(() => {
         Modal({}, undefined);
-    }).toThrow("Modal context is missing");
+    }).toThrow("Context is missing");
 });

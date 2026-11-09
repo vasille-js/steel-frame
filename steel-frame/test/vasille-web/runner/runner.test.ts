@@ -29,7 +29,7 @@ it("Tag", function () {
         expect(div.node!.childNodes[2]!.textContent).toBe("");
     });
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("if", function () {
@@ -39,7 +39,7 @@ it("if", function () {
     let check2 = true;
 
     root.child(
-        new SwitchedNode<Node, Element, WebTagOptions>(root.runner, root.pos + 1, [
+        new SwitchedNode<Node, Element, WebTagOptions>(root, [
             {
                 $case: new Reference(true),
                 slot: (node, value) => {
@@ -50,7 +50,7 @@ it("if", function () {
         ]),
     );
     root.child(
-        new SwitchedNode<Node, Element, WebTagOptions>(root.runner, root.pos + 1, [
+        new SwitchedNode<Node, Element, WebTagOptions>(root, [
             {
                 $case: new Reference(false),
                 slot: () => (check2 = false),
@@ -60,7 +60,7 @@ it("if", function () {
 
     expect(check1).toBe(true);
     expect(check2).toBe(true);
-    root.destroy(0);
+    root.d(0);
 });
 
 it("if else", function () {
@@ -74,8 +74,7 @@ it("if else", function () {
 
     root.child(
         new SwitchedNode<Node, Element, WebTagOptions>(
-            root.runner,
-            root.pos + 1,
+            root,
             [{ $case: iv1, slot: () => (check1 = 1) }],
             () => (check1 = 2),
         ),
@@ -83,8 +82,7 @@ it("if else", function () {
 
     root.child(
         new SwitchedNode<Node, Element, WebTagOptions>(
-            root.runner,
-            root.pos + 1,
+            root,
             [{ $case: iv2, slot: () => (check2 = 1) }],
             () => (check2 = 2),
         ),
@@ -99,7 +97,7 @@ it("if else", function () {
     expect(check1).toBe(2);
     expect(check2).toBe(1);
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("switch", function () {
@@ -111,8 +109,7 @@ it("switch", function () {
 
     root.child(
         new SwitchedNode<Node, Element, WebTagOptions>(
-            root.runner,
-            root.pos + 1,
+            root,
             [
                 { $case: expr(root, v => v == 1, [v]), slot: () => (check = 1) },
                 { $case: expr(root, v => v == 2, [v]), slot: () => (check = 2) },
@@ -136,7 +133,7 @@ it("switch", function () {
     v2.V = false;
     expect(check).toBe(4);
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("INode", function () {
@@ -144,7 +141,7 @@ it("INode", function () {
     const runner = new WebRunner(window.document);
     const root = new AppNode<Node, Element, WebTagOptions>(window.document.body, runner);
 
-    root.child(new Fragment<Node, Element, WebTagOptions>(runner, 1), function (test) {
+    root.child(new Fragment<Node, Element, WebTagOptions>(root), function (test) {
         // attr
         (function () {
             const attrName = "data-attr";
@@ -227,7 +224,7 @@ it("INode", function () {
         })();
     });
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("INode Events 1", function () {
@@ -244,7 +241,7 @@ it("INode Events 1", function () {
     element.click();
     expect(test).toBe(true);
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("INode Events 2", function () {
@@ -261,7 +258,7 @@ it("INode Events 2", function () {
     element.click();
     expect(test).toBe(true);
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("bind DOM api test", function () {
@@ -323,7 +320,7 @@ it("bind DOM api test", function () {
 
     expect(media2.volume).toBe(0.75);
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("Error handling", function () {
@@ -394,10 +391,10 @@ it("destroy link test", function () {
         },
     );
 
-    root.destroy(0);
+    root.d(0);
     // @ts-expect-error
     expect(className.handler1 !== undefined).toBe(true);
-    root.destroy(Infinity);
+    root.d(Infinity);
     // @ts-expect-error
     expect(className.handler1 === undefined).toBe(true);
 });

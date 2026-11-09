@@ -25,7 +25,7 @@ it("should abort", done => {
     expect(control.r_data).toBe(undefined);
     expect(control.signal?.aborted).toBe(false);
 
-    app.destroy(Infinity);
+    app.d(Infinity);
 
     expect(control.r_err).toBe(undefined);
     expect(control.r_data).toBe(undefined);

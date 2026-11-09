@@ -19,7 +19,7 @@ export function routerReplace(path: NodePath<unknown>, internal: Internal) {
         validateRouterPath(parentPath.parentPath.get("arguments")[0] as NodePath<t.Expression>, internal);
     }
 
-    path.replaceWith(t.memberExpression(t.memberExpression(ctx, t.identifier("runner")), t.identifier("router")));
+    path.replaceWith(t.memberExpression(t.memberExpression(ctx, t.identifier("r")), t.identifier("r")));
 }
 
 function validateUrlPath(routes: string[][] | undefined, path: string) {

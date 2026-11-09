@@ -20,7 +20,7 @@ it("handles destroy via callback", function () {
     const body = window.document.body;
     let destroyed = false;
 
-    const app = mountApp(body, test, node.runner, {
+    const app = mountApp(body, test, node.r, {
         callback: $ => {
             expect($.a).toBe(1);
             return () => {
@@ -29,7 +29,7 @@ it("handles destroy via callback", function () {
         },
     });
 
-    app.destroy(0);
+    app.d(0);
     expect(destroyed).toBe(true);
 });
 
@@ -38,13 +38,13 @@ it("handles destroy via runOnDestroy", function () {
     const body = window.document.body;
     let destroyed = false;
 
-    const app = mountApp(body, test, node.runner, {
+    const app = mountApp(body, test, node.r, {
         runOnDestroy() {
             destroyed = true;
         },
     });
 
-    app.destroy(0);
+    app.d(0);
     expect(destroyed).toBe(true);
 });
 
@@ -55,7 +55,7 @@ it("handles destroy via both methods", function () {
     let destroyed_directly = 0;
     let counter = 0;
 
-    const app = mountApp(body, test, node.runner, {
+    const app = mountApp(body, test, node.r, {
         callback: $ => {
             expect($.a).toBe(1);
             return () => {
@@ -67,7 +67,7 @@ it("handles destroy via both methods", function () {
         },
     });
 
-    app.destroy(0);
+    app.d(0);
     expect(destroyed_via_callback).toBe(1);
     expect(destroyed_directly).toBe(2);
 });
@@ -79,7 +79,7 @@ it("use abort signal", function () {
 
     expect(signal === signal2).toBe(true);
     expect(signal.aborted).toBe(false);
-    node.destroy(1);
+    node.d(1);
     expect(signal.aborted).toBe(true);
 });
 
@@ -92,7 +92,7 @@ it("use Zombie", function (done) {
     });
 
     expect(body.children.length).toBe(1);
-    node.destroy(1);
+    node.d(1);
     expect(body.children.length).toBe(1);
 
     setTimeout(() => {

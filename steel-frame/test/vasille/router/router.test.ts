@@ -369,9 +369,9 @@ it("switch page: found -> found", function (done) {
             "/about": {
                 async screen(props, ctx) {
                     ctx.tag("div", { c: [`about`] });
-                    expect("router" in ctx.runner).toBe(true);
-                    if ("router" in ctx.runner && ctx.runner.router instanceof MockRouter) {
-                        router = ctx.runner.router;
+                    expect("r" in ctx.r).toBe(true);
+                    if ("r" in ctx.r && ctx.r.r instanceof MockRouter) {
+                        router = ctx.r.r;
                     }
                 },
             },
@@ -413,8 +413,8 @@ it("switch page: found -> fallback", function (done) {
             "/found": {
                 async screen(props, ctx) {
                     ctx.tag("div", { c: [`found`] });
-                    if ("router" in ctx.runner && ctx.runner.router instanceof MockRouter) {
-                        router = ctx.runner.router;
+                    if ("r" in ctx.r && ctx.r.r instanceof MockRouter) {
+                        router = ctx.r.r;
                     }
                 },
             },
@@ -441,8 +441,8 @@ it("switch page: fallback -> error", function (done) {
     routeApp(body, window as unknown as Window, createLocation("/"), {
         fallbackScreen(props, ctx) {
             ctx.tag("div", { c: [`fallback`] });
-            if ("router" in ctx.runner && ctx.runner.router instanceof MockRouter) {
-                router = ctx.runner.router;
+            if ("r" in ctx.r && ctx.r.r instanceof MockRouter) {
+                router = ctx.r.r;
             }
         },
         errorScreen() {},
@@ -473,8 +473,8 @@ it("switch page: error -> found", function (done) {
         },
         errorScreen(props, ctx) {
             ctx.tag("div", { c: [`error`] });
-            if ("router" in ctx.runner && ctx.runner.router instanceof MockRouter) {
-                router = ctx.runner.router;
+            if ("r" in ctx.r && ctx.r.r instanceof MockRouter) {
+                router = ctx.r.r;
             }
         },
         routes: {
@@ -509,8 +509,8 @@ it("no access fallback", function (done) {
         },
         fallbackScreen(props, ctx) {
             ctx.tag("div", { c: [props.cause] });
-            if ("router" in ctx.runner && ctx.runner.router instanceof MockRouter) {
-                router = ctx.runner.router;
+            if ("r" in ctx.r && ctx.r.r instanceof MockRouter) {
+                router = ctx.r.r;
             }
         },
         errorScreen() {},

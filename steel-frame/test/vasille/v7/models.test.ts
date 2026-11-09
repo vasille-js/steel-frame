@@ -63,9 +63,9 @@ it("resets collection after destruction", function () {
         [2, 2],
     ]);
 
-    arr.destroy(Infinity);
-    map.destroy(Infinity);
-    set.destroy(Infinity);
+    arr.d(Infinity);
+    map.d(Infinity);
+    set.d(Infinity);
 
     $arr.V = [];
     expect(arr.array).toEqual([1, 2]);

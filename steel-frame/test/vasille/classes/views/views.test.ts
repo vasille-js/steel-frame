@@ -11,6 +11,7 @@ import {
     Reference,
     SetModel,
     SetViewNode,
+    Tag,
 } from "../../../../src/vasille/index.js";
 
 it("array view", function () {
@@ -25,15 +26,14 @@ it("array view", function () {
     root.tag("div", { callback: node => (element = node) }, function (tag) {
         tag.child(
             (view = new ArrayModelViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
-                runner,
-                tag.pos + 1,
+                tag as any,
                 array,
                 function (f, item) {
                     f.text(`${item}`);
                 },
                 false,
                 v => new Reference(v),
-                r => new Fragment(r, tag.pos + 1),
+                r => new Fragment(r),
             )),
         );
     });
@@ -85,10 +85,10 @@ it("array view", function () {
     array.splice(1, 1, 4, 5, 6);
     expect(element.innerHTML).toBe("145637");
 
-    view.destroy(view.pos);
+    view.d(view.pos);
     expect(element.innerHTML).toBe("");
 
-    root.destroy(0);
+    root.d(0);
     expect(window.document.body.children.length).toBe(0);
 });
 
@@ -103,8 +103,7 @@ it("single pass array view", function () {
     root.tag("div", { callback: node => (element = node) }, function (tag) {
         tag.child(
             (view = new ArrayViewNode<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
-                runner,
-                tag.pos + 1,
+                tag as any,
                 array,
                 item => item.id,
                 function (f, item, index) {
@@ -113,7 +112,7 @@ it("single pass array view", function () {
                 false,
                 v => new Reference(v),
                 v => new Reference(v),
-                r => new Fragment(r, tag.pos + 1),
+                r => new Fragment(r),
             )),
         );
     });
@@ -178,10 +177,10 @@ it("single pass array view", function () {
     ];
     expect(element.innerHTML).toBe("(0:2)(1:3)");
 
-    view.destroy(view.pos);
+    view.d(view.pos);
     expect(element.innerHTML).toBe("");
 
-    root.destroy(0);
+    root.d(0);
     expect(window.document.body.children.length).toBe(0);
 });
 
@@ -198,8 +197,7 @@ it("multiple text remount", function () {
     root.tag("div", { callback: node => (element = node) }, function (tag) {
         tag.child(
             new ArrayViewNode<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
-                runner,
-                tag.pos + 1,
+                tag as any,
                 array,
                 item => item.id,
                 function (f, item, index) {
@@ -213,7 +211,7 @@ it("multiple text remount", function () {
                 false,
                 v => new Reference(v),
                 v => new Reference(v),
-                r => new Fragment(r, tag.pos + 1),
+                r => new Fragment(r),
             ),
         );
     });
@@ -223,7 +221,7 @@ it("multiple text remount", function () {
     array.V = [array.V[1]!, array.V[0]!];
     expect(element.innerHTML).toBe("0:10=11|1:0=1|");
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("multiple tag remount", function () {
@@ -239,8 +237,7 @@ it("multiple tag remount", function () {
     root.tag("div", { callback: node => (element = node) }, function (tag) {
         tag.child(
             new ArrayViewNode<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
-                runner,
-                tag.pos + 1,
+                tag as any,
                 array,
                 item => item.id,
                 function (f, item, index) {
@@ -254,7 +251,7 @@ it("multiple tag remount", function () {
                 false,
                 v => new Reference(v),
                 v => new Reference(v),
-                r => new Fragment(r, tag.pos + 1),
+                r => new Fragment(r),
             ),
         );
     });
@@ -264,7 +261,7 @@ it("multiple tag remount", function () {
     array.V = [array.V[1]!, array.V[0]!];
     expect(element.innerHTML).toBe("<div>10</div><div>11</div><div>0</div><div>1</div>");
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("array view remount", function () {
@@ -280,8 +277,7 @@ it("array view remount", function () {
     root.tag("div", { callback: node => (element = node) }, function (tag) {
         tag.child(
             new ArrayViewNode<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
-                runner,
-                tag.pos + 1,
+                tag as any,
                 array,
                 item => item.id,
                 function (f, item, index) {
@@ -294,8 +290,7 @@ it("array view remount", function () {
                             typeof runner,
                             unknown
                         >(
-                            runner,
-                            f.sDeep + 1,
+                            f,
                             new Reference([item.V]),
                             i => i.id,
                             function (f, item, index) {
@@ -309,14 +304,14 @@ it("array view remount", function () {
                             false,
                             v => new Reference(v),
                             v => new Reference(v),
-                            r => new Fragment(r, f.sDeep + 1),
+                            r => new Fragment(r),
                         ),
                     );
                 },
                 false,
                 v => new Reference(v),
                 v => new Reference(v),
-                r => new Fragment(r, tag.pos + 1),
+                r => new Fragment(r),
             ),
         );
     });
@@ -326,7 +321,7 @@ it("array view remount", function () {
     array.V = [array.V[1]!, array.V[0]!];
     expect(element.innerHTML).toBe("<div>10</div><div>11</div><div>0</div><div>1</div>");
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("map view", function () {
@@ -344,15 +339,14 @@ it("map view", function () {
     root.tag("div", { callback: node => (element = node as HTMLElement) }, function (tag) {
         tag.child(
             (view = new MapViewNode<number, number, Node, Element, TagOptions, typeof runner, unknown>(
-                runner,
-                tag.pos + 1,
+                tag as any,
                 model,
                 function (f, item) {
                     f.text(item);
                 },
                 false,
                 v => new Reference(v),
-                r => new Fragment(r, tag.pos + 1),
+                r => new Fragment(r),
             )),
         );
     });
@@ -372,10 +366,10 @@ it("map view", function () {
     expect(element.innerHTML).toBe("");
 
     model.set(1, 1);
-    view.destroy(view.pos);
+    view.d(view.pos);
     expect(element.innerHTML).toBe("");
 
-    root.destroy(0);
+    root.d(0);
     expect(window.document.body.children.length).toBe(0);
 });
 
@@ -392,15 +386,13 @@ it("map view remount", function () {
     root.tag("div", { callback: node => (element = node) }, function (tag) {
         tag.child(
             new ArrayViewNode<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
-                runner,
-                tag.pos + 1,
+                tag as any,
                 array,
                 item => item.id,
                 function (f, item) {
                     f.child(
                         new MapViewNode<number, number, Node, Element, TagOptions, typeof runner, unknown>(
-                            runner,
-                            f.sDeep + 1,
+                            f,
                             new MapModel([[item.V.id, item.V.value]]),
                             function (f, item, key) {
                                 f.tag("div", {}, ctx => {
@@ -412,14 +404,14 @@ it("map view remount", function () {
                             },
                             false,
                             v => new Reference(v),
-                            r => new Fragment(r, f.sDeep + 1),
+                            r => new Fragment(r),
                         ),
                     );
                 },
                 false,
                 v => new Reference(v),
                 v => new Reference(v),
-                r => new Fragment(r, tag.pos + 1),
+                r => new Fragment(r),
             ),
         );
     });
@@ -429,7 +421,7 @@ it("map view remount", function () {
     array.V = [array.V[1]!, array.V[0]!];
     expect(element.innerHTML).toBe("<div>10</div><div>11</div><div>0</div><div>1</div>");
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("set view", function () {
@@ -443,13 +435,12 @@ it("set view", function () {
     root.tag("div", { callback: node => (element = node as HTMLElement) }, function (f) {
         f.child(
             (view = new SetViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
-                runner,
-                f.pos + 1,
+                f as any,
                 model,
                 function (f, item) {
                     f.text(`${item}`);
                 },
-                r => new Fragment(r, f.pos + 1),
+                r => new Fragment(r),
             )),
         );
     });
@@ -466,10 +457,10 @@ it("set view", function () {
     expect(element.innerHTML).toBe("");
 
     model.add(1);
-    view.destroy(view.pos);
+    view.d(view.pos);
     expect(element.innerHTML).toBe("");
 
-    root.destroy(0);
+    root.d(0);
 
     expect(window.document.body.children.length).toBe(0);
 });
@@ -484,15 +475,14 @@ it("view timeout test", function (done) {
     root.tag("div", { callback: node => (element = node as HTMLElement) }, function (f) {
         f.child(
             new SetViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
-                runner,
-                f.pos + 1,
+                f as any,
                 model,
                 function (f, item) {
                     setTimeout(() => {
                         f.text(`${item}`);
                     }, 0);
                 },
-                r => new Fragment(r, f.pos + 1),
+                r => new Fragment(r),
             ),
         );
     });
@@ -507,7 +497,7 @@ it("view timeout test", function (done) {
 
         setTimeout(() => {
             expect(element.innerHTML).toBe("1234");
-            root.destroy(0);
+            root.d(0);
             done();
         }, 0);
     }, 0);
@@ -527,15 +517,13 @@ it("set view remount", function () {
     root.tag("div", { callback: node => (element = node) }, function (tag) {
         tag.child(
             new ArrayViewNode<{ id: number; value: number }, Node, Element, TagOptions, typeof runner, unknown>(
-                runner,
-                tag.pos + 1,
+                tag as any,
                 array,
                 item => item.id,
                 function (f, item) {
                     f.child(
                         new SetViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
-                            runner,
-                            f.sDeep + 1,
+                            f,
                             new SetModel([item.V.id, item.V.value]),
                             function (f, item) {
                                 f.tag("div", {}, ctx => {
@@ -543,14 +531,14 @@ it("set view remount", function () {
                                 });
                                 ++count;
                             },
-                            r => new Fragment(r, f.sDeep + 1),
+                            r => new Fragment(r),
                         ),
                     );
                 },
                 false,
                 v => new Reference(v),
                 v => new Reference(v),
-                r => new Fragment(r, tag.pos + 1),
+                r => new Fragment(r),
             ),
         );
     });
@@ -561,5 +549,5 @@ it("set view remount", function () {
     expect(element.innerHTML).toBe("<div>10</div><div>11</div><div>0</div><div>1</div>");
     expect(count).toBe(4);
 
-    root.destroy(0);
+    root.d(0);
 });

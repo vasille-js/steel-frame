@@ -1,4 +1,5 @@
 import { internalError, IRunner, IValue, Tag, TextNode } from "../../src/vasille/index.js";
+import { Root } from "../../src/vasille/classes/node/node.js";
 
 export interface TagOptions {
     c?: string[];
@@ -12,12 +13,12 @@ export class MockTextNode<Options extends TagOptions, RunnerT extends Runner<Opt
     Options,
     RunnerT
 > {
-    protected node!: Text;
+    declare public node: Text;
 
     public compose(): void {
         const text = this.data;
 
-        this.node = this.runner.document.createTextNode((text instanceof IValue ? text.V : text)?.toString() ?? "");
+        this.node = this.r.document.createTextNode((text instanceof IValue ? text.V : text)?.toString() ?? "");
 
         if (text instanceof IValue) {
             this.handler = (v: unknown) => {
@@ -28,11 +29,11 @@ export class MockTextNode<Options extends TagOptions, RunnerT extends Runner<Opt
         this.parent.appendNode(this.node);
     }
 
-    public override destroy(deep: number, keepNodes?: boolean) {
+    public override d(deep: number, keepNodes?: boolean) {
         if (!keepNodes) {
             this.node.remove();
         }
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 
     public override unmount(): void {
@@ -65,7 +66,7 @@ export class MockTag<Options extends TagOptions, RunnerT extends Runner<Options>
             throw internalError("wrong Tag constructor call");
         }
 
-        const node = this.runner.document.createElement(name);
+        const node = this.r.document.createElement(name);
         const options = this.options;
 
         this.node = node;
@@ -83,8 +84,8 @@ export class MockTag<Options extends TagOptions, RunnerT extends Runner<Options>
         }
     }
 
-    public override destroy(deep: number, keepNodes?: boolean) {
-        super.destroy(deep, true);
+    public override d(deep: number, keepNodes?: boolean) {
+        super.d(deep, true);
         /* istanbul ignore else */
         if (!keepNodes) {
             this.node?.remove();
@@ -127,11 +128,11 @@ export class Runner<Options extends TagOptions> implements IRunner<Node, Element
     appendChild(node: Element, child: Element | Node): void {
         node.appendChild(child);
     }
-    textNode(deep: number, text: unknown): TextNode<Node, Element, Options> {
-        return new MockTextNode({ text }, this, deep);
+    textNode(parent: Root<Node, Element, Options, Runner<Options>>, text: unknown): TextNode<Node, Element, Options> {
+        return new MockTextNode(text, parent);
     }
     tag(
-        deep: number,
+        parent: Root<Node, Element, Options, Runner<Options>>,
         tagName: string,
         input: Options,
         cb?: ((ctx: Tag<Node, Element, Options>) => void) | undefined,
@@ -140,6 +141,6 @@ export class Runner<Options extends TagOptions> implements IRunner<Node, Element
             input.slot = cb as any;
         }
 
-        return new MockTag(input, this, tagName, deep);
+        return new MockTag(input, parent, tagName);
     }
 }

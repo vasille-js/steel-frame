@@ -17,11 +17,11 @@ it("Fragment", function () {
     const runner = new Runner(window.document);
     const root = new AppNode<Node, Element, TagOptions>(window.document.body, runner);
 
-    root.child(new FragmentTest(runner, 1));
+    root.child(new FragmentTest(root));
     expect(root.children.length).toBe(1);
     expect(compose).toBe(true);
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("Tag", function () {
@@ -50,7 +50,7 @@ it("Tag", function () {
         expect(div.node!.childNodes[2]!.textContent).toBe("");
     });
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("if", function () {
@@ -60,7 +60,7 @@ it("if", function () {
     let check2 = true;
 
     root.child(
-        new SwitchedNode<Node, Element, TagOptions>(root.runner, root.pos + 1, [
+        new SwitchedNode<Node, Element, TagOptions>(root, [
             {
                 $case: new Reference(true),
                 slot: (node, value) => {
@@ -71,7 +71,7 @@ it("if", function () {
         ]),
     );
     root.child(
-        new SwitchedNode<Node, Element, TagOptions>(root.runner, root.pos + 1, [
+        new SwitchedNode<Node, Element, TagOptions>(root, [
             {
                 $case: new Reference(false),
                 slot: () => (check2 = false),
@@ -81,7 +81,7 @@ it("if", function () {
 
     expect(check1).toBe(true);
     expect(check2).toBe(true);
-    root.destroy(0);
+    root.d(0);
 });
 
 it("if else", function () {
@@ -95,8 +95,7 @@ it("if else", function () {
 
     root.child(
         new SwitchedNode<Node, Element, TagOptions>(
-            root.runner,
-            root.pos + 1,
+            root,
             [{ $case: iv1, slot: () => (check1 = 1) }],
             () => (check1 = 2),
         ),
@@ -104,8 +103,7 @@ it("if else", function () {
 
     root.child(
         new SwitchedNode<Node, Element, TagOptions>(
-            root.runner,
-            root.pos + 1,
+            root,
             [{ $case: iv2, slot: () => (check2 = 1) }],
             () => (check2 = 2),
         ),
@@ -120,7 +118,7 @@ it("if else", function () {
     expect(check1).toBe(2);
     expect(check2).toBe(1);
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("switch", function () {
@@ -132,8 +130,7 @@ it("switch", function () {
 
     root.child(
         new SwitchedNode<Node, Element, TagOptions>(
-            root.runner,
-            root.pos + 1,
+            root,
             [
                 { $case: new TestExpression(v => v == 1, [v], root), slot: () => (check = 1) },
                 { $case: new TestExpression(v => v == 2, [v], root), slot: () => (check = 2) },
@@ -157,7 +154,7 @@ it("switch", function () {
     v2.V = false;
     expect(check).toBe(4);
 
-    root.destroy(0);
+    root.d(0);
 });
 
 it("Error handling", function () {
@@ -195,7 +192,7 @@ it("Insert adjacent", function () {
 
     root.tag("div", {}, function (node) {
         node.child(
-            new SwitchedNode<Node, Element, TagOptions>(node.runner, node.pos + 1, [
+            new SwitchedNode<Node, Element, TagOptions>(node, [
                 {
                     $case: bool,
                     slot(node) {
@@ -218,7 +215,7 @@ it("Find first child of tag", function () {
 
     root.tag("div", {}, function (node) {
         node.child(
-            new SwitchedNode<Node, Element, TagOptions>(node.runner, node.pos + 1, [
+            new SwitchedNode<Node, Element, TagOptions>(node, [
                 {
                     $case: bool,
                     slot(node) {
@@ -227,7 +224,7 @@ it("Find first child of tag", function () {
                 },
             ]),
         );
-        node.child(new Fragment<Node, Element, TagOptions>(runner, node.pos + 1), node => {
+        node.child(new Fragment<Node, Element, TagOptions>(node), node => {
             node.tag("span", {});
         });
 

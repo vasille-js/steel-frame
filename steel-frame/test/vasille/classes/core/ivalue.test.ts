@@ -20,5 +20,5 @@ it("expression", function () {
     a.V++;
     expect(c.V).toBe(6);
 
-    c.destroy();
+    c.d();
 });

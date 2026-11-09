@@ -14,19 +14,18 @@ it("Watch Test", function () {
             {
                 model,
                 slot: function (node, input) {
-                    node.child(new Fragment<Node, Element, TagOptions>(runner, root.pos + 1), ctx => {
+                    node.child(new Fragment<Node, Element, TagOptions>(root), ctx => {
                         ctx.tag("div", {}, ctx => {
                             ctx.text(input);
                         });
                     });
                 },
             },
-            runner,
-            root.pos + 1,
+            root,
         ),
     );
 
-    root.child(new WatchNode<Node, Element, TagOptions, boolean>({ model }, runner, root.pos + 1));
+    root.child(new WatchNode<Node, Element, TagOptions, boolean>({ model }, root));
 
     expect(body.children.length).toBe(1);
     expect(body.children[0]!.innerHTML).toBe("false");
@@ -34,7 +33,7 @@ it("Watch Test", function () {
     expect(body.children[0]!.innerHTML).toBe("true");
     expect(root.children.length).toBe(2);
 
-    root.destroy(0);
+    root.d(0);
 
     expect(body.children.length).toBe(0);
 });

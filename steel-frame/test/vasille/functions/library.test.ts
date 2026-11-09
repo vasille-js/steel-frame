@@ -42,7 +42,7 @@ it("awaited", function (done) {
             setTimeout(() => {
                 expect(counterState.V).toBeUndefined();
                 expect(counterError.V).toBe(2);
-                frag.destroy(frag.pos);
+                frag.d(frag.pos);
                 done();
             });
         });
@@ -109,7 +109,7 @@ it("awaited with aborts", function (done) {
             setTimeout(() => {
                 expect(counterState.V).toBeUndefined();
                 expect(counterError.V).toBe(9);
-                frag.destroy(frag.pos);
+                frag.d(frag.pos);
                 expect(finished.sort()).toEqual([50, 10, 9, 9, 100, 250, 500].sort());
                 done();
             }, 500);
@@ -130,7 +130,7 @@ it("awaited synchronous", function () {
     expect(successResult.V).toBe(2);
     expect(mustFailErr.V).toBe(4);
     expect(mustFailResult.V).toBeUndefined();
-    frag.destroy(frag.pos);
+    frag.d(frag.pos);
 });
 
 it("store test", function () {

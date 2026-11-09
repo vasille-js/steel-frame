@@ -28,12 +28,12 @@ export class ZombieNode<
         this.refreshDeep(0);
     }
 
-    public override destroy(deep: number, keepNodes?: boolean) {
+    public override d(deep: number, keepNodes?: boolean) {
         if (keepNodes) {
-            super.destroy(deep, keepNodes);
+            super.d(deep, keepNodes);
         } else {
             this.trigger();
-            setTimeout(() => super.destroy(deep), this.time.V);
+            setTimeout(() => super.d(deep), this.time.V);
         }
     }
 }

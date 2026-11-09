@@ -9,7 +9,7 @@ export interface RootInit<
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions>,
 > {
-    runner: Runner;
+    r: Runner;
     node: Node;
     pos: number;
 }
@@ -29,14 +29,14 @@ export abstract class Root<
      * @type Array
      */
     public readonly children: Fragment<Node, Element, TagOptions>[] = [];
-    public readonly runner: Runner;
+    public readonly r: Runner;
 
     public last: Fragment<Node, Element, TagOptions> | undefined = undefined;
     public node: Node;
 
     protected constructor(init: RootInit<Node, Element, TagOptions, Runner>) {
         super(init.pos + 1);
-        this.runner = init.runner;
+        this.r = init.r;
         this.node = init.node;
     }
 
@@ -75,7 +75,7 @@ export abstract class Root<
      * @param text {String | IValue} A text fragment string
      */
     public text(text: unknown): void {
-        const node = this.runner.textNode(this, text);
+        const node = this.r.textNode(this, text);
 
         this.push(node);
         node.compose();
@@ -100,7 +100,7 @@ export abstract class Root<
      * @param cb {function(Tag, *)} callback
      */
     public tag(tagName: string, input: TagOptions, cb?: (ctx: Tag<Node, Element, TagOptions>) => void): void {
-        const tag = this.runner.tag(this, tagName, input, cb);
+        const tag = this.r.tag(this, tagName, input, cb);
 
         this.push(tag);
         tag.compose();
@@ -117,15 +117,15 @@ export abstract class Root<
         callback?.(node);
     }
 
-    public override destroy(deep: number, keepNodes?: boolean) {
+    public override d(deep: number, keepNodes?: boolean) {
         this.children.forEach(child => {
             if (!keepNodes || child.deep < deep) {
-                child.destroy(deep, keepNodes);
+                child.d(deep, keepNodes);
             }
         });
 
         this.last = undefined;
-        super.destroy(deep);
+        super.d(deep);
     }
 }
 
@@ -195,7 +195,7 @@ export class Fragment<
         const child = this.findFirstChild();
 
         if (child) {
-            this.runner.insertBefore(node, child);
+            this.r.insertBefore(node, child);
         } else if (this.next) {
             this.next.insertAdjacent(node);
         } else {
@@ -270,14 +270,14 @@ export abstract class TextNode<
 
     protected abstract override findFirstChild(): Node;
 
-    public override destroy(deep: number, keepNodes?: boolean): void {
+    public override d(deep: number, keepNodes?: boolean): void {
         const text = this.data;
 
         if (text instanceof IValue && text.deep < deep && this.handler) {
             text.off(this.handler);
         }
 
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }
 
@@ -292,7 +292,7 @@ export abstract class Tag<
     TagOptions extends object,
     Runner extends IRunner<Node, Element, TagOptions> = IRunner<Node, Element, TagOptions>,
 > extends Fragment<Node, Element, TagOptions, Runner> {
-    public node!: Element;
+    declare public node: Element;
     public readonly name: string;
     public readonly options: TagOptions;
 
@@ -305,7 +305,7 @@ export abstract class Tag<
     public abstract override compose(): void;
 
     public override insertAdjacent(node: Node): void {
-        this.runner.insertBefore(node, this.node!);
+        this.r.insertBefore(node, this.node!);
     }
 
     protected override findFirstChild(): Node | Element | undefined {
@@ -313,7 +313,7 @@ export abstract class Tag<
     }
 
     public override appendNode(node: Node): void {
-        this.runner.appendChild(this.node! as Element, node);
+        this.r.appendChild(this.node! as Element, node);
     }
 }
 
@@ -377,7 +377,7 @@ export class SwitchedNode<
             }
 
             if (this.last) {
-                this.last.destroy(this.last.pos);
+                this.last.d(this.last.pos);
                 this.children.splice(0);
                 this.last = undefined;
             }
@@ -406,7 +406,7 @@ export class SwitchedNode<
         this.sync();
     }
 
-    public override destroy(deep: number, keepNodes?: boolean) {
+    public override d(deep: number, keepNodes?: boolean) {
         this.cases.forEach(c => {
             const item = c.$case;
             if (item instanceof IValue && item.deep < deep) {
@@ -414,7 +414,7 @@ export class SwitchedNode<
             }
         });
 
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 
     protected newChild(_index: number): Fragment<Node, Element, TagOptions, Runner> {

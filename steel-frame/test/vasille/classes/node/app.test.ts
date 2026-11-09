@@ -8,7 +8,7 @@ class MyApp extends AppNode<Node, Element, TagOptions> {
     public compose() {
         this.tag("div", { callback: node => (this.div = node as HTMLDivElement) });
 
-        this.child(new PortalNode<Node, Element, TagOptions>(this.div, this.runner, this.pos + 1), function (f) {
+        this.child(new PortalNode<Node, Element, TagOptions>(this, this.div), function (f) {
             f.tag("span", {});
         });
     }

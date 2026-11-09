@@ -27,7 +27,7 @@ export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
 
         if (length) {
             this.length = length;
-            length.up(this.d.length);
+            length.up(this.l.length);
         }
     }
 
@@ -35,7 +35,7 @@ export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
      * Give read access to the encapsulated array
      */
     public get array(): readonly T[] {
-        return this.d;
+        return this.l;
     }
 
     /* Array mutate members */
@@ -46,10 +46,10 @@ export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
      */
     public pop(): T | undefined {
         /* istanbul ignore else */
-        if (this.d.length > 0) {
-            this.listener.emit(this.d.length - 1, 1);
+        if (this.l.length > 0) {
+            this.listener.emit(this.l.length - 1, 1);
 
-            return this.run(() => this.d.pop());
+            return this.run(() => this.l.pop());
         }
     }
 
@@ -59,8 +59,8 @@ export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
      * @return {number} new length of the array
      */
     public push(...items: Array<T>): number {
-        this.listener.emit(this.d.length, 0, items);
-        return this.run(() => this.d.push(...items));
+        this.listener.emit(this.l.length, 0, items);
+        return this.run(() => this.l.push(...items));
     }
 
     /**
@@ -69,9 +69,9 @@ export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
      */
     public shift(): T | undefined {
         /* istanbul ignore else */
-        if (this.d.length > 0) {
+        if (this.l.length > 0) {
             this.listener.emit(0, 1);
-            return this.run(() => this.d.shift());
+            return this.run(() => this.l.shift());
         }
     }
 
@@ -84,7 +84,7 @@ export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
      */
     public sort(compareFn?: (a: T, b: T) => number): this {
         return this.run(() => {
-            const data = this.d;
+            const data = this.l;
             data.sort(compareFn);
             this.listener.emit(0, data.length, data);
             return this;
@@ -100,10 +100,10 @@ export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
      */
     public splice(start: number, deleteCount?: number, ...items: Array<T>): T[] {
         return this.run(() => {
-            const startIndex = Math.min(start, this.d.length);
-            const removeCount = typeof deleteCount === "number" ? deleteCount : this.d.length - startIndex;
+            const startIndex = Math.min(start, this.l.length);
+            const removeCount = typeof deleteCount === "number" ? deleteCount : this.l.length - startIndex;
             this.listener.emit(startIndex, removeCount, items);
-            return this.d.splice(startIndex, removeCount, ...items);
+            return this.l.splice(startIndex, removeCount, ...items);
         });
     }
 
@@ -114,7 +114,7 @@ export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
      */
     public unshift(...items: Array<T>): number {
         this.listener.emit(0, 0, items);
-        return this.run(() => this.d.unshift(...items));
+        return this.run(() => this.l.unshift(...items));
     }
 
     /**
@@ -126,24 +126,24 @@ export class ArrayModel<T, Extra> extends Collection<T[] | undefined, T[]> {
     public replace(at: number, with_: T): this {
         return this.run(() => {
             this.listener.emit(at, 1, [with_]);
-            this.d[at] = with_;
+            this.l[at] = with_;
             return this;
         });
     }
 
     protected run<T>(fn: () => T): T {
         const result = fn();
-        this.length?.up(this.d.length);
-        this.r?.up((this.last = [...this.d]));
+        this.length?.up(this.l.length);
+        this.r?.up((this.last = [...this.l]));
         return result;
     }
 
     protected override reset(arr: T[] | undefined) {
         const newArr = arr ? [...arr] : [];
-        const length = this.d.length;
+        const length = this.l.length;
 
         this.listener.emit(0, length, newArr);
-        this.d.splice(0, length, ...newArr);
+        this.l.splice(0, length, ...newArr);
         this.length?.up(newArr.length);
     }
 }
@@ -183,15 +183,15 @@ class BaseArrayView<
         }
     }
 
-    public override destroy(deep: number, keepNodes?: boolean): void {
+    public override d(deep: number, keepNodes?: boolean): void {
         for (let i = this.cache.length - 1; i >= 0; i--) {
             const frag = this.cache[i]!.frag;
             /* istanbul ignore else */
             if (!keepNodes || frag.pos < deep) {
-                frag.destroy(deep, keepNodes);
+                frag.d(deep, keepNodes);
             }
         }
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }
 
@@ -345,7 +345,7 @@ export class ArrayModelViewNode<
 
             // destroy removed nodes
             for (let i = 0; i < remove; i++) {
-                children[index + i]?.frag.destroy(view.pos + 1);
+                children[index + i]?.frag.d(view.pos + 1);
             }
 
             // modify the cache
@@ -369,12 +369,12 @@ export class ArrayModelViewNode<
         this.apply = apply;
     }
 
-    public override destroy(deep: number, keepNodes?: boolean) {
+    public override d(deep: number, keepNodes?: boolean) {
         /* istanbul ignore else */
         if (this.apply && this.model.deep < deep) {
             this.model.listener.off(this.apply);
         }
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }
 
@@ -498,12 +498,12 @@ export class DiffingArrayView<
         return cache;
     }
 
-    public override destroy(deep: number, keepNodes?: boolean) {
+    public override d(deep: number, keepNodes?: boolean) {
         /* istanbul ignore else */
         if (this.match && this.model.deep < deep) {
             this.model.off(this.match);
         }
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }
 
@@ -617,7 +617,7 @@ export class ArrayViewNode<
             // destroy removed nodes
             unmounted.forEach(item => {
                 existing.delete(item.key);
-                item.frag.destroy(item.frag.pos);
+                item.frag.d(item.frag.pos);
             });
 
             view.cache = newCache;

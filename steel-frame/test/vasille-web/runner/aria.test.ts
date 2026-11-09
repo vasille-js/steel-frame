@@ -20,5 +20,5 @@ it("Tag", function () {
     expect(body.children[2]!.getAttribute("aria-hidden")).toBe("true");
     expect(body.children[3]!.getAttribute("aria-hidden")).toBe("false");
 
-    root.destroy(0);
+    root.d(0);
 });

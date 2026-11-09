@@ -24,7 +24,7 @@ it("test field reference", function () {
     expect(obj.V).toEqual({ test: 24 });
     field.V = 25;
     expect(obj.V).toEqual({ test: 25 });
-    field.destroy();
+    field.d();
 });
 
 it("test field reference of undefined", function () {
@@ -35,7 +35,7 @@ it("test field reference of undefined", function () {
     expect(field.V).toBeUndefined();
     field.V = 24;
     expect(obj.V).toEqual({ test: 24 });
-    field.destroy();
+    field.d();
 });
 
 it("test field reference with dependency", function () {
@@ -53,7 +53,7 @@ it("test field reference with dependency", function () {
     expect(field.V).toBe(22);
     field.V = 25;
     expect(obj.V).toEqual({ test2: 25, test: 33 });
-    field.destroy();
+    field.d();
     fieldName.V = "test3";
     expect(field.V).toBe(25);
 });
@@ -70,7 +70,7 @@ it("test deep field reference", function () {
     expect(obj.V).toEqual({ test: { test2: 25, test3: 22 }, test4: 44 });
     obj.V = {};
     expect(field.V).toBeUndefined();
-    field.destroy();
+    field.d();
 });
 
 it("test deep field reference of undefined", function () {
@@ -81,7 +81,7 @@ it("test deep field reference of undefined", function () {
     expect(field.V).toBeUndefined();
     field.up(24);
     expect(obj.V).toEqual({ test: { test2: 24 } });
-    field.destroy();
+    field.d();
 });
 
 it("test deep field reference destroy", function () {
@@ -90,7 +90,7 @@ it("test deep field reference destroy", function () {
     const field = new DeepFieldReference(v => new Reference(v), obj, ["test", "test2"], ctx);
 
     expect(field.V).toBeUndefined();
-    field.destroy();
+    field.d();
     field.V = 24;
     expect(field.V).toBeUndefined();
 });
@@ -102,7 +102,7 @@ it("test deep field reference context destroy", function () {
     const field = new DeepFieldReference(v => new Reference(v), obj, ["test", "test2"], ctx1);
 
     expect(field.V).toBeUndefined();
-    ctx1.destroy(1);
+    ctx1.d(1);
     field.V = 24;
     expect(field.V).toBeUndefined();
 });
@@ -125,7 +125,7 @@ it("test deep filed reference with dependencies", function () {
     expect(field.V).toBeUndefined();
     field.V = 27;
     expect(obj.V).toEqual({ a: { z: { 1: 25 } }, b: { z: { 1: 26, 2: 27 } } });
-    field.destroy();
+    field.d();
     f1.V = "c";
     f2.V = "3";
     expect(field.V).toBe(27);
@@ -181,7 +181,7 @@ it("test reference debounce destroy", function (done) {
     expect(debounce.V).toBe(0);
     ref.V = 1;
     expect(debounce.V).toBe(0);
-    debounce.destroy();
+    debounce.d();
     setTimeout(() => {
         expect(debounce.V).toBe(0);
         done();
@@ -197,7 +197,7 @@ it("test reference debounce context destroy", function (done) {
     expect(debounce.V).toBe(0);
     ref.V = 1;
     expect(debounce.V).toBe(0);
-    ctx1.destroy(1);
+    ctx1.d(1);
     setTimeout(() => {
         expect(debounce.V).toBe(0);
         done();

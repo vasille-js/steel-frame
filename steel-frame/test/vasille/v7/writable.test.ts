@@ -51,8 +51,7 @@ it("edit array item", function () {
 
     node.child(
         new ArrayViewNode<number, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, any>(
-            node.runner,
-            0,
+            node,
             array,
             v => v,
             (ctx, value) => {
@@ -63,7 +62,7 @@ it("edit array item", function () {
             true,
             ref,
             ref,
-            r => new Fragment(r, 1),
+            r => new Fragment(r),
         ),
     );
 
@@ -80,8 +79,7 @@ it("edit array model item", function () {
 
     node.child(
         new ArrayModelViewNode<number, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, any>(
-            node.runner,
-            0,
+            node,
             array,
             (ctx, value: WritableIValue<number, unknown>) => {
                 if (value.isWritable()) {
@@ -90,7 +88,7 @@ it("edit array model item", function () {
             },
             true,
             ref,
-            r => new Fragment(r, 1),
+            r => new Fragment(r),
         ),
     );
 
@@ -110,8 +108,7 @@ it("edit map model item", function () {
 
     node.child(
         new MapViewNode<number, number, Node, Element, TagOptions, IRunner<Node, Element, TagOptions>, any>(
-            node.runner,
-            0,
+            node,
             map,
             (ctx, value: WritableIValue<number, unknown>) => {
                 if (value.isWritable()) {
@@ -120,7 +117,7 @@ it("edit map model item", function () {
             },
             true,
             ref,
-            r => new Fragment(r, 1),
+            r => new Fragment(r),
         ),
     );
 

@@ -55,18 +55,18 @@ class MyApp extends AppNode<Node, Element, TagOptions> {
     public compose(triple?: boolean, runOnDestroy?: () => void) {
         this.tag("div", { callback: node => (this.div = node as HTMLDivElement) });
 
-        this.child(new Fragment<Node, Element, TagOptions>(this.runner, this.pos + 1), ctx => {
+        this.child(new Fragment<Node, Element, TagOptions>(this), ctx => {
             this.frag_1 = ctx;
             this.ref_1 = new Reference(1, ctx);
             this.expr_1 = new TestExpression(n => n, [this.ref_1], ctx);
 
-            ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.pos + 1), ctx => {
+            ctx.child(new Fragment<Node, Element, TagOptions>(ctx), ctx => {
                 this.frag_1_1 = ctx;
                 this.ref_1_1 = new Reference(11, ctx);
                 this.expr_1_1 = new TestExpression((n, m) => n + m, [this.ref_1_1, this.ref_1], ctx);
 
                 if (triple) {
-                    ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.pos + 1), ctx => {
+                    ctx.child(new Fragment<Node, Element, TagOptions>(ctx), ctx => {
                         this.frag_1_1_1 = ctx;
                         this.ref_1_1_1 = new Reference(111, ctx);
                         this.expr_1_1_1 = new TestExpression((n, m) => n, [this.ref_1_1_1, this.expr_1_1], ctx);
@@ -77,7 +77,7 @@ class MyApp extends AppNode<Node, Element, TagOptions> {
                 }
             });
         });
-        this.child(new Fragment<Node, Element, TagOptions>(this.runner, this.pos + 1), ctx => {
+        this.child(new Fragment<Node, Element, TagOptions>(this), ctx => {
             this.frag_2 = ctx;
             this.ref_2 = new Reference(2, ctx);
 
@@ -85,7 +85,7 @@ class MyApp extends AppNode<Node, Element, TagOptions> {
                 this.expr_2 = new TestExpression((n, m) => n + m, [this.ref_0, this.ref_2], ctx);
             }
 
-            ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.pos + 1), ctx => {
+            ctx.child(new Fragment<Node, Element, TagOptions>(ctx), ctx => {
                 this.frag_2_1 = ctx;
                 this.ref_2_1 = new Reference(21, ctx);
 
@@ -94,7 +94,7 @@ class MyApp extends AppNode<Node, Element, TagOptions> {
                 }
 
                 if (triple) {
-                    ctx.child(new Fragment<Node, Element, TagOptions>(this.runner, ctx.pos + 1), ctx => {
+                    ctx.child(new Fragment<Node, Element, TagOptions>(ctx), ctx => {
                         this.frag_2_1_1 = ctx;
                         this.ref_2_1_1 = new Reference(211, ctx);
                         this.expr_2_1_1 = new TestExpression((n, m) => n + m, [this.ref_0, this.ref_2_1_1], ctx);
@@ -146,7 +146,7 @@ it("destroy root", function () {
     expect(app.expr_2.deep).toBe(app.pos);
     expect(app.expr_2_1.deep).toBe(app.pos);
     // destroy root
-    app.destroy(0);
+    app.d(0);
     // all bindings are kept
     expect(handlersCount(app.ref_0)).toBe(2);
     expect(handlersCount(app.ref_1)).toBe(2);
@@ -159,7 +159,7 @@ it("destroy root children", function () {
 
     app.compose();
     // destroy root children
-    app.children.forEach(child => child.destroy(1));
+    app.children.forEach(child => child.d(child.pos));
     // all bindings (except owned bindings and children bindings) are removed
     expect(handlersCount(app.ref_0)).toBe(0);
     expect(handlersCount(app.ref_1)).toBe(2);
@@ -174,7 +174,7 @@ it("destroy root children with infinity", function () {
 
     app.compose();
     // destroy with infinity
-    app.destroy(Infinity);
+    app.d(Infinity);
     // all bindings (except owned bindings) are removed
     expect(handlersCount(app.ref_0)).toBe(0);
     expect(handlersCount(app.ref_1)).toBe(1);
@@ -195,7 +195,7 @@ it("recursive rDeep index update", function () {
     expect(app.frag_2_1.deep).toBe(app.pos);
     expect(app.frag_2_1_1.deep).toBe(app.pos);
     // destroy frag 2
-    app.frag_2.destroy(app.frag_2.pos);
+    app.frag_2.d(app.frag_2.pos);
     // all bindings (except owned bindings) are removed
     expect(handlersCount(app.ref_0)).toBe(0);
     expect(handlersCount(app.ref_2_1_1)).toBe(0);
@@ -211,7 +211,7 @@ it("has runOnDestroy handler", function () {
     expect(app.frag_1.deep).toBe(0);
     expect(app.frag_1_1.deep).toBe(0);
     // destroy frag1
-    app.frag_1.destroy(app.frag_1.pos);
+    app.frag_1.d(app.frag_1.pos);
     // check if your handler was executed
     expect(test).toBe(true);
 });
@@ -226,21 +226,20 @@ it("destroys array view", () => {
     root.tag("div", {}, function (tag) {
         tag.child(
             new ArrayModelViewNode<number, Node, Element, TagOptions, typeof runner, unknown>(
-                runner,
-                tag.pos + 1,
+                tag as any,
                 array,
                 function (f, item: number) {
                     f.text(new TestExpression(a => a + item, [ref], f));
                 },
                 false,
                 v => new Reference(v),
-                r => new Fragment(r, tag.pos + 1),
+                r => new Fragment(r),
             ),
         );
     });
 
     expect(handlersCount(ref)).toBe(3);
-    root.destroy(Infinity);
+    root.d(Infinity);
     expect(handlersCount(ref)).toBe(0);
 });
 
@@ -252,7 +251,7 @@ it("destroys switched node", () => {
 
     root.tag("div", {}, function (tag) {
         tag.child(
-            new SwitchedNode<Node, Element, TagOptions, typeof runner>(runner, tag.pos + 1, [
+            new SwitchedNode<Node, Element, TagOptions, typeof runner>(tag as any, [
                 {
                     $case: new TestExpression(n => n === 1, [ref], tag),
                     slot(node) {
@@ -264,7 +263,7 @@ it("destroys switched node", () => {
     });
 
     expect(handlersCount(ref)).toBe(1);
-    root.destroy(Infinity);
+    root.d(Infinity);
     expect(handlersCount(ref)).toBe(0);
 });
 
@@ -283,14 +282,13 @@ it("destroys watch node", () => {
                         node.text(input);
                     },
                 },
-                runner,
-                tag.pos + 1,
+                tag as any,
             ),
         );
     });
 
     expect(handlersCount(ref)).toBe(1);
-    root.destroy(Infinity);
+    root.d(Infinity);
     expect(handlersCount(ref)).toBe(0);
 });
 
@@ -305,7 +303,7 @@ it("destroys binding", () => {
     new TestExpression(a => a, [ref], ctx);
 
     expect(handlersCount(ref)).toBe(1);
-    root.destroy(Infinity);
+    root.d(Infinity);
     expect(handlersCount(ref)).toBe(0);
 });
 
@@ -320,7 +318,7 @@ it("keep binding", () => {
     new TestExpression(a => a, [ref], ctx);
 
     expect(handlersCount(ref)).toBe(1);
-    root.destroy(0);
+    root.d(0);
     expect(handlersCount(ref)).toBe(1);
 });
 

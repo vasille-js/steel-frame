@@ -75,7 +75,7 @@ export class DevReference<T> extends BaseDevReference<T> implements Destroyable 
         }
     }
 
-    public destroy(): void {
+    public d(): void {
         inspector.destroy({ id: this.id, time: Date.now() });
     }
 
@@ -194,9 +194,9 @@ export class DevExpression<T, Args extends unknown[]> extends Expression<T, Args
         }
     }
 
-    public override destroy(): void {
+    public override d(): void {
         inspector.destroy({ id: this.id, time: Date.now() });
-        super.destroy();
+        super.d();
     }
 
     protected override getHandler(

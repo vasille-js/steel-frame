@@ -57,13 +57,13 @@ export class MockRouter<Routes extends string> extends Router<Node, Element, Tag
     ): Promise<void> {
         const children = this.contentNode.children;
         const oldChildren = [...children];
-        const ctx = new Fragment<Node, Element, TagOptions>(this.contentNode.runner, this.contentNode.pos + 1);
+        const ctx = new Fragment<Node, Element, TagOptions>(this.contentNode);
 
         this.contentNode.child(ctx, () => {});
         await screen(props, ctx);
 
         oldChildren.forEach(node => {
-            node.destroy(node.pos);
+            node.d(node.pos);
         });
         children.splice(0, oldChildren.length);
     }
@@ -82,7 +82,7 @@ export function routeApp<Routes extends string>(
         (_data, node) => {
             const router = new MockRouter<Routes>(init, location, node);
 
-            Object.defineProperty(runner, "router", {
+            Object.defineProperty(runner, "r", {
                 value: router,
                 writable: false,
             });

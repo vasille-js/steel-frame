@@ -353,7 +353,7 @@ export class Element extends Node {
 }
 
 export class SsgTextNode extends TextNode<Node, Element, SsgTagOptions> {
-    public node!: Text;
+    declare public node: Text;
 
     public compose() {
         this.node = new Text(this.data);
@@ -381,14 +381,14 @@ export class SsgTag extends Tag<Node, Element, SsgTagOptions, SsgRunner> {
 
 class HeadTag extends SsgTag {
     public compose(): void {
-        this.node = this.runner.head;
+        this.node = this.r.head;
         this.applyOptions(this.options);
     }
 }
 
 class BodyTag extends SsgTag {
     public compose(): void {
-        this.node = this.runner.body;
+        this.node = this.r.body;
         for (const key in this.options) {
             (this.node.options as any)[key] = (this.options as any)[key];
         }
@@ -419,8 +419,8 @@ export class SsgRunner implements IRunner<Node, Element, SsgTagOptions> {
     }
 
     textNode(
-        text: unknown,
         parent: Root<Node, Element, SsgTagOptions, SsgRunner>,
+        text: unknown,
     ): TextNode<Node, Element, SsgTagOptions> {
         return new SsgTextNode(text, parent);
     }

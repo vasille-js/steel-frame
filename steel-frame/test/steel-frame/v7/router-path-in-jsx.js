@@ -1,7 +1,7 @@
 import { compose, safe as VasilleSafe, ref as VasilleRef } from "vasille-web";
 const C = compose((Vasille, props) => {
   VasilleSafe(() => {
-    Vasille.runner.router?.goTo(props["checked:path"]);
+    Vasille.r.r?.goTo(props["checked:path"]);
   })();
 });
 const D = compose(Vasille => {

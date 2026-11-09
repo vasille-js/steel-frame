@@ -15,8 +15,8 @@ it("initialize router", function (done) {
         routes: {
             "/": {
                 screen: (props, ctx) => {
-                    if ("router" in ctx.runner && ctx.runner.router instanceof WebRouter) {
-                        router = ctx.runner.router;
+                    if ("r" in ctx.r && ctx.r.r instanceof WebRouter) {
+                        router = ctx.r.r;
                     }
                     screenCalled = ++index;
                     return Promise.resolve();
@@ -52,8 +52,8 @@ it("router initialization fails", function (done) {
         routes: {
             "/": {
                 screen: (props, ctx) => {
-                    if ("router" in ctx.runner && ctx.runner.router instanceof WebRouter) {
-                        router = ctx.runner.router;
+                    if ("r" in ctx.r && ctx.r.r instanceof WebRouter) {
+                        router = ctx.r.r;
                     }
                     screenCalled++;
                     return Promise.resolve();
@@ -88,8 +88,8 @@ it("router with wrapper", function (done) {
             "/": {
                 screen: (props, ctx) => {
                     ctx.tag("div", { c: ["screen"] });
-                    if ("router" in ctx.runner && ctx.runner.router instanceof WebRouter) {
-                        router = ctx.runner.router;
+                    if ("r" in ctx.r && ctx.r.r instanceof WebRouter) {
+                        router = ctx.r.r;
                     }
                     return Promise.resolve();
                 },

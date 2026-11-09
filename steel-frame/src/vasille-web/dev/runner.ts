@@ -48,9 +48,9 @@ export class DevWebTextNode extends WebTextNode<DevWebTagOptions, DevWebRunner> 
         });
     }
 
-    public override destroy(deep: number, keepNodes?: boolean): void {
+    public override d(deep: number, keepNodes?: boolean): void {
         inspector.destroy({ id: this.id, time: Date.now() });
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 
     public override compose(): void {
@@ -139,9 +139,9 @@ export class DevWebTag extends WebTag<DevWebTagOptions, DevWebRunner> {
         super.applyOptions(options);
     }
 
-    public override destroy(deep: number, keepNodes?: boolean): void {
+    public override d(deep: number, keepNodes?: boolean): void {
         inspector.destroy({ id: this.id, time: Date.now() });
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 
     public override compose(): void {

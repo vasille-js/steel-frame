@@ -9,7 +9,7 @@ it("remains alive because it is zombie", function (done) {
     let triggered = false;
 
     root.child(
-        new ZombieNode<Node, Element, TagOptions>(root.runner, new Reference(1), () => {
+        new ZombieNode<Node, Element, TagOptions>(root, new Reference(1), () => {
             triggered = true;
         }),
         ctx => {
@@ -19,7 +19,7 @@ it("remains alive because it is zombie", function (done) {
 
     expect(body.children.length).toBe(1);
     expect(triggered).toBe(false);
-    root.destroy(0);
+    root.d(0);
     expect(body.children.length).toBe(1);
     expect(triggered).toBe(true);
 
@@ -35,14 +35,14 @@ it("does not remain alive inside a zombie", function () {
     const root = new AppNode<Node, Element, TagOptions>(window.document.body, new Runner(window.document));
 
     root.tag("div", {}, ctx => {
-        ctx.child(new ZombieNode<Node, Element, TagOptions>(root.runner, new Reference(1), () => void 0), ctx => {
+        ctx.child(new ZombieNode<Node, Element, TagOptions>(ctx, new Reference(1), () => void 0), ctx => {
             ctx.tag("div", {});
         });
     });
 
     expect(body.children.length).toBe(1);
     expect(body.children[0]!.children.length).toBe(1);
-    root.destroy(1);
+    root.d(1);
     expect(body.children.length).toBe(0);
 });
 
@@ -52,15 +52,15 @@ it("remains alive inside a zombie wrapped in portal", function (done) {
     const root = new AppNode<Node, Element, TagOptions>(window.document.body, new Runner(window.document));
 
     root.tag("div", {}, ctx => {
-        ctx.child(new PortalNode<Node, Element, TagOptions>(body, root.runner, 1), ctx => {
-            ctx.child(new ZombieNode<Node, Element, TagOptions>(root.runner, new Reference(1), () => void 0), ctx => {
+        ctx.child(new PortalNode<Node, Element, TagOptions>(root, body), ctx => {
+            ctx.child(new ZombieNode<Node, Element, TagOptions>(root, new Reference(1), () => void 0), ctx => {
                 ctx.tag("div", {});
             });
         });
     });
 
     expect(body.children.length).toBe(2);
-    root.destroy(1);
+    root.d(1);
     expect(body.children.length).toBe(1);
 
     setTimeout(() => {

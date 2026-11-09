@@ -67,12 +67,12 @@ it("Reactive", function () {
 
     coreTest.bind(destroyable1);
 
-    coreTest.destroy(Infinity);
+    coreTest.d(Infinity);
 
     expect(test1).toBe(true);
     expect(test2).toBe(false);
 
-    destroyable2.destroy(0);
+    destroyable2.d(0);
 
     expect(test2).toBe(true);
 });

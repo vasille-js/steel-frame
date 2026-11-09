@@ -178,7 +178,7 @@ export class WebRouter<Routes extends string> extends Router<
         }
 
         oldChildren.forEach(node => {
-            node.destroy(node.pos);
+            node.d(node.pos);
         });
         children.splice(0, oldChildren.length);
 
@@ -195,7 +195,7 @@ export class WebRouter<Routes extends string> extends Router<
     protected clearNode(node: Fragment<Node, Element, WebTagOptions>) {
         const { children } = node;
 
-        children.forEach(node => node.destroy(node.pos));
+        children.forEach(node => node.d(node.pos));
         children.splice(0);
     }
 
@@ -222,7 +222,7 @@ export function webRouterApp<Routes extends string>(
         (_data, node) => {
             const router = new WebRouter(window, location, node, init);
 
-            Object.defineProperty(runner, "router", {
+            Object.defineProperty(runner, "r", {
                 value: router,
                 writable: false,
             });

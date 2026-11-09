@@ -40,12 +40,12 @@ export class WebTextNode<Options extends WebTagOptions, RunnerT extends WebRunne
     Options,
     RunnerT
 > {
-    public node!: Text;
+    declare public node: Text;
 
     public compose(): void {
         const text = this.data;
 
-        this.node = this.runner.document.createTextNode((text instanceof IValue ? text.V : text)?.toString() ?? "");
+        this.node = this.r.document.createTextNode((text instanceof IValue ? text.V : text)?.toString() ?? "");
 
         if (text instanceof IValue) {
             this.handler = (v: unknown) => {
@@ -56,12 +56,12 @@ export class WebTextNode<Options extends WebTagOptions, RunnerT extends WebRunne
         this.parent.appendNode(this.node);
     }
 
-    public override destroy(deep: number, keepNodes?: boolean) {
+    public override d(deep: number, keepNodes?: boolean) {
         /* istanbul ignore else */
         if (!keepNodes) {
             this.node.remove();
         }
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 
     public override unmount(): void {
@@ -87,7 +87,7 @@ export class WebTag<Options extends WebTagOptions, RunnerT extends WebRunner<Opt
     Options,
     RunnerT
 > {
-    public node!: Element;
+    declare public node: Element;
 
     public compose(): void {
         const name = this.name;
@@ -96,7 +96,7 @@ export class WebTag<Options extends WebTagOptions, RunnerT extends WebRunner<Opt
             throw internalError("wrong Tag constructor call");
         }
 
-        const node = this.runner.document.createElement(name);
+        const node = this.r.document.createElement(name);
         const options = this.options;
 
         this.node = node;
@@ -114,8 +114,8 @@ export class WebTag<Options extends WebTagOptions, RunnerT extends WebRunner<Opt
         }
     }
 
-    public override destroy(deep: number, keepNodes?: boolean) {
-        super.destroy(deep, true);
+    public override d(deep: number, keepNodes?: boolean) {
+        super.d(deep, true);
         /* istanbul ignore else */
         if (!keepNodes) {
             this.node?.remove();

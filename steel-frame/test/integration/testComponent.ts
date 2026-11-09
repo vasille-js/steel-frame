@@ -27,7 +27,7 @@ export function testComponent<Out>(
 
     const runner = new WebRunner(page.window.document);
     const root = new AppNode<Node, Element, object>(page.window.document.body, runner as any);
-    const frag = new Fragment<Node, Element, object>(runner as any, 1);
+    const frag = new Fragment<Node, Element, object>(root);
 
     root.child(frag, function () {
         (component as any)(

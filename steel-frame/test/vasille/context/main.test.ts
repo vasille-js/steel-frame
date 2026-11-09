@@ -26,14 +26,10 @@ class Number3 extends ANumber {
 it("Main test", function () {
     const runner = new Runner<object>(null as unknown as Document);
     const root = new AppNode<unknown, unknown, object>({}, runner);
-    const child1 = new Fragment<unknown, unknown, object>(runner, 0);
-    const child2 = new Fragment<unknown, unknown, object>(runner, 0);
-    const child3 = new Fragment<unknown, unknown, object>(runner, 0);
+    const child1 = new Fragment<unknown, unknown, object>(root);
+    const child2 = new Fragment<unknown, unknown, object>(child1);
+    const child3 = new Fragment<unknown, unknown, object>(child2);
     const ctx = context((n: number) => n);
-
-    child1.parent = root;
-    child2.parent = child1;
-    child3.parent = child2;
 
     // testing ctx
 
@@ -89,5 +85,5 @@ it("Main test", function () {
     // throw test
     expect(() => receive(child1, "y")).toThrow('Missing value for key "y"');
 
-    [child3, child2, child1, root].forEach(child => child.destroy(0));
+    [child3, child2, child1, root].forEach(child => child.d(0));
 });

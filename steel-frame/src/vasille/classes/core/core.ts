@@ -55,11 +55,11 @@ export class Reactive implements Destroyable {
         this.refreshDeep(0);
     }
 
-    public destroy(deep: number) {
+    public d(deep: number) {
         this.onDestroy?.();
         if (this.deep < deep) {
             this.linked?.forEach(item => {
-                item.destroy(deep);
+                item.d(deep);
             });
         }
     }

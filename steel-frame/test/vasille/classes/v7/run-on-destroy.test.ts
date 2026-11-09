@@ -15,6 +15,6 @@ it("handles destroy via callback", function () {
         },
     });
 
-    root.destroy(0);
+    root.d(0);
     expect(destroyed).toBe(true);
 });

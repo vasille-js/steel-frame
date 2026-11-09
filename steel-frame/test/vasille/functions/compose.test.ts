@@ -45,7 +45,7 @@ it("MVVM test", function () {
     const body = window.document.body;
     let div!: Element;
 
-    mountApp(body, mvvm, node.runner, {
+    mountApp(body, mvvm, node.r, {
         callback: node => {
             div = node?.div as Element;
         },
@@ -53,7 +53,7 @@ it("MVVM test", function () {
     expect(div).toBeInstanceOf(window.Element);
     expect(div.children.length).toBe(0);
 
-    mountApp(body, mvvm, node.runner, {
+    mountApp(body, mvvm, node.r, {
         callback: node => {
             div = node?.div as Element;
         },
@@ -66,7 +66,7 @@ it("MVVM test", function () {
     expect(div.children[0].className).toBe("1");
     expect(() => mvvm({})).toThrow("Context is missing");
 
-    mountApp(body, mvvm, node.runner, {
+    mountApp(body, mvvm, node.r, {
         callback: node => {
             div = node?.div as Element;
             expect(node?.className).toBe("replaced");
@@ -90,7 +90,7 @@ it("MVC test", function () {
     const body = window.document.body;
     let count = 0;
 
-    mountApp(body, mvc, node.runner, {
+    mountApp(body, mvc, node.r, {
         callback: className => {
             expect(className?.c).toBe("string");
             count++;
@@ -98,7 +98,7 @@ it("MVC test", function () {
         className: "string",
     });
 
-    mountApp(body, mvc, node.runner, {
+    mountApp(body, mvc, node.r, {
         callback: className => {
             expect(className?.c).toBeUndefined();
             count++;
@@ -113,7 +113,7 @@ it("Hybrid test", function () {
     const body = window.document.body;
     let count = 0;
 
-    mountApp(body, hybrid, node.runner, {
+    mountApp(body, hybrid, node.r, {
         callback: data => {
             expect(data?.[0]).toBe("string");
             expect(data?.[1]).toBe(3);
@@ -123,7 +123,7 @@ it("Hybrid test", function () {
         number: 3,
     });
 
-    mountApp(body, hybrid, node.runner, {
+    mountApp(body, hybrid, node.r, {
         callback: data => {
             expect(data?.[0]).toBeUndefined();
             expect(data?.[1]).toBeUndefined();
@@ -144,7 +144,7 @@ it("throw test", function () {
 
     setErrorHandler(e => (handled = e as Error));
 
-    mountApp(window.document.body, throwC, node.runner, {});
+    mountApp(window.document.body, throwC, node.r, {});
     expect(handled).toBe(e);
 });
 
@@ -172,7 +172,7 @@ it("IValue keep test", function () {
     const string = new Reference("test");
     let count = 0;
 
-    mountApp(body, mvvmIValue, node.runner, {
+    mountApp(body, mvvmIValue, node.r, {
         callback(data) {
             expect(data?.test).toBe(string);
             count += 1;
@@ -180,7 +180,7 @@ it("IValue keep test", function () {
         string: string,
     });
 
-    mountApp(body, hybridIValue1, node.runner, {
+    mountApp(body, hybridIValue1, node.r, {
         callback(data) {
             expect(data?.test).toBe(string);
             expect(data?.number).toBe(1);
@@ -190,7 +190,7 @@ it("IValue keep test", function () {
         number: 1,
     });
 
-    mountApp(body, hybridIValue2, node.runner, {
+    mountApp(body, hybridIValue2, node.r, {
         callback(data) {
             expect(data?.test).toBe(string);
             expect(data?.number).toBe(2);
@@ -226,7 +226,7 @@ it("model", function () {
     expect(m1.a.V).toBe(4);
     expect(m1.b.V).toBe(5);
 
-    root.destroy(Infinity);
+    root.d(Infinity);
     m1.a.V = 7;
     m2.a.V = 7;
     expect(m1.a.V).toBe(7);

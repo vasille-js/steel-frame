@@ -37,7 +37,7 @@ it("model functions", function () {
     expect(arr1.array.length).toBe(2);
     expect(arr2.array.length).toBe(2);
 
-    node.destroy(node.pos);
+    node.d(node.pos);
 
     // lixcode update: no more cleanup on context destruction
     expect(set1.set.size).toBe(2);

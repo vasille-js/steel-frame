@@ -51,9 +51,9 @@ export class DevWatchNode<Node, Element extends Node, TagOptions extends object,
         processComponentProps(id, input);
     }
 
-    public override destroy(deep: number, keepNodes?: boolean): void {
+    public override d(deep: number, keepNodes?: boolean): void {
         inspector.destroy({ id: this.id, time: Date.now() });
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }
 
@@ -76,9 +76,9 @@ export class DevAppNode<Node, Element extends Node, TagOptions extends object> e
         });
     }
 
-    public override destroy(deep: number, keepNodes?: boolean): void {
+    public override d(deep: number, keepNodes?: boolean): void {
         inspector.destroy({ id: this.id, time: Date.now() });
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }
 
@@ -111,9 +111,9 @@ export class DevPortalNode<
         });
     }
 
-    public override destroy(deep: number) {
+    public override d(deep: number) {
         inspector.destroy({ id: this.id, time: Date.now() });
-        super.destroy(deep);
+        super.d(deep);
     }
 }
 
@@ -150,9 +150,9 @@ export class DevSwitchedNode<Node, Element extends Node, TagOptions extends obje
         processComponentProps(id, conditions);
     }
 
-    public override destroy(deep: number, keepNodes?: boolean): void {
+    public override d(deep: number, keepNodes?: boolean): void {
         inspector.destroy({ id: this.id, time: Date.now() });
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 
     protected override newChild(
@@ -189,8 +189,8 @@ export class DevZombieNode<Node, Element extends Node, TagOptions extends object
         processComponentProps(id, { time, trigger });
     }
 
-    public override destroy(deep: number, keepNodes?: boolean): void {
+    public override d(deep: number, keepNodes?: boolean): void {
         inspector.destroy({ id: this.id, time: Date.now() });
-        super.destroy(deep, keepNodes);
+        super.d(deep, keepNodes);
     }
 }

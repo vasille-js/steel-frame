@@ -17,7 +17,7 @@ it("loading screen/overlay test", function (done) {
         },
         body,
     );
-    const router = (app.runner as any).router as WebRouter<string>;
+    const router = (app.r as any).r as WebRouter<string>;
 
     setTimeout(function () {
         expect(body.children.length).toBe(1);

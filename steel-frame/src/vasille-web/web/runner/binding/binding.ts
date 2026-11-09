@@ -27,7 +27,7 @@ export class Binding<T> implements Destroyable {
     /**
      * Just clear bindings
      */
-    public destroy(deep: number) {
+    public d(deep: number) {
         /* istanbul ignore else */
         if (this.binding.deep < deep) {
             this.binding.off(this.func);

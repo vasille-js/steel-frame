@@ -65,7 +65,7 @@ export class Prompt<T extends PromptProps, Extra extends [number, ...unknown[]]>
 
             function destroy() {
                 timer && clearTimeout(timer);
-                portal.destroy(portal.pos);
+                portal.d(portal.pos);
             }
 
             try {

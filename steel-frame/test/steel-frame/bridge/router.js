@@ -2,12 +2,12 @@ import { calculate, compose, ref as VasilleRef, safe as VasilleSafe } from "vasi
 const C = compose(Vasille => {
   const $a = VasilleRef(2, Vasille);
   const $b = calculate(Vasille, Vasille_0 => {
-    Vasille.runner.router?.goTo("/1");
+    Vasille.r.r?.goTo("/1");
     return Vasille_0 + 1;
   }, [$a]);
   function goNext() {
-    Vasille.runner.router?.goTo("/x");
+    Vasille.r.r?.goTo("/x");
   }
-  VasilleSafe(() => Vasille.runner.router?.goTo("/"))();
-  VasilleSafe(() => Vasille.runner.router)();
+  VasilleSafe(() => Vasille.r.r?.goTo("/"))();
+  VasilleSafe(() => Vasille.r.r)();
 });
