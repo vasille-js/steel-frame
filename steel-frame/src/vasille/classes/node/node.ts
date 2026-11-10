@@ -168,13 +168,6 @@ export class Fragment<
         super.push(fragment);
     }
 
-    public override refreshDeep(deep: number) {
-        this.deep = deep;
-        if (this.parent.deep > deep) {
-            this.parent.refreshDeep(deep);
-        }
-    }
-
     /**
      * Append a node to the end of element
      * @param node {Node} node to insert

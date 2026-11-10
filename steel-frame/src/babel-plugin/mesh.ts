@@ -15,7 +15,7 @@ import {
     unwrapFunctions,
     watchFunctions,
 } from "./call.js";
-import { checkExpression, exprIsSure, idIsIValue, memberIsIValue, nodeIsMeshed } from "./expression.js";
+import { exprIsSure, idIsIValue, memberIsIValue, nodeIsMeshed } from "./expression.js";
 import { ctx, InterfaceData, Internal, V, VariablesStatus, VariableState } from "./internal.js";
 import { ConditionCollection, processConditions, transformJsx } from "./jsx.js";
 import {

@@ -3,7 +3,7 @@ import type { Reactive } from "../classes/index.js";
 const searchMap = new Map<Reactive, Map<unknown, unknown>>();
 
 function lookUp(node: Reactive, key: unknown): unknown {
-    let it: Reactive | null = node;
+    let it: Reactive | null | undefined = node;
 
     while (it) {
         const value = searchMap.get(it)?.get(key);
@@ -12,7 +12,7 @@ function lookUp(node: Reactive, key: unknown): unknown {
             return value;
         }
 
-        it = "parent" in it ? (it.parent as Reactive) : null;
+        it = it.parent;
     }
 }
 
