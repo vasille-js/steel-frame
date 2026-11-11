@@ -2,7 +2,9 @@ import type { ElementStyleProps } from "./spec/css.ts";
 import type { HtmlTagMap } from "./spec/html.ts";
 import { CssStyleInjector } from "../css/index.js";
 
-export type { TagEvents, TagAttrs, TagProps } from "./spec/html.ts";
+export type { TagEvents } from "./spec/html.ts";
+export type { TagAttrs } from "./spec/html-attrs.js";
+export type { TagProps } from "./spec/html-properties.js";
 
 export type prefixedObject<T, P extends string> = {
     [K in keyof T as K extends string ? `${P}${K}` : never]?: T[K];

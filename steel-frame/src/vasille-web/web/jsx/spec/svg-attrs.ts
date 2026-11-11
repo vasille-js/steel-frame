@@ -1,6 +1,6 @@
 import { ClassItem } from "../jsx-runtime.js";
 import { CssStyleInjector } from "../../css/index.js";
-import { AriaAttributes } from "./html-attrs.js";
+import { AriaAttributes, RelValue } from "./html-attrs.js";
 
 type BlendMode =
     | "normal"
@@ -76,6 +76,20 @@ type Cursors =
     | "wait"
     | "help";
 
+type PreserveAspectRatioAlign =
+    | "none"
+    | "xMinYMin"
+    | "xMidYMin"
+    | "xMaxYMin"
+    | "xMinYMid"
+    | "xMidYMid"
+    | "xMaxYMid"
+    | "xMinYMax"
+    | "xMidYMax"
+    | "xMaxYMax";
+
+type Units = "userSpaceOnUse" | "objectBoundingBox";
+
 interface AttributeName {
     "attribute-name": string;
 }
@@ -110,6 +124,7 @@ interface ColorInterpolation {
 
 interface ColorInterpolationFilters extends Size {
     "color-interpolation-filters": "auto" | "sRGB" | "linearRGB";
+    result: string;
 }
 
 interface Cursor {
@@ -131,7 +146,6 @@ interface Filter {
 
 interface Href {
     href: string;
-    "xlink:href": string;
 }
 
 interface In {
@@ -147,6 +161,8 @@ interface Marker extends Stroke {
     "marker-mid": string | "none";
     "marker-start": string | "none";
     pathLength: number;
+    "shape-rendering": "auto" | "optimizeSpeed" | "crispEdges" | "geometricPrecision";
+    systemLanguage: string;
 }
 
 interface Mask {
@@ -171,13 +187,42 @@ interface PointerEvents {
         | "none";
 }
 
+interface PAR {
+    preserveAspectRatio:
+        PreserveAspectRatioAlign | `${PreserveAspectRatioAlign} meet` | `${PreserveAspectRatioAlign} slice`;
+}
+
+interface RE {
+    requiredExtensions: string;
+    requiredFeatures: string;
+    systemLanguage: string;
+}
+
 interface Size {
-    width: LengthPercentage;
     height: LengthPercentage;
+    width: LengthPercentage;
+    x: LengthPercentage;
+    y: LengthPercentage;
 }
 
 interface Stroke {
     "paint-order": "normal" | ("fill" | "stroke" | "markers")[];
+    stroke: number;
+    "stroke-dasharray": string | LengthPercentage[];
+    "stroke-dashoffset": LengthPercentage;
+    "stroke-linecap": "butt" | "round" | "square";
+    "stroke-linejoin": "arcs" | "bevel" | "miter" | "miter-clip" | "round";
+    "stroke-miterlimit": number;
+    "stroke-opacity": number | Percentage;
+    "stroke-width": LengthPercentage;
+}
+
+interface ViewBox {
+    viewBox: string | number | number[];
+}
+
+interface Visibility {
+    visibility: "visible" | "hidden" | "collapse";
 }
 
 // common attrs
@@ -188,15 +233,33 @@ interface Attrs extends AriaAttributes {
     display: "none" | "inline";
     id: string;
     lang: string;
+    tabindex: number;
+    "text-overflow": "clip" | "ellipsis";
+    title: string;
+    transform: string | string[];
+    "transform-origin":
+        | "left"
+        | "center"
+        | "right"
+        | "top"
+        | "bottom"
+        | LengthPercentage
+        | `${LengthPercentage | "center" | "left" | "right"} ${LengthPercentage | "center" | "top" | "bottom"}`;
+    "white-space": "normal" | "pre" | "nowrap" | "pre-wrap" | "break-space" | "pre-line";
 }
 
-interface AnimateSetAttrs extends Attrs, Href {
+interface AnimateSetAttrs extends Attrs, Href, RE {
     begin: string;
     dur: "media" | "indefinite" | ClockValue;
     end: string;
     keyPoints: string;
     max: ClockValue;
     min: ClockValue;
+    repeatCount: number | "indefinite";
+    repeatDur: ClockValue | "indefinite";
+    restart: "always" | "never" | "whenNotActive";
+    to: string;
+    systemLanguage: string;
 }
 
 interface AnimateBaseAttrs extends AnimateSetAttrs {
@@ -207,9 +270,10 @@ interface AnimateBaseAttrs extends AnimateSetAttrs {
     from: string;
     keySplines: string;
     keyTimes: string;
+    values: string;
 }
 
-interface BaselineAttrs extends Stroke, Fill, FillRule, PointerEvents {
+interface BaselineAttrs extends Stroke, Fill, FillRule, PointerEvents, RE, Visibility {
     "alignment-baseline":
         | "auto"
         | "baseline"
@@ -281,9 +345,16 @@ interface BaselineAttrs extends Stroke, Fill, FillRule, PointerEvents {
     lengthAdjust: "spacing" | "spacingAndGlyphs";
     "letter-spacing": "normal" | Length;
     opacity: number;
+    "text-anchor": "start" | "middle" | "end";
+    "text-decoration": string;
+    textLength: LengthPercentage;
+    "unicode-bidi": "normal" | "embed" | "isolate" | "bidi-override" | "isolate-override" | "plaintext";
+    "vector-effect": "none" | "non-scaling-stroke" | "non-scaling-size" | "non-rotation" | "fixed-position";
+    "word-spacing": Length | "normal";
+    "writing-mode": "horizontal-tb" | "vertical-rl" | "vertical-lr";
 }
 
-interface ContainerAttrs extends Attrs, Class, ColorInterpolation, Cursor, Filter, Mask, PointerEvents {
+interface ContainerAttrs extends Attrs, Class, ColorInterpolation, Cursor, Filter, Mask, PointerEvents, RE, Visibility {
     opacity: number;
 }
 
@@ -292,66 +363,107 @@ interface FeFuncAttrs extends Attrs {
     exponent: number;
     intercept: number;
     offset: number;
+    slope: number;
+    tableValues: number | number[];
+    type: "identity" | "table" | "discrete" | "linear" | "gamma";
+    x: LengthPercentage;
+    y: LengthPercentage;
 }
 
 interface GradientAttrs extends Attrs, Href {
     gradientTransform: string;
-    gradientUnits: "userSpaceOnUse" | "objectBoundingBox";
+    gradientUnits: Units;
+    spreadMethod: "pad" | "reflect" | "repeat";
 }
 
-interface GraphicAttrs extends Attrs, Class, ClipPath, ClipRule, ColorInterpolation, Cursor, Filter, PointerEvents {
+interface GraphicAttrs
+    extends
+        Attrs,
+        Class,
+        ClipPath,
+        ClipRule,
+        ColorInterpolation,
+        Cursor,
+        Filter,
+        PointerEvents,
+        Omit<RE, "systemLanguage">,
+        Visibility {
     opacity: number;
+    "vector-effect": "none" | "non-scaling-stroke" | "non-scaling-size" | "non-rotation" | "fixed-position";
 }
 
 interface LightningAttrs extends Attrs {
     kernelUnitLength: NumberOptionalNumber;
     "lighting-color": string;
+    surfaceScale: number;
 }
 
 // real tags
 
-interface AAttrs extends ContainerAttrs, ClipPath, ColorInterpolation, Href {
+export interface AAttrs extends ContainerAttrs, ClipPath, ColorInterpolation, Href {
     download: string;
     hreflang: string;
+    referrerpolicy: ReferrerPolicy;
+    rel: RelValue | RelValue[];
+    systemLanguage: string;
+    target: "_self" | "_parent" | "_top" | "_blank" | string;
+    type: string;
 }
 
-interface AnimateAttrs extends AnimateBaseAttrs, AttributeName, AttributeType, ColorInterpolation {}
+export interface AnimateAttrs extends AnimateBaseAttrs, AttributeName, AttributeType, ColorInterpolation {}
 
-interface AnimateMotionAttrs extends AnimateBaseAttrs {
+export interface AnimateMotionAttrs extends AnimateBaseAttrs {
     origin: "default";
     path: string;
+    rotate: number | "auto" | "auto-reverse";
 }
 
-interface AnimateTransformAttrs extends AnimateBaseAttrs, AttributeName, AttributeType {}
+export interface AnimateTransformAttrs extends AnimateBaseAttrs, AttributeName, AttributeType {
+    type: "translate" | "scale" | "rotate" | "skewX" | "skewY";
+}
 
-interface CircleAttrs extends GraphicAttrs, Fill, Marker, Mask {
+export interface CircleAttrs extends GraphicAttrs, Fill, Marker, Mask {
     cx: LengthPercentage;
     cy: LengthPercentage;
     r: LengthPercentage;
 }
 
-interface ClipPathAttrs extends Attrs, Class, ClipPath, ColorInterpolation, Mask, PointerEvents {
-    clipPathUnits: "userSpaceOnUse" | "objectBoundingBox";
+export interface ClipPathAttrs extends Attrs, Class, ClipPath, ColorInterpolation, Mask, PointerEvents, RE {
+    clipPathUnits: Units;
 }
 
-interface DefsAttrs extends Omit<ContainerAttrs, "filter"> {}
+export interface DefsAttrs extends Omit<ContainerAttrs, "filter"> {}
 
-interface DescAttrs extends Attrs, Class {}
+export interface DescAttrs extends Attrs, Class {}
 
-interface EllipseAttrs extends GraphicAttrs, Fill, Marker, Mask {
+export interface EllipseAttrs extends GraphicAttrs, Fill, Marker, Mask {
     cx: LengthPercentage;
     cy: LengthPercentage;
+    rx: LengthPercentage | "auto";
+    ry: LengthPercentage | "auto";
 }
 
-interface FeBlendAttrs extends Attrs, Class, ColorInterpolationFilters, In, In2 {
+export interface FeBlendAttrs extends Attrs, Class, ColorInterpolationFilters, In, In2 {
     mode: BlendMode;
 }
 
-interface FeColorMatrixAttrs extends Attrs, Class, ColorInterpolationFilters, In {}
+export interface FeColorMatrixAttrs1 extends Attrs, Class, ColorInterpolationFilters, In {
+    type: "matrix";
+    values: number[];
+}
 
-interface FeComponentTransferAttrs extends Attrs, Class, ColorInterpolationFilters, In {}
+export interface FeColorMatrixAttrs2 extends Attrs, Class, ColorInterpolationFilters, In {
+    type: "saturate" | "hueRotate";
+    values: number;
+}
 
-interface FeCompositeAttrs extends Attrs, Class, ColorInterpolationFilters, In, In2 {
+export interface FeColorMatrixAttrs3 extends Attrs, Class, ColorInterpolationFilters, In {
+    type: "luminanceToAlpha";
+}
+
+export interface FeComponentTransferAttrs extends Attrs, Class, ColorInterpolationFilters, In {}
+
+export interface FeCompositeAttrs extends Attrs, Class, ColorInterpolationFilters, In, In2 {
     k1: number;
     k2: number;
     k3: number;
@@ -359,7 +471,7 @@ interface FeCompositeAttrs extends Attrs, Class, ColorInterpolationFilters, In, 
     operator: "over" | "in" | "out" | "atop" | "xor" | "lighter" | "arithmetic";
 }
 
-interface FeConvolveMatrixAttrs extends Attrs, Class, ColorInterpolationFilters, In {
+export interface FeConvolveMatrixAttrs extends Attrs, Class, ColorInterpolationFilters, In {
     bias: number;
     divisor: number;
     edgeMode: "duplicate" | "wrap" | "none";
@@ -367,173 +479,265 @@ interface FeConvolveMatrixAttrs extends Attrs, Class, ColorInterpolationFilters,
     kernelUnitLength: NumberOptionalNumber;
     order: NumberOptionalNumber;
     preserveAlpha: "true" | "false";
+    targetX: number;
+    targetY: number;
 }
 
-interface FeDiffuseLightingAttrs extends LightningAttrs, Class, ColorInterpolationFilters, In {
+export interface FeDiffuseLightingAttrs extends LightningAttrs, Class, ColorInterpolationFilters, In {
     diffuseConstant: number;
 }
 
-interface FeDistantLightAttrs extends Attrs {
+export interface FeDisplacementMapAttrs extends Attrs, Class, ColorInterpolationFilters, In, In2 {
+    scale: number;
+    xChannelSelector: "R" | "G" | "B" | "A";
+}
+
+export interface FeDistantLightAttrs extends Attrs {
     azimuth: number;
     elevation: number;
 }
 
-interface FeDisplacementMapAttrs extends Attrs, Class, ColorInterpolationFilters, In, In2 {}
-
-interface FeDropShadowAttrs extends Attrs, ColorInterpolationFilters {
+export interface FeDropShadowAttrs extends Attrs, ColorInterpolationFilters {
     dx: number;
     dy: number;
     "flood-color": string;
     "flood-opacity": number;
+    stdDeviation: NumberOptionalNumber;
 }
 
-interface FeFloodAttrs extends Attrs, Class, ColorInterpolationFilters {
+export interface FeFloodAttrs extends Attrs, Class, ColorInterpolationFilters {
     "flood-color": string;
     "flood-opacity": number;
 }
 
-interface FeFuncAAttrs extends FeFuncAttrs {}
+export interface FeFuncAAttrs extends FeFuncAttrs {}
 
-interface FeFuncBAttrs extends FeFuncAttrs {}
+export interface FeFuncBAttrs extends FeFuncAttrs {}
 
-interface FeFuncGAttrs extends FeFuncAttrs {}
+export interface FeFuncGAttrs extends FeFuncAttrs {}
 
-interface FeFuncRAttrs extends FeFuncAttrs {}
+export interface FeFuncRAttrs extends FeFuncAttrs {}
 
-interface FeGaussianBlurAttrs extends Attrs, Class, ColorInterpolationFilters, In {
+export interface FeGaussianBlurAttrs extends Attrs, Class, ColorInterpolationFilters, In {
     edgeMode: "duplicate" | "wrap" | "none";
+    stdDeviation: NumberOptionalNumber;
 }
 
-interface FeImageAttrs extends Attrs, Class, ColorInterpolationFilters, Href {
+export interface FeImageAttrs extends Attrs, Class, ColorInterpolationFilters, Href, PAR {
     crossorigin: "" | "anonymous" | "use-credentials";
     fetchpriority: "high" | "low" | "auto";
 }
 
-interface FeMergeAttrs extends Attrs, Class, ColorInterpolationFilters, In {}
+export interface FeMergeAttrs extends Attrs, Class, ColorInterpolationFilters {}
 
-interface FeMorphologyAttrs extends Attrs, Class, ColorInterpolationFilters, In {
+export interface FeMergeNodeAttrs extends Attrs, In {}
+
+export interface FeMorphologyAttrs extends Attrs, Class, ColorInterpolationFilters, In {
     operator: "over" | "in" | "out" | "atop" | "xor" | "lighter" | "arithmetic";
+    radius: NumberOptionalNumber;
 }
 
-interface FeOffsetAttrs extends Attrs, Class, ColorInterpolationFilters, In {
+export interface FeOffsetAttrs extends Attrs, Class, ColorInterpolationFilters, In {
     dx: number;
     dy: number;
 }
 
-interface FeSpecularLightingAttrs extends LightningAttrs, Class, ColorInterpolationFilters, In {}
+export interface FePointLightAttrs extends Attrs {
+    x: number;
+    y: number;
+    z: number;
+}
 
-interface FeSpotLightAttrs extends Attrs {
+export interface FeSpecularLightingAttrs extends LightningAttrs, Class, ColorInterpolationFilters, In {
+    specularConstant: number;
+    specularExponent: number;
+}
+
+export interface FeSpotLightAttrs extends Attrs {
     limitingConeAngle: number;
     pointsAtX: number;
     pointsAtY: number;
     pointsAtZ: number;
+    specularExponent: number;
+    x: number;
+    y: number;
+    z: number;
 }
 
-interface FeTileAttrs extends Attrs, Class, ColorInterpolationFilters, In {}
+export interface FeTileAttrs extends Attrs, Class, ColorInterpolationFilters, In {}
 
-interface FeTurbulenceAttrs extends Attrs, Class, ColorInterpolationFilters {
+export interface FeTurbulenceAttrs extends Attrs, Class, ColorInterpolationFilters {
     baseFrequency: NumberOptionalNumber;
     numOctaves: number;
+    seed: number;
+    stitchTiles: "noStitch" | "stitch";
+    type: "fractalNoise" | "turbulence";
 }
 
-interface FilterAttrs extends Attrs, Class, Size {
-    filterUnits: "userSpaceOnUse" | "objectBoundingBox";
+export interface FilterAttrs extends Attrs, Class, Size {
+    filterUnits: Units;
+    primitiveUnits: Units;
 }
 
-interface ForeignObjectAttrs extends Attrs, Class, Clip, ColorInterpolation, Size, Overflow, PointerEvents {
+export interface ForeignObjectAttrs
+    extends Attrs, Class, Clip, ColorInterpolation, Size, Overflow, PointerEvents, RE, Visibility {
     opacity: number;
+    systemLanguage: string;
+    "vector-effect": "none" | "non-scaling-stroke" | "non-scaling-size" | "non-rotation" | "fixed-position";
 }
 
-interface GAttrs extends ContainerAttrs, ClipPath {}
+export interface GAttrs
+    extends
+        ContainerAttrs,
+        ClipPath,
+        Marker,
+        Fill,
+        BaselineAttrs,
+        BaselineShift,
+        Clip,
+        ClipRule,
+        ColorInterpolation,
+        ColorInterpolationFilters,
+        Cursor,
+        Filter,
+        Overflow,
+        Mask,
+        Omit<GraphicAttrs, "requiredExtensions" | "requiredFeatures"> {}
 
-interface ImageAttrs extends GraphicAttrs, Clip, Size, Href, Mask, Overflow {
+export interface ImageAttrs extends GraphicAttrs, Clip, Size, Href, Mask, Overflow, PAR {
     crossorigin: "" | "anonymous" | "use-credentials";
     decoding: "auto" | "sync" | "async";
     fetchpriority: "high" | "low" | "auto";
     "image-rendering": "auto" | "optimizeSpeed" | "optimizeQuality";
+    systemLanguage: string;
 }
 
-interface LineAttrs extends GraphicAttrs, Marker {}
+export interface LineAttrs extends GraphicAttrs, Marker {
+    x1: LengthPercentage;
+    x2: LengthPercentage;
+    y1: LengthPercentage;
+    y2: LengthPercentage;
+}
 
-interface LinearGradientAttrs extends GradientAttrs, Class, ColorInterpolation {}
+export interface LinearGradientAttrs extends GradientAttrs, Class, ColorInterpolation {
+    x1: LengthPercentage;
+    x2: LengthPercentage;
+    y1: LengthPercentage;
+    y2: LengthPercentage;
+}
 
-interface MarkerAttrs extends ContainerAttrs, Clip, ClipPath, Overflow {
+export interface MarkerAttrs extends ContainerAttrs, Clip, ClipPath, Overflow, PAR, ViewBox {
     markerHeight: LengthPercentage;
-    markerUnits: "userSpaceOnUse" | "objectBoundingBox";
+    markerUnits: Units;
     markerWidth: LengthPercentage;
     orient: "auto" | "auto-start-reverse" | number | Angle;
+    refX: LengthPercentage | "left" | "center" | "right";
+    refY: LengthPercentage | "top" | "center" | "bottom";
 }
 
-interface MaskAttrs extends ContainerAttrs, ClipPath, Size {
+export interface MaskAttrs extends ContainerAttrs, ClipPath, Size, ViewBox {
     "mask-type": "luminance" | "alpha";
-    maskContentUnits: "userSpaceOnUse" | "objectBoundingBox";
-    maskUnits: "userSpaceOnUse" | "objectBoundingBox";
+    maskContentUnits: Units;
+    maskUnits: Units;
 }
 
-interface MPath extends Attrs, Href {}
+export interface Metadata extends Attrs {}
 
-interface PathAttrs extends GraphicAttrs, Fill, FillRule, Marker, Mask {
+export interface MPath extends Attrs, Href {
+    systemLanguage: string;
+}
+
+export interface PathAttrs extends GraphicAttrs, Fill, FillRule, Marker, Mask {
     d: string;
 }
 
-interface PatternAttrs extends ContainerAttrs, Clip, ClipPath, Size, Href, Overflow {
-    patternContentUnits: "userSpaceOnUse" | "objectBoundingBox";
+export interface PatternAttrs extends ContainerAttrs, Clip, ClipPath, Size, Href, Overflow, PAR, ViewBox {
+    patternContentUnits: Units;
     patternTransform: string;
-    patternUnits: "userSpaceOnUse" | "objectBoundingBox";
+    patternUnits: Units;
 }
 
-interface PolygonAttrs extends GraphicAttrs, Fill, FillRule, Marker {
+export interface PolygonAttrs extends GraphicAttrs, Fill, FillRule, Marker {
     points: string;
 }
 
-interface PolylineAttrs extends GraphicAttrs, Fill, FillRule, Marker {
+export interface PolylineAttrs extends GraphicAttrs, Fill, FillRule, Marker {
     points: string;
 }
 
-interface RadialGradientAttrs extends GradientAttrs, Class, ColorInterpolation {
+export interface RadialGradientAttrs extends GradientAttrs, Class, ColorInterpolation {
     cx: LengthPercentage;
     cy: LengthPercentage;
     fr: Percentage;
     fx: LengthPercentage;
     fy: LengthPercentage;
+    r: Length;
 }
 
-interface RectAttrs extends GraphicAttrs, Fill, Size, Marker {}
-
-interface SetAttrs extends AttributeName, AttributeType, AnimateSetAttrs {
-    begin: string;
+export interface RectAttrs extends GraphicAttrs, Fill, Size, Marker {
+    rx: LengthPercentage | "auto";
+    ry: LengthPercentage | "auto";
 }
 
-interface StopAttrs extends Attrs, Class {
+export interface SetAttrs extends AttributeName, AttributeType, AnimateSetAttrs {}
+
+export interface StopAttrs extends Attrs, Class {
     offset: number | Percentage;
+    "stop-color": string;
+    "stop-opacity": number;
 }
 
-interface SvgAttrs extends ContainerAttrs, Clip, ClipPath, Size, Overflow {
+export interface SvgAttrs extends ContainerAttrs, Clip, ClipPath, Size, Overflow, PAR, ViewBox {
     baseProfile: string;
+    systemLanguage: string;
+    version: "1.0" | "1.1";
+    zoomAndPan: "magnify" | "disable";
 }
 
-interface SwitchAttrs extends ContainerAttrs {}
+export interface SwitchAttrs extends ContainerAttrs {
+    systemLanguage: string;
+}
 
-interface SymbolAttrs extends ContainerAttrs, Clip, ClipPath, Overflow {}
+export interface SymbolAttrs extends ContainerAttrs, Clip, ClipPath, Overflow, PAR, ViewBox {
+    refX: Length | "left" | "center" | "right";
+    refY: Length | "top" | "center" | "bottom";
+}
 
-interface TextAttrs extends Attrs, BaselineAttrs, BaselineShift, ClipRule {
+export interface TextAttrs extends Attrs, BaselineAttrs, BaselineShift, ClipRule {
     direction: "ltr" | "rtl";
     dx: LengthPercentage | LengthPercentage[];
     dy: LengthPercentage | LengthPercentage[];
+    rotate: number | number[];
+    systemLanguage: string;
+    "text-rendering": "auto" | "optimizeSpeed" | "optimizeLegibility" | "geometricPrecision";
 }
 
-interface TextPathAttrs extends Attrs, BaselineAttrs, ClipPath, Href, Overflow {
+export interface TextPathAttrs extends Attrs, BaselineAttrs, ClipPath, Href, Overflow {
     direction: "ltr" | "rtl";
     method: "align" | "stretch";
     path: string;
+    side: "left" | "right";
+    spacing: "auto" | "exact";
+    startOffset: LengthPercentage;
+    x: LengthPercentage;
+    y: LengthPercentage;
 }
 
-interface TitleAttrs extends Attrs, Class {}
+export interface TitleAttrs extends Attrs, Class {}
 
-interface TSpanAttrs extends Attrs, BaselineAttrs, BaselineShift {
+export interface TSpanAttrs extends Attrs, BaselineAttrs, BaselineShift {
     direction: "ltr" | "rtl";
     dx: LengthPercentage | LengthPercentage[];
     dy: LengthPercentage | LengthPercentage[];
+    rotate: number | number[];
+    x: LengthPercentage;
+    y: LengthPercentage;
 }
 
-interface UseAttrs extends GraphicAttrs, Size, Href, Mask {}
+export interface UseAttrs extends GraphicAttrs, Size, Href, Mask {
+    systemLanguage: string;
+}
+
+export interface ViewAttrs extends Attrs, PAR, ViewBox {
+    zoomAndPan: "magnify" | "disable";
+}
