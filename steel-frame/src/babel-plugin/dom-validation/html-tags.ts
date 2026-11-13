@@ -261,7 +261,9 @@ const flow: AcceptedTags = [
 ];
 
 const sectioning: AcceptedTags = ["article", "aside", "nav", "section"];
+
 const heading: AcceptedTags = ["h1", "h2", "h3", "h4", "h5", "h6", "hgroup"];
+
 const phrasing: AcceptedTags = [
     ["a", ExtraCondition.Phrasing],
     "abbr",
@@ -321,18 +323,7 @@ const phrasing: AcceptedTags = [
     "wbr",
     "-",
 ];
-const embedded: AcceptedTags = [
-    "audio",
-    "canvas",
-    "embed",
-    "iframe",
-    "img",
-    "math",
-    "object",
-    "picture",
-    "svg",
-    "video",
-];
+
 const interactive: AcceptedTags = [
     ["a", "href"],
     ["audio", "controls"],
@@ -348,73 +339,56 @@ const interactive: AcceptedTags = [
     "textarea",
     ["video", "controls"],
 ];
-const palpable: AcceptedTags = [
-    "a",
-    "abbr",
-    "address",
-    "article",
-    "aside",
-    ["audio", "controls"],
-    "b",
-    "bdi",
-    "bdo",
-    "blockquote",
+
+const none: AcceptedTags = [];
+
+const headerFooter: AcceptedTags = ["header", "footer"];
+const addressRestricted: AcceptedTags = [...heading, ...sectioning, ...headerFooter];
+const thRestricted: AcceptedTags = [...sectioning, ...heading, ...headerFooter];
+
+const audioVideo: AcceptedTags = ["audio", "video"];
+const trackOnly: AcceptedTags = ["track"];
+const sourceTrack: AcceptedTags = ["source", "track"];
+
+const flowSelectedContent: AcceptedTags = [...flow, "selectedcontent"];
+const flowSummary: AcceptedTags = [...flow, "summary"];
+const flowLegend: AcceptedTags = [...flow, "legend"];
+const flowFigcaption: AcceptedTags = [...flow, "figcaption"];
+
+const headingP: AcceptedTags = [...heading, "p"];
+const phrasingOption: AcceptedTags = [...phrasing, "option"];
+const phrasingRt: AcceptedTags = [...phrasing, "rt"];
+const phrasingHeading: AcceptedTags = [...phrasing, ...heading];
+
+const dtDdScriptTemplate: AcceptedTags = ["dt", "dd", "script", "template"];
+const dtDdScriptTemplateDiv: AcceptedTags = [...dtDdScriptTemplate, "div"];
+const liScriptTemplate: AcceptedTags = ["li", "script", "template"];
+const trOnly: AcceptedTags = ["tr"];
+
+const linkStyleMeta: AcceptedTags = ["link", "style", "meta"];
+const rtRp: AcceptedTags = ["rt", "rp"];
+const optionLegend: AcceptedTags = ["option", "legend"];
+const optionOnly: AcceptedTags = ["option"];
+const headBody: AcceptedTags = ["head", "body"];
+const sourceImg: AcceptedTags = ["source", "img"];
+const paramOnly: AcceptedTags = ["param"];
+const colOnly: AcceptedTags = ["col"];
+const tableContent: AcceptedTags = ["caption", "colgroup", "thead", "tbody", "tfoot", "tr"];
+const selectMultiple: AcceptedTags = ["div", "script", "noscript", "template"];
+const selectSingle: AcceptedTags = ["option", "optgroup", "hr", "button"];
+const thTdScriptTemplate: AcceptedTags = ["th", "td", "script", "template"];
+const canvasRestrictedNames: TagNames[] = ["a", "button", "input"];
+const canvasRestrictedNodes: AcceptedTags = interactive.filter(item =>
+    canvasRestrictedNames.includes(typeof item === "string" ? item : item[0]),
+);
+const labelRestricted: AcceptedTags = [
     "button",
-    "canvas",
-    "cite",
-    "code",
-    "data",
-    "del",
-    "details",
-    "dfn",
-    "div",
-    ["dl", new ChildrenCheck(2)],
-    "em",
-    "embed",
-    "fieldset",
-    "figure",
-    "footer",
-    "form",
-    "iframe",
-    "img",
     ["input", new AttributeCheck("type", "hidden", false)],
-    "ins",
-    "kbd",
-    "label",
-    "li",
-    "main",
-    "map",
-    "mark",
-    "math",
     "meter",
-    "nav",
-    "object",
-    ["ol", new ChildrenCheck(1)],
-    "p",
-    "picture",
-    "pre",
+    "output",
     "progress",
-    "q",
-    "ruby",
-    "s",
-    "samp",
-    "search",
-    "section",
     "select",
-    "small",
-    "span",
-    "strong",
-    "sub",
-    "sup",
-    "svg",
-    "table",
     "textarea",
-    "time",
-    "u",
-    ["ul", new ChildrenCheck(1)],
-    "var",
-    "video",
-    "-",
 ];
 
 type AcceptanceRule = AcceptedTags | ((tag: IDomNode, successors: IDomNode[]) => AcceptedTags | undefined) | Checkable;
@@ -443,53 +417,51 @@ class OrCheck {
 export const htmlAcceptanceRules: { [key in TagNames]?: AcceptanceRule | AcceptData } = {
     a: { noRecursion: true, restrictedNode: interactive, restrictedAttr: "tabindex", transparent: true },
     abbr: phrasing,
-    address: { noRecursion: true, rule: flow, restrictedNode: [...heading, ...sectioning, "header", "footer"] },
-    area: { successor: "map", rule: [] },
+    address: { noRecursion: true, rule: flow, restrictedNode: addressRestricted },
+    area: { successor: "map", rule: none },
     article: flow,
     aside: flow,
     audio: {
-        restrictedNode: ["audio", "video"],
-        rule: n => (n.attributes.src ? ["track"] : ["source", "track"]),
+        restrictedNode: audioVideo,
+        rule: n => (n.attributes.src ? trackOnly : sourceTrack),
         transparent: true,
     },
     b: phrasing,
-    base: [],
+    base: none,
     bdi: phrasing,
     bdo: phrasing,
     blockquote: flow,
     body: flow,
-    br: [],
+    br: none,
     button: {
         restrictedNode: interactive,
-        rule: (_, s) => (s[0].name === "select" ? [...flow, "selectedcontent"] : flow),
+        rule: (_, s) => (s[0].name === "select" ? flowSelectedContent : flow),
     },
     canvas: {
-        restrictedNode: interactive.filter(item =>
-            ["a", "button", "input"].includes(typeof item === "string" ? item : item[0]),
-        ),
+        restrictedNode: canvasRestrictedNodes,
         transparent: true,
     },
     caption: flow,
     cite: phrasing,
     code: phrasing,
-    col: [],
-    colgroup: el => (el.attributes.span ? [] : ["col"]),
+    col: none,
+    colgroup: el => (el.attributes.span ? none : colOnly),
     data: phrasing,
-    datalist: [...phrasing, "option"],
+    datalist: phrasingOption,
     dd: flow,
     del: { transparent: true },
-    details: [...flow, "summary"],
+    details: flowSummary,
     dfn: { rule: phrasing, noRecursion: true },
     dialog: flow,
-    div: (_, s) => (s[0].name === "dl" ? ["dt", "dd", "script", "template"] : flow),
-    dl: ["dt", "dd", "script", "template", "div"],
-    dt: { rule: flow, restrictedNode: ["header", "footer"] },
+    div: (_, s) => (s[0].name === "dl" ? dtDdScriptTemplate : flow),
+    dl: dtDdScriptTemplateDiv,
+    dt: { rule: flow, restrictedNode: headerFooter },
     em: phrasing,
-    embed: [],
-    fieldset: [...flow, "legend"],
+    embed: none,
+    fieldset: flowLegend,
     figcaption: flow,
-    figure: [...flow, "figcaption"],
-    footer: { rule: flow, restrictedNode: ["header", "footer"] },
+    figure: flowFigcaption,
+    footer: { rule: flow, restrictedNode: headerFooter },
     form: { rule: flow, noRecursion: true },
     geolocation: { transparent: true },
     h1: phrasing,
@@ -499,96 +471,85 @@ export const htmlAcceptanceRules: { [key in TagNames]?: AcceptanceRule | AcceptD
     h5: phrasing,
     h6: phrasing,
     head: metadata,
-    header: { rule: flow, restrictedNode: ["header", "footer"] },
-    hgroup: [...heading, "p"],
-    hr: [],
-    html: ["head", "body"],
+    header: { rule: flow, restrictedNode: headerFooter },
+    hgroup: headingP,
+    hr: none,
+    html: headBody,
     i: phrasing,
-    iframe: [],
-    img: [],
-    input: [],
+    iframe: none,
+    img: none,
+    input: none,
     ins: { transparent: true },
     kbd: phrasing,
     label: {
         rule: phrasing,
-        restrictedNode: [
-            "button",
-            ["input", new AttributeCheck("type", "hidden", false)],
-            "meter",
-            "output",
-            "progress",
-            "select",
-            "textarea",
-        ],
+        restrictedNode: labelRestricted,
         noRecursion: true,
     },
-    legend: [...phrasing, ...heading],
+    legend: phrasingHeading,
     li: flow,
-    link: [],
+    link: none,
     main: flow,
     map: { transparent: true },
     mark: phrasing,
-    menu: ["li", "script", "template"],
-    meta: [],
+    menu: liScriptTemplate,
+    meta: none,
     meter: { rule: phrasing, noRecursion: true },
     nav: flow,
     noscript: {
         noRecursion: true,
-        rule: (_, s) => (s.some(n => n.name === "head") ? ["link", "style", "meta"] : undefined),
+        rule: (_, s) => (s.some(n => n.name === "head") ? linkStyleMeta : undefined),
         transparent: (_, s) => !s.some(n => n.name === "head"),
     },
-    object: { rule: ["param"], transparent: true },
-    ol: ["li", "script", "template"],
-    optgroup: (_, s) => (s[0].children[0].name === "button" ? ["option", "legend"] : ["option"]),
-    option: (_, s) => ((s[0].name === "select" ? s[0] : s[1])?.children[0]?.name === "button" ? flow : []),
+    object: { rule: paramOnly, transparent: true },
+    ol: liScriptTemplate,
+    optgroup: (_, s) => (s[0].children[0].name === "button" ? optionLegend : optionOnly),
+    option: (_, s) => ((s[0].name === "select" ? s[0] : s[1])?.children[0]?.name === "button" ? flow : none),
     output: phrasing,
     p: phrasing,
-    picture: ["source", "img"],
+    picture: sourceImg,
     pre: phrasing,
     progress: { noRecursion: true, rule: phrasing },
     q: phrasing,
-    rp: [],
+    rp: none,
     rt: phrasing,
-    rtc: [...phrasing, "rt"],
-    ruby: { noRecursion: true, rule: new OrCheck(phrasing, ["rt", "rp"]) },
+    rtc: phrasingRt,
+    ruby: { noRecursion: true, rule: new OrCheck(phrasing, rtRp) },
     s: phrasing,
     samp: phrasing,
-    script: [],
+    script: none,
     search: flow,
     section: flow,
-    select: s =>
-        s.attributes.multiple && s.attributes.size !== "1"
-            ? ["div", "script", "noscript", "template"]
-            : ["option", "optgroup", "hr", "button"],
-    selectedcontent: [],
+    select: s => (s.attributes.multiple && s.attributes.size !== "1" ? selectMultiple : selectSingle),
+    selectedcontent: none,
     slot: { transparent: true },
     small: phrasing,
-    source: [],
+    source: none,
     span: phrasing,
     strong: phrasing,
-    style: [],
+    style: none,
     sub: phrasing,
-    summary: [...phrasing, ...heading],
+    summary: phrasingHeading,
     sup: phrasing,
-    table: ["caption", "colgroup", "thead", "tbody", "tfoot", "tr"],
-    tbody: ["tr"],
+    table: tableContent,
+    tbody: trOnly,
     td: flow,
-    textarea: [],
-    tfoot: ["tr"],
-    th: { rule: flow, restrictedNode: [...sectioning, ...heading, "header", "footer"] },
-    thead: ["tr"],
+    textarea: none,
+    tfoot: trOnly,
+    th: { rule: flow, restrictedNode: thRestricted },
+    thead: trOnly,
     time: phrasing,
-    title: [],
-    tr: ["th", "td", "script", "template"],
-    track: [],
+    title: none,
+    tr: thTdScriptTemplate,
+    track: none,
     tt: phrasing,
     u: phrasing,
-    ul: ["li", "script", "template"],
+    ul: liScriptTemplate,
     var: phrasing,
     video: {
-        restrictedNode: ["audio", "video"],
-        rule: n => (n.attributes.src ? ["track"] : ["source", "track"]),
+        restrictedNode: audioVideo,
+        rule: n => (n.attributes.src ? trackOnly : sourceTrack),
         transparent: true,
     },
-    wbr: [],
+    wbr: none,
 };
