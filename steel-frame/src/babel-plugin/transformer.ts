@@ -291,6 +291,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
         stateOnly: false,
         filename: filename,
         steelFilePath: packageJson.name + relativePath,
+        relativePath: relativePath.substring(1),
         stylesConnected: false,
         devLayer: opts.devLayer,
         strictFolders: opts.strictFolders,
@@ -474,8 +475,8 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
         positionedText(text: types.Expression, area: types.Node): types.Expression {
             return call("positionedText", [text, nodeToStaticPosition(area)]);
         },
-        reportError(message: string, node: types.Node, e?: Error) {
-            const pos = node.loc;
+        reportError(message: string, node?: types.Node, e?: Error) {
+            const pos = node?.loc;
 
             /* istanbul ignore else */
             if (pos) {
@@ -491,7 +492,7 @@ export function transformProgram(path: NodePath<types.Program>, filename: string
                 if (opts.throwAtFirstError) {
                     throw e;
                 }
-                errors.push(`\nin file://${filename}:${pos?.start.line}:${pos?.start.column}\n${e.message}\n`);
+                errors.push(`\n${relativePath.substring(1)}:${pos?.start.line}:${pos?.start.column}\n${e.message}\n`);
             } else {
                 console.warn(message);
             }

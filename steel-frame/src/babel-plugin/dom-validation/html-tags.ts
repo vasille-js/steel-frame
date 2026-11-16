@@ -1,4 +1,7 @@
 import { Checker, IDomNode } from "./interfaces.js";
+import { Internal } from "../internal.js";
+import { tagError } from "./validation-utils.js";
+import { checkSvgTag } from "./svg-tags.js";
 
 type TagNames =
     | "a"
@@ -139,32 +142,25 @@ type TagNames =
     | "-";
 
 abstract class Checkable {
-    public abstract check: (tag: IDomNode, chain: IDomNode[]) => boolean;
+    public abstract check(tag: IDomNode, chain: IDomNode[], root: IDomNode, internal: Internal): boolean;
 }
 
-class AttributeCheck implements Checkable {
+class AttributeCheck extends Checkable {
     public constructor(
         private readonly name: string,
         private readonly value: string,
         private readonly result: boolean,
-    ) {}
+    ) {
+        super();
+    }
 
     public check(tag: IDomNode): boolean {
         return (tag.attributes[this.name] === this.value) === this.result;
     }
 }
 
-class ChildrenCheck implements Checkable {
-    public constructor(private readonly count: number) {}
-
-    public check(tag: IDomNode): boolean {
-        return tag.children.length >= this.count;
-    }
-}
-
 const enum ExtraCondition {
     Phrasing = 0,
-    Transparent = 1,
 }
 type AcceptedTag = TagNames | [TagNames, string | ExtraCondition | Checkable];
 type AcceptedTags = AcceptedTag[];
@@ -366,7 +362,7 @@ const liScriptTemplate: AcceptedTags = ["li", "script", "template"];
 const trOnly: AcceptedTags = ["tr"];
 
 const linkStyleMeta: AcceptedTags = ["link", "style", "meta"];
-const rtRp: AcceptedTags = ["rt", "rp"];
+const rtRp: TagNames[] = ["rt", "rp"];
 const optionLegend: AcceptedTags = ["option", "legend"];
 const optionOnly: AcceptedTags = ["option"];
 const headBody: AcceptedTags = ["head", "body"];
@@ -403,14 +399,27 @@ interface AcceptData {
     check?(tag: IDomNode, chain: IDomNode[]): boolean;
 }
 
-class OrCheck {
-    constructor(
-        private readonly rule1: AcceptanceRule,
-        private readonly rule2: AcceptanceRule,
-    ) {}
+function orCheck(children: IDomNode[], tags: TagNames[]) {
+    const mapped = children.map(child => tags.includes(child.name as TagNames));
+    return mapped.every(value => value) || mapped.every(value => !value);
+}
 
-    check(tag: IDomNode, chain: IDomNode[]): boolean {
-        throw 1;
+class OrCheck extends Checkable {
+    private readonly accepted: AcceptedTags;
+    constructor(
+        accepted: AcceptedTags,
+        private readonly names: TagNames[],
+    ) {
+        super();
+        this.accepted = [...names, ...accepted];
+    }
+
+    public check(tag: IDomNode, chain: IDomNode[], root: IDomNode, internal: Internal): boolean {
+        return (
+            (tag.variations
+                ? tag.variations.every(variation => orCheck(variation.children, this.names))
+                : orCheck(tag.children, this.names)) && checkChildren(tag, chain, root, internal, this.accepted)
+        );
     }
 }
 
@@ -553,3 +562,173 @@ export const htmlAcceptanceRules: { [key in TagNames]?: AcceptanceRule | AcceptD
     },
     wbr: none,
 };
+
+function decodeRules(
+    rules: AcceptanceRule | AcceptData | undefined,
+    node: IDomNode,
+    path: IDomNode[],
+): AcceptedTags | Checkable | undefined {
+    return rules instanceof Array
+        ? rules
+        : rules instanceof Checkable
+          ? rules
+          : typeof rules === "function"
+            ? rules(node, path)
+            : typeof rules === "object"
+              ? decodeRules(rules.rule, node, path)
+              : rules;
+}
+
+function checkChildren(
+    node: IDomNode,
+    path: IDomNode[],
+    root: IDomNode,
+    internal: Internal,
+    rules: AcceptanceRule | AcceptData,
+): true {
+    if (node.variations) {
+        for (const variation of node.variations) {
+            checkChildren({ ...node, variations: undefined, ...variation }, path, root, internal, rules);
+        }
+    } else {
+        const pathForChildCheck = [node, ...path];
+
+        for (const child of node.children) {
+            checkHtmlTag(child, pathForChildCheck, root, internal, rules);
+        }
+    }
+
+    return true;
+}
+
+function recursiveCheck(
+    node: IDomNode,
+    path: IDomNode[],
+    root: IDomNode,
+    internal: Internal,
+    rule: (node: IDomNode) => boolean,
+    cause: string,
+) {
+    if (node.variations) {
+        for (const variation of node.variations) {
+            recursiveCheck({ ...node, variations: undefined, ...variation }, path, root, internal, rule, cause);
+        }
+    } else {
+        const pathForChildCheck = [node, ...path];
+
+        for (const child of node.children) {
+            if (!rule(child)) {
+                tagError(child, pathForChildCheck, root, internal, cause);
+            }
+            recursiveCheck(child, pathForChildCheck, root, internal, rule, cause);
+        }
+    }
+}
+
+function nodeIsAccepted(
+    node: IDomNode,
+    acceptedTags: AcceptedTags,
+    path: IDomNode[],
+    root: IDomNode,
+    internal: Internal,
+) {
+    return acceptedTags.some(item =>
+        item instanceof Array
+            ? item[0] === node.name &&
+              (item[1] instanceof Checkable
+                  ? item[1].check(node, path, root, internal)
+                  : item[1] === ExtraCondition.Phrasing
+                    ? checkChildren(node, path, root, internal, phrasing)
+                    : !!node.attributes[item[1]])
+            : item === node.name,
+    );
+}
+
+export function checkHtmlTag(
+    node: IDomNode,
+    path: IDomNode[],
+    root: IDomNode,
+    internal: Internal,
+    rules?: AcceptanceRule | AcceptData,
+): true {
+    if (rules) {
+        const tagRules = decodeRules(rules, node, path);
+        const options =
+            rules instanceof Array || rules instanceof Checkable || typeof rules === "function" ? undefined : rules;
+
+        if (tagRules instanceof Array) {
+            if (!nodeIsAccepted(node, tagRules, path, root, internal)) {
+                tagError(node, path, root, internal);
+            }
+        } else if (tagRules instanceof Checkable) {
+            if (!tagRules.check(node, path, root, internal)) {
+                tagError(node, path, root, internal);
+            }
+        }
+        if (options) {
+            if (options.noRecursion) {
+                const sameNodeParent = path.find(parent => parent.name === node.name);
+                if (sameNodeParent) {
+                    tagError(node, path, sameNodeParent, internal, `because ${node.name} does not accept recursion`);
+                }
+            }
+            if (options.restrictedNode) {
+                recursiveCheck(
+                    node,
+                    path,
+                    node,
+                    internal,
+                    node => !nodeIsAccepted(node, options.restrictedNode!, path, root, internal),
+                    "",
+                );
+            }
+            if (options.restrictedAttr) {
+                recursiveCheck(
+                    node,
+                    path,
+                    node,
+                    internal,
+                    node => !node.attributes[options.restrictedAttr!],
+                    `because it has ${options.restrictedAttr} attribute`,
+                );
+            }
+            if (options.successor) {
+                if (path[0].name !== options.successor) {
+                    tagError(node, path, path[0], internal);
+                }
+            }
+            if (typeof options.transparent === "function" ? options.transparent(node, path) : options.transparent) {
+                checkChildren(node, path, root, internal, rules);
+            }
+            if (options.check) {
+                if (!options.check(node, path)) {
+                    tagError(node, path, root, internal);
+                }
+            }
+        }
+
+        if (node.children.length) {
+            const pathForChildCheck = [node, ...path];
+            for (const child of node.children) {
+                checkHtmlTag(child, pathForChildCheck, node, internal);
+            }
+        }
+    } else {
+        const name = node.name as TagNames;
+        const tagRules = htmlAcceptanceRules[name];
+
+        if (tagRules) {
+            if (node.variations) {
+                for (const variation of node.variations) {
+                    checkHtmlTag({ ...node, variations: undefined, ...variation }, path, root, internal, tagRules);
+                }
+            } else {
+                checkHtmlTag(node, path, root, internal, tagRules);
+            }
+        } else if (name === "svg") {
+            checkSvgTag(node, node, internal);
+        }
+    }
+
+    return true;
+}

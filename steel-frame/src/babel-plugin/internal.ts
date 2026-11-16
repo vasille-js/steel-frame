@@ -198,6 +198,7 @@ export interface Internal {
     isFunctionParsing?: boolean;
     filename: string;
     steelFilePath: string;
+    relativePath: string;
     packageName: string;
     devLayer: boolean;
     strictFolders: boolean;
@@ -218,7 +219,7 @@ export interface Internal {
     typeIdentifiersMapping: Map<string, string>;
     isWrapper: boolean;
     usedStylesProps: Set<string>;
-    reportError(message: string, node: types.Node, e?: Error): void;
+    reportError(message: string, node?: types.Node, e?: Error): void;
 
     // component tracking
     componentTracking?: ComponentTracking;

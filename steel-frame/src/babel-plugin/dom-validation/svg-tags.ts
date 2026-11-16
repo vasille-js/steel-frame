@@ -1,3 +1,8 @@
+import { IDomNode } from "./interfaces.js";
+import { Internal } from "../internal.js";
+import { checkHtmlTag } from "./html-tags.js";
+import { tagError } from "./validation-utils.js";
+
 type TagNames =
     | "a"
     | "animate"
@@ -187,3 +192,41 @@ export const svgAcceptedChildren: { [key in TagNames]?: TagNames[] } = {
     use: animationsDescriptive,
     view: descriptive,
 };
+
+function checkHtmlChildren(children: IDomNode[], container: IDomNode, internal: Internal) {
+    for (const child of children) {
+        checkHtmlTag(child, [container], container, internal);
+    }
+}
+
+export function checkSvgTag(node: IDomNode, parent: IDomNode, internal: Internal, children?: TagNames[]) {
+    if (children) {
+        for (const child of node.children) {
+            if (!children.includes(child.name as TagNames)) {
+                tagError(child, [node], node, internal);
+            }
+            checkSvgTag(child, node, internal);
+        }
+    } else {
+        const name = node.name as TagNames;
+        const tagChildren = svgAcceptedChildren[name];
+
+        if (tagChildren) {
+            if (node.variations) {
+                for (const variation of node.variations) {
+                    checkSvgTag({ ...node, variations: undefined, ...variation }, parent, internal, tagChildren);
+                }
+            } else {
+                checkSvgTag(node, parent, internal, tagChildren);
+            }
+        } else if (name === "foreignObject") {
+            if (node.variations) {
+                for (const variation of node.variations) {
+                    checkHtmlChildren(variation.children, node, internal);
+                }
+            } else {
+                checkHtmlChildren(node.children, node, internal);
+            }
+        }
+    }
+}
