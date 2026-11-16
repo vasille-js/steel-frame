@@ -1,4 +1,4 @@
-import { IDomNode } from "./interfaces.js";
+import { IDomNode, SlotsData } from "./interfaces.js";
 import { Internal } from "../internal.js";
 
 export function tagError(node: IDomNode, path: IDomNode[], root: IDomNode, internal: Internal, cause = "") {
@@ -27,27 +27,40 @@ function mergeBranches(actual: IDomNode[][], next: IDomNode[][]): IDomNode[][] {
     }
 }
 
-export function mergeFragments(nodes: IDomNode[]): IDomNode[][] {
+export function mergeFragments(nodes: IDomNode[], slots: SlotsData): IDomNode[][] {
     let ret: IDomNode[][] = [[]];
 
     for (const node of nodes) {
-        if (node.name) {
-            const variations = mergeFragments(node.children);
+        const slotContent = node.slotName && slots[node.slotName];
+        const child: IDomNode = slotContent
+            ? {
+                  ...node,
+                  children: slotContent.length === 1 ? slotContent[0] : [],
+                  variations:
+                      slotContent.length > 1 ? slotContent.map(variation => ({ children: variation })) : undefined,
+              }
+            : node;
+
+        if (child.name) {
+            const variations = mergeFragments(child.children, slots);
             const clone: IDomNode = {
-                ...node,
+                ...child,
                 children: variations.length === 1 ? variations[0] : [],
                 variations: variations.length > 1 ? variations.map(children => ({ children })) : undefined,
             };
 
             ret = ret.map(nodes => [...nodes, clone]);
-        } else if (node.variations) {
-            const next = node.variations.map(variation => mergeFragments(variation.children));
+        } else if (child.variations) {
+            const next = child.variations.map(variation => mergeFragments(variation.children, slots));
 
             for (const variant of next) {
                 ret = mergeBranches(ret, variant);
             }
         } else {
-            ret = mergeBranches(ret, mergeFragments(node.children));
+            ret = mergeBranches(
+                ret,
+                mergeFragments(child.children, child.slotsPreFill ? { ...slots, ...child.slotsPreFill } : slots),
+            );
         }
     }
 
