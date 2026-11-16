@@ -18,3 +18,38 @@ export function tagError(node: IDomNode, path: IDomNode[], root: IDomNode, inter
 
     internal.reportError("Invalid HTML", undefined, new Error(text.join("\n")));
 }
+
+function mergeBranches(actual: IDomNode[][], next: IDomNode[][]): IDomNode[][] {
+    if (next.length === 1) {
+        return actual.map(nodes => [...nodes, ...next[0]]);
+    } else {
+        return actual.map(nodes => next.map(nextNodes => [...nodes, ...nextNodes])).flat(1);
+    }
+}
+
+export function mergeFragments(nodes: IDomNode[]): IDomNode[][] {
+    let ret: IDomNode[][] = [[]];
+
+    for (const node of nodes) {
+        if (node.name) {
+            const variations = mergeFragments(node.children);
+            const clone: IDomNode = {
+                ...node,
+                children: variations.length === 1 ? variations[0] : [],
+                variations: variations.length > 1 ? variations.map(children => ({ children })) : undefined,
+            };
+
+            ret = ret.map(nodes => [...nodes, clone]);
+        } else if (node.variations) {
+            const next = node.variations.map(variation => mergeFragments(variation.children));
+
+            for (const variant of next) {
+                ret = mergeBranches(ret, variant);
+            }
+        } else {
+            ret = mergeBranches(ret, mergeFragments(node.children));
+        }
+    }
+
+    return ret;
+}
